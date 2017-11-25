@@ -1,0 +1,119 @@
+QL Program writing to file.
+
+CODE           TRACING                              FUNCTION
+-------------- ------------------------------------ ----------------------------------
+               FILE HEADER
+0Q 0L          QL Bytecode stream.                  VM:WriteHeader
+03 00 00 00 C8 QL Version: 2.00
+
+			         CLASSES
+06             Writing classes stream header        VM:WriteStream
+
+02             NULL                                 VM:WriteMemObject
+
+03 00 12 01 04 Type 3 = integer                     VM:WriteInteger
+
+04             This is a string                     VM:WriteString
+03 00 00 00 11 Stringsize: 17
+41 48 56 68 69
+69 75 60 58 57
+49 41
+
+05             BCD: 45.677                          VM:WriteFloat
+03 05 00 45 67
+07 00 00 00 00
+00 00 00 00 00 
+00 00 00 00
+
+06             FILENAME
+04             C:\TMP\TEST.TXT                      VM:WriteFileName
+03 00 00 00 15 Stringsize: 15
+43 39 38 52 45
+55 53 52 51 58
+49 48 52 57 52
+
+00             EMPTY ARRAY
+
+0A             ARRAY							 	                VM::WriteArray
+03 00 00 00 02 Arraysize: 2
+...
+...
+               END ARRAY
+
+
+0B             OBJECT								                VM::WriteObject
+04             TheObjectName
+03 00 00 00 0D Stringsize: 13
+51 67 64 71 68
+55 64 63 72 77
+52 62 69
+03 00 00 00 04 Attributes: 4
+..
+..
+..
+..
+               END OBJECT							              VM::WriteClass
+
+
+0C             CLASS DEFINITION			   
+04             ClassName
+03 00 00 00 09 Stringsize: 9
+51 67 64 71 68
+55 64 63 72
+04             BaseName			   
+03 00 00 00 08 Stringsize: 8
+51 67 64 71 68
+55 64 63
+0A             MEMBERS  							              VM::WriteArray
+..
+..             <array of members>
+..
+               END MEMBERS
+0A             ATTRIBUTES                           VM::WriteArray			   
+..
+..             <array of attributes>
+..
+               END ATTRIBUTES
+			   END CLASS
+			   
+03 00 00 01 01 BYTECODE Length: 257                	VM::WriteBytecode
+07 06 03 20 21
+...            <50 more lines of bytecode dump>
+34 0A          			   
+			   
+0D             SCRIPT [class::]function
+04             Function
+03 00 00 00 08 Stringsize: 8
+51 67 64 71 68
+55 64 63
+04             classnam
+03 00 00 00 08 Stringsize: 8
+51 67 64 71 68
+55 64 63
+03 00 00 00 04  BYTECODE (Length: 4)
+02 10 12 03
+0A              LITERALS
+
+
+                END LITERALS
+				END SCRIPT
+
+0E              INTERNAL
+04              printf
+03 00 00 00 06  Stringsize: 6
+51 67 64 71 68
+55 64
+				
+0F              EXTERNAL
+04              main
+03 00 00 00 06  Stringsize: 4
+51 67 64 71 68
+
+
+8B              REFERENCE TO OBJECT
+8C              REFERENCE TO CLASS
+8D              REFERENCE TO SCRIPT
+			   
+
+QL Object Written OK!
+ 

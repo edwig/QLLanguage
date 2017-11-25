@@ -1,0 +1,213 @@
+BACKUS-NAUR DEFINITION OF Quantum Language
+==========================================
+
+CLASS DEFINITION
+  class <class-name> [: <base-class-name>]
+  { <member-definition> ... }
+
+MEMBER DEFINITION
+  [static] <function-name> ( [<formal-argument-list>] ) ...;
+  [static] <variable-name>...;
+
+FUNCTION DEFINITION
+  [ <class-name> ::] <function-name> ([<formal-argument-list> )
+  { 
+    <local-declaration>,...
+    <statement>,...
+  }
+
+LOCAL-DECLARATION
+  local <variablename> [ = <value-expression> ];
+  <local-declaration> , ...;
+
+STATEMENT
+  if ( <test-expression> ) <then-statement> [else <else-statement>];
+  while ( <test-expression> ) <statement>;
+  do <statement> while ( <test-expression> );
+  for ( <init-expression> ; <test-expression> ; <increment-expression> ) statement;
+  switch(expression) { case <constant> : <expression>; ... [ default <expression> ] }
+  break;
+  continue;
+  return [ <result-expression> ] ;
+  [ <expression> ] ;
+  { [local-declaration] <statement> ... }
+
+EXPRESSION
+  <expression> , <expression>
+  <lvalue>   = <expression>
+  <lvalue>  += <expression>
+  <lvalue>  -= <expression>
+  <lvalue>  *= <expression>
+  <lvalue)  /= <expression>
+  <lvalue)  %= <expression>
+  <lvalue) <<= <expression>
+  <lvalue) >>= <expression>
+  <test-expression> ? <true-expression> : <false-expression>
+  <expression>  | <expression>
+  <expression>  & <expression>
+  <expression> || <expression>
+  <expression> && <expression>
+  <expression> == <expression>
+  <expression> != <expression>
+  <expression> << <expression>
+  <expression> >> <expression>
+  <expression> <= <expression>
+  <expression> >= <expression>
+  <expression>  > <expression>
+  <expression>  < <expression>
+  <expression>  + <expression>
+  <expression>  - <expression>
+  <expression>  * <expression>
+  <expression>  / <expression>
+  <expression>  % <expression>
+  -- <expression>
+  !  <expression>
+  ~  <expression>
+  ++ <lvalue>
+  -- <lvalue>
+  <lvalue>++
+  <lvalue>--
+  new <class-name> ( [<constructor-arguments>] )
+  delete <object>
+  <expression>([<arguments>])
+  <expression>.<function-name> ([<arguments>])
+  <expression>-><function-name>([<arguments>])
+  super.<function-name) ([<arguments>])
+  this.<expression>
+  ( <expression> )
+  <variable-name>
+  <number>
+  <string>
+  this
+
+GLOBAL-CONSTANT-OBJECTS
+  stdin    (of type file)
+  stdout   (of type file)
+  stderr   (of type file)
+//  pi     (of type bcd)
+//  null   (of type int/bcd)
+  this     (of type object)
+
+TYPES/OBJECTS
+  int
+  string
+  bcd
+  array
+  file
+  dbase
+  query
+  variant
+
+STANDARD OBJECT METHODS
+  <objectname>::<objectname> -> XTOR
+  <objectname>::Destroy()    -> DTOR + gc.
+  
+STANDARD FUNCTIONS
+  exit([exitcode])
+  Trace(on-off)
+  LoadSourceFile(<filename.ql>)
+  LoadObjectFile(<filename.qb>)
+  <bcd> = abs(x)    (type: int, bcd)
+  <bcd> = sin(x)    (bcd)
+  <bcd> = cos(x)    (type: bcd)
+  <bcd> = tan(x)    (type: bcd)
+  <bcd> = asin(x)   (type: bcd)
+  <bcd> = acos(x)   (type: bcd)
+  <bcd> = atan(x)   (type: bcd)
+  <bcd> = sqrt(x)   (type: bcd)
+  <bcd> = ceil(x)   (type: bcd)
+  <bcd> = floor(x)  (type: bcd)
+  <bcd> = exp(x)    (type: bcd)
+  <bcd> = log(x)    (type: bcd)
+  <bcd> = logn(x)   (type: bcd)
+  <bcd> = log10(x)  (type: bcd)
+  <bcd> = pow(x,y)  (type: int)
+  <bcd> = round(x,y) (type: bcd,int)
+  <bcd> = rand()   
+
+STANDARD OBJECT METHODS
+  file     = fopen(filename,mode)
+  <int>    = fclose(file)
+  <int>    = getc(file)
+  <int>    = putc(file,int)
+  <string> = gets(file)
+  <int>    = puts(file,string)
+  <nil>    = print(<expression> [, ...])
+  <nil>    = fprint(file,<expression> [, ...])
+  <string> = getarg(int)
+  <int>    = system(string)
+  <nil>    = gc();
+  <bcd>    = tobcd(int | string | bcd)
+  <int>    = toint(bcd | string | int)
+  <string> = tostring(bcd | int | string)
+
+  string.index(<expression>)
+  string.reverseIndex(<expression>)
+  string.find(<expression>)
+  string.reverseFind(<expression>)
+  string.substring(<expression>[,<expression])
+  string.size()
+  vector.push_front(<expression>)
+  vector.push_back (<expression>)
+  vector.pop_front()
+  vector.pop_back()
+  vector.front()
+  vector.back()
+  vector.size()
+  vector.find(<expression>)
+  vector.get(n)
+  vector.next()
+  vector.prev()
+  vector.clear()
+  map.insert(<int>   ,<expression>)
+  map.insert(<string>,<expression>)
+  map.find(string | int)
+  map.begin()
+  map.end()
+  map.next()
+  map.prev()
+  map.erase([string | int])
+  map.clear()
+
+  bcd.*     (all bcd members)
+  sqlvar.*  (all SQLVariant  members)
+
+  <dbase> = newdbs([database[,user[,password]]])
+  <query> = newquery(dbase)
+  dbase.IsOpen()
+  dbase.Close();
+  query.DoSQLStatement(text)
+  query.GetRecord()
+  query.GetColumn(n)
+  query.Close
+
+DLL IMPORT FUNCTIONS FOR LIBRARIES
+  <int> = import("<dll library path>")
+  loadfunction(<n>,"name")
+
+QL-PROGRAM
+==========
+ql [options] sourcefile[.ql] [objectfile.qob]
+
+The following are valid options
+-v	      Verbose + copyrights
+-c        Compile only to object file
+-b        Show compiling trace (object, method, bytecode)
+-t        Show tracing bytecode execution
+-e name   Use 'name' as entry point, other than 'main'
+-d name   Use 'name' as database name
+-u name   Use 'name' as database user's name
+-p word   Use 'word' as database password
+-h        Show this help page
+-o        show contents of object file
+-x        check for memory leaks on exit
+-s        Print stack on error exit
+
+
+QLLinker program
+================
+QLLinker -o <outputfile[.qob]> <inputfile[.qob]> ...
+
+(links all but first header, wich rewrites)
+
+
