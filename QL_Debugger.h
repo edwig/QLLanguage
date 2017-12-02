@@ -32,9 +32,11 @@ public:
   QLDebugger(QLVirtualMachine* p_vm);
  ~QLDebugger();
 
- // decode_procedure - decode the instructions in a code object 
+ // decode global parts outside functions/classes
+ void   DecodeGlobals(BYTE* cbuff,int oldptr,int cptr);
+ // decode the instructions in a code object 
  void   DecodeProcedure(Function* p_function);
- // decode_instruction - decode a single bytecode instruction
+ // decode a single bytecode instruction
  int    DecodeInstruction(Function* p_function,BYTE* code,int lc,bool p_generator = false);
  // Print return into function
  void   PrintReturn(Function* p_function);

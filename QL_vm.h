@@ -63,17 +63,21 @@ public:
   Method*     AddMethod  (CString p_name,int p_type);
   Method*     FindMethod (CString p_name,int p_type);
 
-  // addentry - add an entry to a dictionary 
+  // Add an entry to a dictionary 
   MemObject*  AddEntry(NameMap& dict,CString p_key,int p_storage);
-  // addsymbol
+  // Adding various objects
   MemObject*  AddSymbol (CString p_name);
   void        AddClass  (Class* p_class);
   MemObject*  NewObject (Class* p_class);
-  int         FindGlobal(CString p_name);
   int         AddGlobal (MemObject* p_object,CString p_name);
+  void        AddLiteral(MemObject* p_object);
+  void        AddBytecode(BYTE* p_bytecode,unsigned p_size);
 
   MemObject*  GetGlobal(unsigned p_index);
   void        SetGlobal(unsigned p_index,MemObject* p_object);
+  MemObject*  GetLiteral(unsigned p_index);
+  BYTE*       GetBytecode();
+  int         FindGlobal(CString p_name);
   CString     FindSymbolName(MemObject* p_object);
 
   // FILE STREAMING OPERATIONS
@@ -92,7 +96,9 @@ private:
   void        DestroyObjectChain();
   void        CleanUpClasses();
   void        CleanUpGlobals();
+  void        CleanUpLiterals();
   void        CleanUpMethods();
+  void        CleanUpInitcode();
   void        DumpObject(MemObject* p_object);
 
   void        TracingText(bool p_trace,const char* p_text,...);
@@ -150,8 +156,11 @@ private:
   ClassMap    m_classes;   // All defined script classes
   NameMap     m_symbols;   // Static symbols defined
   Array*      m_globals;   // Global variables for the scripts
+  Array*      m_literals;  // Literals for globals
   NameMap     m_scripts;   // All defined script functions, including "main()"
   MethodMap   m_methods;   // All internal defined methods for internal datatypes
+  BYTE*       m_initcode;  // Code to run before the entrypoint
+  int         m_initcode_size;
 
   // The object chain for gc
   MemObject*  m_root_object;
@@ -192,4 +201,10 @@ inline void
 QLVirtualMachine::SetDumping(bool p_dump)
 {
   m_dumpchain = p_dump;
+}
+
+inline BYTE*
+QLVirtualMachine::GetBytecode()
+{
+  return m_initcode;
 }

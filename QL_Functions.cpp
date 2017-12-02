@@ -169,7 +169,7 @@ static int argcount(QLInterpreter* p_inter,int n,int cnt)
 
   if(n < 0)
   {
-    //  Happens on internal methods of datatypes
+    //  Happens on internal methods of data types
     return TRUE;
   }
   if ((n) < (cnt)) 
@@ -242,7 +242,14 @@ static int xsizeof(QLInterpreter* p_inter,int argc)
                         break;
     case DTYPE_INTEGER: p_inter->SetInteger(1,sizeof(int));
                         break;
-    default:            break;
+    case DTYPE_DATABASE:p_inter->SetInteger(1,sizeof(SQLDatabase));
+                        break;
+    case DTYPE_QUERY:   p_inter->SetInteger(1,sizeof(SQLQuery));
+                        break;
+    case DTYPE_VARIANT: p_inter->SetInteger(1,sizeof(SQLVariant));
+                        break;
+    default:            p_inter->SetInteger(1,0);
+                        break;
   }
   p_inter->IncrementStackPointer();
   return 0;
@@ -616,7 +623,7 @@ static int xtostr(QLInterpreter* p_inter,int argc)
   else if(object->m_type == DTYPE_BCD)
   {
     bcd n = p_inter->GetBcdArgument(0);
-    CString val = n.AsDisplayString();
+    CString val = n.AsString();
     p_inter->SetString(0,0);
     *(object->m_value.v_string) = val;
   }
@@ -770,10 +777,9 @@ int xnewquery(QLInterpreter* p_inter,INT argc)
 int xdbsIsOpen(QLInterpreter* p_inter, int argc) 
 {
   argcount(p_inter,argc,0);
+  p_inter->CheckType(1,DTYPE_DATABASE);
   MemObject** sp = p_inter->GetStackPointer();
-  QLVirtualMachine* vm = p_inter->GetVirtualMachine();
-
-  SQLDatabase* dbs = sp[argc + 1]->m_value.v_database;
+  SQLDatabase* dbs = sp[1]->m_value.v_database;
   int isopen = dbs->IsOpen();
   p_inter->SetInteger(0,isopen);
 
@@ -783,12 +789,13 @@ int xdbsIsOpen(QLInterpreter* p_inter, int argc)
 int xdbsClose(QLInterpreter* p_inter, int argc) 
 {
   argcount(p_inter,argc,0);
+  p_inter->CheckType(1,DTYPE_DATABASE);
   MemObject** sp = p_inter->GetStackPointer();
   QLVirtualMachine* vm = p_inter->GetVirtualMachine();
 
-  SQLDatabase* dbs = sp[argc + 1]->m_value.v_database;
+  SQLDatabase* dbs = sp[1]->m_value.v_database;
   dbs->Close();
-  // Always successfull
+  // Always successful
   p_inter->SetInteger(0,1);
   return 0;
 }
@@ -796,12 +803,13 @@ int xdbsClose(QLInterpreter* p_inter, int argc)
 int xqryClose(QLInterpreter* p_inter, int argc) 
 {
   argcount(p_inter,argc,0);
+  p_inter->CheckType(1,DTYPE_QUERY);
   MemObject** sp = p_inter->GetStackPointer();
   QLVirtualMachine* vm = p_inter->GetVirtualMachine();
   
-  SQLQuery* qry = sp[argc + 1]->m_value.v_query;
+  SQLQuery* qry = sp[1]->m_value.v_query;
   qry->Close();
-  // Always successfull
+  // Always successful
   p_inter->SetInteger(0,1);
   return 0;
 }
@@ -832,10 +840,11 @@ int xqryDoSQL(QLInterpreter* p_inter,int argc)
 int xqryRecord(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,0);
+  p_inter->CheckType(1,DTYPE_QUERY);
   MemObject** sp = p_inter->GetStackPointer();
   QLVirtualMachine* vm = p_inter->GetVirtualMachine();
 
-  SQLQuery* qry = sp[argc + 1]->m_value.v_query;
+  SQLQuery* qry = sp[1]->m_value.v_query;
   int result = 0;
 
   try
@@ -854,6 +863,7 @@ int xqryColumn(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
   p_inter->CheckType(0,DTYPE_INTEGER);
+  p_inter->CheckType(2,DTYPE_QUERY);
   MemObject** sp = p_inter->GetStackPointer();
   QLVirtualMachine* vm = p_inter->GetVirtualMachine();
 

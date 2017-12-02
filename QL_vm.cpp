@@ -13,6 +13,7 @@
 #include "QL_Functions.h"
 #include "QL_Compiler.h"
 #include "QL_Debugger.h"
+#include "QL_Opcodes.h"
 #include "bcd.h"
 #include <stdarg.h>
 #include <io.h>
@@ -29,6 +30,8 @@ QLVirtualMachine::QLVirtualMachine()
   m_last_object = nullptr;
   m_interpreter = nullptr;
   m_globals     = nullptr;
+  m_literals    = nullptr;
+  m_initcode    = nullptr;
   m_threshold   = THRESHOLD_DEFAULT;
   m_dumpchain   = false;
   m_allocs      = 0;
@@ -42,7 +45,9 @@ QLVirtualMachine::~QLVirtualMachine()
   DestroyObjectChain();
   CleanUpClasses();
   CleanUpGlobals();
+  CleanUpLiterals();
   CleanUpMethods();
+  CleanUpInitcode();
 
   DeleteCriticalSection(&m_lock);
 }
@@ -467,6 +472,17 @@ QLVirtualMachine::AddEntry(NameMap& dict,CString p_key,int p_storage)
   return entry;
 }
 
+// Add a new literal in the global space
+void
+QLVirtualMachine::AddLiteral(MemObject* p_object)
+{
+  if(m_literals == nullptr)
+  {
+    m_literals = new Array();
+  }
+  m_literals->AddEntry(p_object);
+}
+
 // addsymbol
 MemObject*
 QLVirtualMachine::AddSymbol(CString p_name)
@@ -517,6 +533,10 @@ QLVirtualMachine::AddGlobal(MemObject* p_object,CString p_name)
   {
     // Not found, add a new one
     n = m_globals->GetSize();
+    if(p_object == nullptr)
+    {
+      p_object = AddSymbol(p_name);
+    }
     m_globals->AddEntry(p_object);
   }
   return n;
@@ -543,6 +563,17 @@ QLVirtualMachine::SetGlobal(unsigned p_index,MemObject* p_object)
   }
   Error("Global entry out of range: %d", p_index);
 }
+
+MemObject*
+QLVirtualMachine::GetLiteral(unsigned p_index)
+{
+  if(m_literals)
+  {
+    return m_literals->GetEntry(p_index);
+  }
+  return nullptr;
+}
+
 
 CString
 QLVirtualMachine::FindSymbolName(MemObject* p_object)
@@ -592,6 +623,26 @@ QLVirtualMachine::AddMethod(CString p_name, int p_type)
   return found;
 }
 
+void
+QLVirtualMachine::AddBytecode(BYTE* p_bytecode,unsigned p_size)
+{
+  if(!m_initcode)
+  {
+    m_initcode_size = p_size;
+    m_initcode = (BYTE*)malloc(p_size + 1);
+    memcpy(m_initcode,p_bytecode,p_size);
+  }
+  else
+  {
+    m_initcode = (BYTE*)realloc(m_initcode,m_initcode_size + p_size + 1);
+    memcpy(&m_initcode[m_initcode_size],p_bytecode,p_size);
+    m_initcode_size += p_size;
+  }
+  // Mark as the end of the init group
+  m_initcode[m_initcode_size] = (BYTE) OP_RETURN;
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 //
 // PRINTING
@@ -611,11 +662,8 @@ QLVirtualMachine::Print(FILE* p_fp,int p_quoteFlag,MemObject* p_value)
     p_fp = stdout;
   }
 
-  if(p_value == nullptr)
-  {
-    fputs("<NO-OBJECT>",p_fp);
-  }
-  else switch (p_value->m_type)
+  if(p_value)
+  switch (p_value->m_type)
   {
     case DTYPE_NIL:  	  len = fputs("NIL", p_fp);
                         break;
@@ -825,6 +873,16 @@ QLVirtualMachine::CleanUpGlobals()
 }
 
 void
+QLVirtualMachine::CleanUpLiterals()
+{
+  if(m_literals)
+  {
+    delete m_literals;
+    m_literals = nullptr;
+  }
+}
+
+void
 QLVirtualMachine::CleanUpMethods()
 {
   // Clean up all internal methods for data types
@@ -834,3 +892,12 @@ QLVirtualMachine::CleanUpMethods()
   }
 }
 
+void
+QLVirtualMachine::CleanUpInitcode()
+{
+  if(m_initcode)
+  {
+    delete m_initcode;
+    m_initcode = nullptr;
+  }
+}

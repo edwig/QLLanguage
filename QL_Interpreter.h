@@ -36,7 +36,7 @@ public:
   void              SetTracing(bool p_trace);
   void              SetStacksize(int p_size);
 
-  // execute - execute a bytecode function
+  // Execute a bytecode function
   int               Execute(CString p_name);
   // interpret - interpret bytecode instructions
   void              Interpret(Object* p_object,Function* p_function);

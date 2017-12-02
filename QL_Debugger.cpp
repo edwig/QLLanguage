@@ -23,7 +23,7 @@ void osputs(const char* str);
 // BEWARE: The order of this array follows the order of opcodes
 //         as is defined in the 'QL_Opcodes.h' header file
 
-OTDEF otab[] = 
+OTDEF opcode_table[] = 
 {
   {	OP_BRT,		  "BRT",		FMT_WORD, -1 },  // Branch on true
   {	OP_BRF,		  "BRF",		FMT_WORD, -1 },  // Branch on false
@@ -115,11 +115,22 @@ QLDebugger::DecodeProcedure(Function* p_function)
   }
 }
 
+void
+QLDebugger::DecodeGlobals(BYTE* cbuff,int oldptr,int cptr)
+{
+  int done = 0;
+
+  for(int ind = oldptr;ind < cptr; ind += done)
+  {
+    done = DecodeInstruction(nullptr,cbuff,ind,true);
+  }
+}
+
 // decode_instruction - decode a single bytecode instruction
 int 
 QLDebugger::DecodeInstruction(Function* p_function,BYTE* code,int lc,bool p_generator /*=false*/)
 {
-  CString name = p_function->GetFullName();
+  CString name = p_function ? p_function->GetFullName() : "GLOBALS";
   CString buffer;
   BYTE*   cp;
   OTDEF*  opcode;
@@ -146,8 +157,8 @@ QLDebugger::DecodeInstruction(Function* p_function,BYTE* code,int lc,bool p_gene
 
   if(*cp >= 1 && *cp <= OP_LAST)
   {
-    // Haal opcode op uit array
-    opcode = &otab[(*cp - 1)];
+    // Getting the opcode from the opcode array
+    opcode = &opcode_table[(*cp - 1)];
 
     switch (opcode->ot_fmt) 
     {
@@ -167,7 +178,15 @@ QLDebugger::DecodeInstruction(Function* p_function,BYTE* code,int lc,bool p_gene
                         if(p_generator)
                         {
                           osputs("   ; ");
-                          m_vm->Print(stderr,TRUE,p_function->GetLiteral(cp[1]));
+                          if(p_function)
+                          {
+                            m_vm->Print(stderr,TRUE,p_function->GetLiteral(cp[1]));
+                          }
+                          else
+                          {
+                            m_vm->Print(stderr,TRUE,m_vm->GetLiteral(cp[1]));
+                            osputs("\n");
+                          }
                         }
                         n += 1; // skip 1 byte / literal = byte size
                         break;

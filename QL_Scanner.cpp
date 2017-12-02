@@ -23,6 +23,7 @@ static KeywordTable keywordTable[] =
 {
   { "class",    T_CLASS     },
   { "static",   T_STATIC    },
+  { "global",   T_GLOBAL    },
   { "local",    T_LOCAL     },
   { "if",       T_IF        },
   { "else",     T_ELSE      },
@@ -41,6 +42,7 @@ static KeywordTable keywordTable[] =
 };
 
 // token name table 
+// Beware: must be in the order of the T_* macro names
 static char *tokenNames[] =
 {
   "<string>",
@@ -48,6 +50,7 @@ static char *tokenNames[] =
   "<number>",
   "class",
   "static",
+  "global",
   "local",
   "if",
   "else",
@@ -109,7 +112,7 @@ QLScanner::~QLScanner()
 
 }
 
-/* token - get the next token */
+// get the next token
 int QLScanner::GetToken()
 {
   int tkn;
@@ -125,7 +128,7 @@ int QLScanner::GetToken()
   return (tkn);
 }
 
-/* tkn_name - get the name of a token */
+// get the name of a token
 CString QLScanner::TokenName(int tkn)
 {
   if (tkn == T_EOF)
@@ -136,19 +139,19 @@ CString QLScanner::TokenName(int tkn)
   {
     return (tokenNames[tkn - _TMIN]);
   }
-  // Geef terug als string
+  // Give back as a string
   CString tokenAsChar(" ");
   tokenAsChar.SetAt(0,(unsigned char) tkn);
 
   return tokenAsChar;
 }
 
-/* rtoken - read the next token */
+// read the next token
 int QLScanner::ReadToken()
 {
   int ch, ch2;
 
-  /* check the next character */
+  // check the next character 
   for (;;)
   {
     switch (ch = SkipSpaces())
@@ -289,13 +292,12 @@ int QLScanner::ReadToken()
   }
 }
 
-/* getstring - get a string */
+// get a string
 int QLScanner::GetString()
 {
   int ch;
   int size = 0;
 
-  /* get the string */
   m_tokenAsString.Empty();
   while ((ch = LiteralCharacter()) != EOF && ch != '"')
   {
@@ -308,7 +310,7 @@ int QLScanner::GetString()
   return (T_STRING);
 }
 
-/* getcharacter - get a character constant */
+// get a character constant
 int QLScanner::GetCharacter()
 {
   m_tokenAsString.Empty();
@@ -321,7 +323,7 @@ int QLScanner::GetCharacter()
   return (T_NUMBER);
 }
 
-/* literalch - get a character from a literal string */
+// get a character from a literal string
 int QLScanner::LiteralCharacter()
 {
   int ch;
@@ -338,7 +340,7 @@ int QLScanner::LiteralCharacter()
   return (ch);
 }
 
-/* getid - get an identifier */
+// get an identifier
 int QLScanner::GetID(int ch)
 {
   int i;
@@ -363,12 +365,12 @@ int QLScanner::GetID(int ch)
   return (T_IDENTIFIER);
 }
 
-/* getnumber - get a number */
+// get a number 
 int QLScanner::GetNumber(int ch)
 {
   int type = T_NUMBER;
 
-  /* get the number */
+  // get the number 
   m_tokenAsString.Empty();
   m_tokenAsString = (const char) ch;
   m_tokenAsInteger = ch - '0';
@@ -409,7 +411,7 @@ int QLScanner::GetNumber(int ch)
   return type;
 }
 
-/* skipspaces - skip leading spaces */
+// skip leading spaces
 int QLScanner::SkipSpaces()
 {
   int ch;
@@ -417,7 +419,7 @@ int QLScanner::SkipSpaces()
   return (ch);
 }
 
-/* isidchar - is this an identifier character */
+// is this an identifier character
 int QLScanner::IsIDcharacter(int ch)
 {
   return (isupper(ch)
@@ -426,7 +428,7 @@ int QLScanner::IsIDcharacter(int ch)
        || ch == '_');
 }
 
-// getch - get the next character 
+// get the next character 
 int QLScanner::getch()
 {
   int ch;
@@ -465,7 +467,7 @@ int QLScanner::getch()
   return (ch);
 }
 
-/* parse_error - report an error in the current line */
+// report an error in the current line
 void QLScanner::ParseError(const char* msg)
 {
   int ch;

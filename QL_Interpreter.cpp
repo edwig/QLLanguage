@@ -124,7 +124,7 @@ QLInterpreter::DestroyStack()
   }
 }
 
-// execute - execute a function 
+// execute from an entry point function 
 int 
 QLInterpreter::Execute(CString p_name)
 {
@@ -133,10 +133,15 @@ QLInterpreter::Execute(CString p_name)
   // Check the allocation of the stack
   AllocateStack();
 
+  // EXECUTE the global init code
+  Interpret(nullptr,nullptr);
+
+  // Various parameters
   shortint   type   = 0;
   MemObject* symbol = nullptr;
   Function*  func   = nullptr;
   
+  // Find the main entry point
   NameMap& symbols = m_vm->GetSymbols();
   NameMap::iterator it = symbols.find(p_name);
   if(it == symbols.end())
@@ -156,6 +161,7 @@ QLInterpreter::Execute(CString p_name)
     MemObject* symbol = it->second;
   }
 
+  // EXECUTE the main entry point
   switch(type)
   {
     case DTYPE_INTERNAL:  (*symbol->m_value.v_internal)(this,0);
@@ -185,7 +191,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
   Class*        vClass;
 
   // initialize
-  m_code = m_pc = runFunction->GetBytecode();
+  m_code = m_pc = runFunction ? runFunction->GetBytecode() : m_vm->GetBytecode();
 
   /* make a dummy call frame */
   CheckStack(STACKFRAME_SIZE);
@@ -494,7 +500,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         ++m_stack_pointer;
                         break;
       case OP_LIT:      // LOAD A LITERAL FOR THE CURRENT FUNCTION
-                        m_stack_pointer[0] = runFunction->GetLiteral(*m_pc++);
+                        m_stack_pointer[0] = runFunction ? runFunction->GetLiteral(*m_pc++) : m_vm->GetLiteral(*m_pc++);
                         break;
       case OP_SEND:     // SEND REQUEST -> CALL A MEMBER OF AN OBJECT, INTERNAL METHOD
                         n = *m_pc++; // Get the stack offset

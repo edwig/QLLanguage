@@ -591,8 +591,6 @@ Function::AddLiteral(QLvm* p_vm,CString p_literal)
   {
     m_literals = new Array();
   }
-
-
   m_literals->AddEntry(p_vm,p_literal);
 }
 

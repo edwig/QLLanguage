@@ -27,7 +27,7 @@ QLCompiler::QLCompiler(QLVirtualMachine* p_vm)
            ,m_methodclass(nullptr)
            ,cbuff(nullptr)
            ,cptr(0)
-           ,decode(0)
+           ,m_decode(0)
 {
   cbuff = (unsigned char *) GetMemory(CMAX);
 
@@ -56,7 +56,7 @@ QLCompiler::CompileDefinitions(int (*getcf)(void*),void *getcd)
   CString name;
   int tkn;
 
-  /* initialize */
+  //* initialize the scanner
   m_scanner = new QLScanner(getcf,getcd);
   bsp       = &bstack[-1];
   csp       = &cstack[-1];
@@ -70,6 +70,8 @@ QLCompiler::CompileDefinitions(int (*getcf)(void*),void *getcd)
     {
       switch (tkn) 
       {
+        case T_GLOBAL:      do_global_declaration();
+                            break;
         case T_IDENTIFIER:  name = m_scanner->GetTokenAsString();
                             do_function(name);
                             break;
@@ -92,7 +94,65 @@ QLCompiler::CompileDefinitions(int (*getcf)(void*),void *getcd)
   return result;
 }
 
-/* do_class - handle bob_class declarations */
+// do global declaration
+void
+QLCompiler::do_global_declaration()
+{
+  int tkn = 0;
+  int global_count = 0;
+  int oldptr = cptr;
+
+  // Reset code pointer
+  cptr = 0;
+
+  // parse each global declaration
+  do
+  {
+    // parse each variable and initializer
+    do
+    {
+      // Get local variable name
+      FetchRequireToken(T_IDENTIFIER);
+      int global = m_vm->AddGlobal(nullptr,m_scanner->GetTokenAsString());
+
+      if((tkn = m_scanner->GetToken()) == '=')
+      {
+        do_init_expr();
+        putcbyte(OP_STORE);
+        putcbyte(global);
+      }
+      else
+      {
+        m_scanner->SaveToken(tkn);
+      }
+    } 
+    while((tkn = m_scanner->GetToken()) == ',');
+    RequireToken(tkn,';');
+  } 
+  while((tkn = m_scanner->GetToken()) == T_GLOBAL);
+  m_scanner->SaveToken(tkn);
+
+  // Copy the literals to the global literals
+  if(m_literals)
+  {
+    for(int ind = 0;ind < m_literals->GetSize(); ++ind)
+    {
+      m_vm->AddLiteral(m_literals->GetEntry(ind));
+    }
+    FreeLiterals();
+  }
+
+  // Save the bytecode for the global init
+  m_vm->AddBytecode(cbuff,cptr);
+
+  // Show what we just did
+  if(m_decode && m_debugger)
+  {
+    m_debugger->DecodeGlobals(cbuff,oldptr,cptr);
+  }
+}
+
+// do_class - handle class declarations 
 void 
 QLCompiler::do_class()
 {
@@ -103,17 +163,17 @@ QLCompiler::do_class()
   Class*      theClass  = nullptr;
   Class*      baseClass = nullptr;
 
-  // get the bob_class name
+  // get the class name
   FetchRequireToken(T_IDENTIFIER);
   className = m_scanner->GetTokenAsString();
     
-  /* get the optional base bob_class */
+  // get the optional base class
   if ((tkn = m_scanner->GetToken()) == ':') 
   {
     FetchRequireToken(T_IDENTIFIER);
     CString baseClassName = m_scanner->GetTokenAsString();
     baseClass = get_class(baseClassName);
-    if(decode)
+    if(m_decode)
     {
       m_vm->Info("Class '%s', Base class '%s'",className,baseClassName);
     }
@@ -121,14 +181,14 @@ QLCompiler::do_class()
   else 
   {
     m_scanner->SaveToken(tkn);
-    if(decode)
+    if(m_decode)
     {
       m_vm->Info("Class '%s'",className);
     }
   }
   FetchRequireToken('{');
 
-  // create the new bob_class object
+  // create the new class object
   theClass = new Class(className,baseClass);
 
   if(baseClass)
@@ -144,12 +204,12 @@ QLCompiler::do_class()
   // handle each variable declaration 
   while ((tkn = m_scanner->GetToken()) != '}') 
   {
-    /* check for static members */
+    // check for static members 
     if ((type = tkn) == T_STATIC)
     {
       tkn = m_scanner->GetToken();
     }
-    /* get the first identifier */
+    // get the first identifier
     if (tkn != T_IDENTIFIER)
     {
       m_scanner->ParseError("Expecting a member declaration");
@@ -236,7 +296,7 @@ QLCompiler::do_member_function(Class* p_class)
   selector = m_scanner->GetTokenAsString();
   FetchRequireToken('(');
   name = p_class->GetName();
-  if(decode)
+  if(m_decode)
   {
     m_vm->Info("Member function '%s::%s'",name,selector);
   }
@@ -302,6 +362,7 @@ QLCompiler::do_code(Function* p_function)
   tcnt = m_temporaries.size();
 
   // Fix the number of temporaries in TSPACE
+  // We can only do this AFTER the function is compiled
   fixup_ref(tcode,tcnt + 1);
 
   // Copy the literals to the function
@@ -311,21 +372,20 @@ QLCompiler::do_code(Function* p_function)
     {
       p_function->AddLiteral(m_vm,m_literals->GetEntry(ind));
     }
+    FreeLiterals();
   }
 
   // copy the bytecode tot the function
   p_function->SetBytecode(cbuff,cptr);
 
-  FreeLiterals();
-
   // show the generated code
-  if(decode && m_debugger)
+  if(m_decode && m_debugger)
   {
     m_debugger->DecodeProcedure(p_function);
   }
 }
 
-// get_class - get the bob_class associated with a symbol
+// get_class - get the class associated with a symbol
 Class* 
 QLCompiler::get_class(CString p_name)
 {
@@ -337,7 +397,7 @@ QLCompiler::get_class(CString p_name)
   return sym;
 }
 
-/* do_statement - compile a single statement */
+// do_statement - compile a single statement
 void 
 QLCompiler::do_statement()
 {
@@ -369,17 +429,17 @@ QLCompiler::do_if()
 {
   int tkn,nxt,end;
 
-  /* compile the test expression */
+  // compile the test expression
   do_test();
 
-  /* skip around the 'then' clause if the expression is false */
+  // skip around the 'then' clause if the expression is false
   putcbyte(OP_BRF);
   nxt = putcword(0);
 
-  /* compile the 'then' clause */
+  // compile the 'then' clause
   do_statement();
 
-  /* compile the 'else' clause */
+  // compile the 'else' clause
   if ((tkn = m_scanner->GetToken()) == T_ELSE) 
   {
     putcbyte(OP_BR);
@@ -392,11 +452,11 @@ QLCompiler::do_if()
   {
     m_scanner->SaveToken(tkn);
   }
-  /* handle the end of the statement */
+  // handle the end of the statement
   Fixup(nxt,cptr);
 }
 
-/* addbreak - add a break level to the stack */
+// addbreak - add a break level to the stack
 int* 
 QLCompiler::addbreak(int lbl)
 {
@@ -412,14 +472,14 @@ QLCompiler::addbreak(int lbl)
   return (old);
 }
 
-/* rembreak - remove a break level from the stack */
+// rembreak - remove a break level from the stack
 int 
 QLCompiler::rembreak(int* old,int* lbl)
 {
    return (bsp > old ? *bsp-- : (int)lbl);
 }
 
-/* addcontinue - add a continue level to the stack */
+// addcontinue - add a continue level to the stack
 int* 
 QLCompiler::addcontinue(int lbl)
 {
@@ -435,43 +495,43 @@ QLCompiler::addcontinue(int lbl)
   return (old);
 }
 
-/* remcontinue - remove a continue level from the stack */
+// remcontinue - remove a continue level from the stack
 void
 QLCompiler::remcontinue(int* old)
 {
   csp = old;
 }
 
-/* do_while - compile the WHILE expression */
+// do_while - compile the WHILE expression
 void 
 QLCompiler::do_while()
 {
   int nxt,end,*ob,*oc;
 
-  /* compile the test expression */
+  // compile the test expression
   nxt = cptr;
   do_test();
 
-  /* skip around the loop body if the expression is false */
+  // skip around the loop body if the expression is false
   putcbyte(OP_BRF);
   end = putcword(0);
 
-  /* compile the loop body */
+  // compile the loop body
   ob = addbreak(end);
   oc = addcontinue(nxt);
   do_statement();
   end = rembreak(ob,(int*)end);
   remcontinue(oc);
 
-  /* branch back to the start of the loop */
+  // branch back to the start of the loop
   putcbyte(OP_BR);
   putcword(nxt);
 
-  /* handle the end of the statement */
+  // handle the end of the statement 
   Fixup(end,cptr);
 }
 
-/* do_dowhile - compile the DO/WHILE expression */
+// do_dowhile - compile the DO/WHILE expression
 void 
 QLCompiler::do_dowhile()
 {
@@ -591,7 +651,7 @@ QLCompiler::do_continue()
   }
 }
 
-/* addswitch - add a switch level to the stack */
+// add a switch level to the stack
 SWENTRY*
 QLCompiler::AddSwitch()
 {
@@ -609,7 +669,7 @@ QLCompiler::AddSwitch()
   return old;
 }
 
-/* remswitch - remove a switch level from the stack */
+// remove a switch level from the stack
 void 
 QLCompiler::RemoveSwitch(SWENTRY *old)
 {
@@ -684,7 +744,7 @@ QLCompiler::do_case()
     CENTRY **pNext,*entry;
     int value;
 
-    /* get the case value */
+    // get the case value
     switch (m_scanner->GetToken()) 
     {
       case '\\':        switch (m_scanner->GetToken()) 
@@ -698,20 +758,17 @@ QLCompiler::do_case()
                         break;
       case T_NUMBER:    value = make_lit_integer(m_scanner->GetTokenAsInteger());
                         break;
-//    case T_FLOAT:     value = addliteral(ic->MakeFloat(m_scanner->GetFloatValue()));
-//                      break;
       case T_STRING:    value = make_lit_string(m_scanner->GetTokenAsString());
                         break;
       case T_NIL:       value = 0;
                         do_lit_integer(0);
                         break;
-      default:
-                        m_scanner->ParseError("Expecting a literal value");
-                        value = 0; /* never reached */
+      default:          m_scanner->ParseError("Expecting a literal value");
+                        value = 0; // never reached
     }
     FetchRequireToken(':');
 
-    /* find the place to add the new case */
+    // find the place to add the new case
     for (pNext = &ssp->cases; (entry = *pNext) != NULL; pNext = &entry->next) 
     {
       if (value < entry->value)
@@ -758,14 +815,14 @@ QLCompiler::do_default()
   }
 }
 
-// Count the number of temporaries sofar
+// Count the number of temporaries so far
 int
 QLCompiler::CountOfTemporaries()
 {
   return m_temporaries.size();
 }
 
-/* do_block - compile the {} expression */
+// compile the {} block expression
 void 
 QLCompiler::do_block()
 {
@@ -774,10 +831,10 @@ QLCompiler::do_block()
   if((tkn = m_scanner->GetToken()) == T_LOCAL)
   {
     int tcnt = CountOfTemporaries();
-    /* parse each local declaration */
+    // parse each local declaration 
     do 
     {
-      /* parse each variable and initializer */
+      // parse each variable and initializer
       do 
       {
         // Get local variable name
@@ -1266,7 +1323,7 @@ QLCompiler::do_expr15(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_primary - parse a primary expression and unary operators */
+// parse a primary expression and unary operators
 void 
 QLCompiler::do_primary(PVAL* pv)
 {
@@ -1475,7 +1532,7 @@ QLCompiler::FindTemporary(CString p_name)
   return -1;
 }
 
-/* finddatamember - find a bob_class data member */
+/* finddatamember - find a class data member */
 MemObject*
 QLCompiler::FindDataMember(CString p_name)
 {
@@ -1608,7 +1665,7 @@ QLCompiler::make_lit_variable(MemObject* p_sym)
   return n;
 }
 
-/* findvariable - find a variable */
+// find a variable
 void 
 QLCompiler::FindVariable(CString p_name,PVAL* pv)
 {    
@@ -1643,7 +1700,7 @@ QLCompiler::FindVariable(CString p_name,PVAL* pv)
   }
 }
 
-/* findclassvariable - find a bob_class member variable */
+// find a class member variable 
 int 
 QLCompiler::FindClassVariable(Class* p_class,CString p_name,PVAL* pv)
 {
@@ -1749,7 +1806,7 @@ QLCompiler::code_index(int fcn)
   return 0;
 }
 
-/* code_literal - compile a literal reference */
+// code_literal - compile a literal reference
 void 
 QLCompiler::code_literal(int n)
 {
@@ -1757,7 +1814,7 @@ QLCompiler::code_literal(int n)
   putcbyte(n);
 }
 
-/* putcbyte - put a code byte into data space */
+// put a code byte into data space
 int 
 QLCompiler::putcbyte(int b)
 {
@@ -1769,7 +1826,7 @@ QLCompiler::putcbyte(int b)
   return (cptr++);
 }
 
-/* putcword - put a code word into data space */
+// put a code word into data space
 int 
 QLCompiler::putcword(int w)
 {
@@ -1785,7 +1842,7 @@ QLCompiler::fixup_ref(int chn,int val)
   cbuff[chn] = val & 0xFF;
 }
 
-/* fixup - fixup a reference chain */
+// fixup a reference chain
 void 
 QLCompiler::Fixup(int chn,int val)
 {
@@ -1800,7 +1857,7 @@ QLCompiler::Fixup(int chn,int val)
 
 #pragma warning(disable: 4996)
 
-/* getmemory - allocate memory and complain if there isn't enough */
+// allocate memory and complain if there isn't enough
 char*
 QLCompiler::GetMemory(int size)
 {

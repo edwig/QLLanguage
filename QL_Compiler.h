@@ -27,6 +27,7 @@
 #define PV_LITERAL   4
 #define PV_VARIABLE  5
 #define PV_MEMBER    6
+#define PV_GLOBAL    7
 
 // Max amount of bytecode per function
 #define CMAX     32000
@@ -75,6 +76,7 @@ public:
 
 private:
   // Language parsing methods
+  void    do_global_declaration();
   void    do_function(CString p_name);
   void    do_regular_function(CString p_name);
   void    do_member_function(Class* p_class);
@@ -169,18 +171,18 @@ private:
   ARGUMENT          m_temporaries;	// temporary variable list */
   Array*            m_literals;	    // literal list 
   Class*            m_methodclass;	// bob_class of the current method */
-  BYTE*             cbuff;	      /* code buffer */
-  int               cptr;		      /* code pointer */
+  BYTE*             cbuff;	        // code buffer
+  int               cptr;		        // code pointer
   /* break/continue stacks */
   int               bstack[SSIZE],*bsp;
   int               cstack[SSIZE],*csp;
-  SWENTRY           sstack[SSIZE],*ssp,*ssbase;   /* compiler - switch stack */
-  int               decode; 		  /* flag for decoding functions */
+  SWENTRY           sstack[SSIZE],*ssp,*ssbase;   // switch stack
+  int               m_decode; 		  // flag for decoding functions
 };
 
 inline void 
 QLCompiler::SetDebugger(QLDebugger* p_debugger,int p_decode)
 {
   m_debugger = p_debugger;
-  decode     = p_decode;
+  m_decode   = p_decode;
 }
