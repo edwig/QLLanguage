@@ -13,6 +13,7 @@
 #include "QL_Objects.h"
 #include "QL_Interpreter.h"
 #include "QL_Functions.h"
+#include "QL_Opcodes.h"
 #include "bcd.h"
 #include <stdarg.h>
 
@@ -84,7 +85,15 @@ QLVirtualMachine::ReadFromFile(FILE* p_fp,bool p_trace)
 
     // Read globals stream
     ReadStream   (p_fp,p_trace,"GLOBALS stream header!");
-    MustReadArray(p_fp,p_trace,m_globals,"ARRAY");
+    MustReadArray(p_fp,p_trace,m_globals,"GLOBALS");
+
+    // Read global literals
+    ReadStream   (p_fp,p_trace,"GLOBAL LITERALS stream header!");
+    MustReadArray(p_fp,p_trace,m_literals,"GLOBAL LITERALS");
+
+    // Read global bytecode
+    ReadStream  (p_fp,p_trace,"INIT BYTECODE stream header!");
+    ReadBytecode(p_fp,p_trace,&m_initcode,&m_initcode_size);
 
     // Read script stream
     ReadStream (p_fp,p_trace,"FUNCTIONS stream header!");
@@ -409,7 +418,7 @@ QLVirtualMachine::ReadClass(FILE* p_fp,bool p_trace)
 }
 
 void        
-QLVirtualMachine::ReadBytecode(FILE* p_fp, bool p_trace, Function* p_function)
+QLVirtualMachine::ReadBytecode(FILE* p_fp, bool p_trace, BYTE** p_bytecode,int* p_size)
 {
   long length = 0;
   // Read the length up front
@@ -417,7 +426,7 @@ QLVirtualMachine::ReadBytecode(FILE* p_fp, bool p_trace, Function* p_function)
   TracingText(p_trace,"BYTECODE (Size: %d)",length);
 
   // Allocate the bytecode array
-  BYTE* bytecode = new BYTE[length + 1];
+  BYTE* bytecode = new BYTE[length + 2];
   BYTE* pointer  = bytecode;
 
   // Read the bytecode array
@@ -431,12 +440,14 @@ QLVirtualMachine::ReadBytecode(FILE* p_fp, bool p_trace, Function* p_function)
       throw QLException("Bytecode not written!");
     }
   }
+  // Write extra OP_RETURN
+  *pointer++ = OP_RETURN;
   // End marker
   *pointer = 0;
 
-  // Record with this function
-  p_function->SetBytecode(bytecode,length);
-  delete [] bytecode;
+  // Transfer the result
+  *p_bytecode = bytecode;
+  *p_size     = length;
 
   TracingText(p_trace,"END OF BYTECODE");
 }
@@ -462,8 +473,14 @@ QLVirtualMachine::ReadScript(FILE* p_fp, bool p_trace)
   Function* function = new Function(functionName);
   function->SetClass(theClass);
 
-  // Write bytecode 
-  ReadBytecode(p_fp,p_trace,function);
+  // Read the bytecode for the function
+  BYTE* bytecode = nullptr;
+  int   bytecode_size = 0;
+
+  ReadBytecode(p_fp,p_trace,&bytecode,&bytecode_size);
+  function->SetBytecode(bytecode,bytecode_size);
+
+  delete [] bytecode;
 
   // Read literals array
   int type = Getc(p_fp,p_trace);

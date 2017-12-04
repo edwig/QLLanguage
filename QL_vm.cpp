@@ -26,16 +26,17 @@ static char THIS_FILE[] = __FILE__;
 
 QLVirtualMachine::QLVirtualMachine()
 {
-  m_root_object = nullptr;
-  m_last_object = nullptr;
-  m_interpreter = nullptr;
-  m_globals     = nullptr;
-  m_literals    = nullptr;
-  m_initcode    = nullptr;
-  m_threshold   = THRESHOLD_DEFAULT;
-  m_dumpchain   = false;
-  m_allocs      = 0;
-  m_position    = 0;
+  m_root_object   = nullptr;
+  m_last_object   = nullptr;
+  m_interpreter   = nullptr;
+  m_globals       = nullptr;
+  m_literals      = nullptr;
+  m_initcode      = nullptr;
+  m_threshold     = THRESHOLD_DEFAULT;
+  m_dumpchain     = false;
+  m_allocs        = 0;
+  m_position      = 0;
+  m_initcode_size = 0;
 
   InitializeCriticalSection(&m_lock);
 }
@@ -66,7 +67,8 @@ QLVirtualMachine::CheckInit()
 
     init_functions(this);
 
-    m_globals = new Array();
+    m_globals  = new Array();
+    m_literals = new Array();
   }
 }
 
@@ -629,14 +631,17 @@ QLVirtualMachine::AddBytecode(BYTE* p_bytecode,unsigned p_size)
   if(!m_initcode)
   {
     m_initcode_size = p_size;
-    m_initcode = (BYTE*)malloc(p_size + 1);
+    m_initcode = new BYTE[p_size + 1];
     memcpy(m_initcode,p_bytecode,p_size);
   }
   else
   {
-    m_initcode = (BYTE*)realloc(m_initcode,m_initcode_size + p_size + 1);
+    BYTE* code = new BYTE[m_initcode_size + p_size + 1];
+    memcpy(code,m_initcode,m_initcode_size);
     memcpy(&m_initcode[m_initcode_size],p_bytecode,p_size);
     m_initcode_size += p_size;
+    delete [] m_initcode;
+    m_initcode = code;
   }
   // Mark as the end of the init group
   m_initcode[m_initcode_size] = (BYTE) OP_RETURN;
@@ -897,7 +902,7 @@ QLVirtualMachine::CleanUpInitcode()
 {
   if(m_initcode)
   {
-    delete m_initcode;
+    delete [] m_initcode;
     m_initcode = nullptr;
   }
 }

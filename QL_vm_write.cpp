@@ -68,14 +68,20 @@ QLVirtualMachine::WriteToFile(FILE* p_fp,bool p_trace)
 
     WriteHeader(p_fp,p_trace);
 
-    WriteStream(p_fp,p_trace,"CLASSES stream header!");
+    WriteStream (p_fp,p_trace,"CLASSES stream header!");
     WriteClasses(p_fp,p_trace,m_classes);
 
-    WriteStream(p_fp,p_trace,"SYMBOLS stream header!");
+    WriteStream (p_fp,p_trace,"SYMBOLS stream header!");
     WriteNameMap(p_fp,p_trace,m_symbols,"SYMBOLS",false);
 
     WriteStream(p_fp,p_trace,"GLOBALS stream header!");
-    WriteArray(p_fp,p_trace,m_globals);
+    WriteArray (p_fp,p_trace,m_globals);
+
+    WriteStream(p_fp,p_trace,"GLOBAL LITERALS stream header!");
+    WriteArray (p_fp,p_trace,m_literals);
+
+    WriteStream  (p_fp,p_trace,"INIT BYTECODE stream header!");
+    WriteBytecode(p_fp,p_trace,m_initcode,m_initcode_size);
 
     WriteStream(p_fp,p_trace,"FUNCTIONS stream header!");
     WriteNameMap(p_fp,p_trace,m_scripts,"FUNCTIONS",true);

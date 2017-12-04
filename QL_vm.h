@@ -140,7 +140,7 @@ private:
   Array*      MustReadArray   (FILE* p_fp, bool p_trace, Array* p_array = nullptr,char* p_name = nullptr);
   Object*     ReadObject      (FILE* p_fp, bool p_trace);
   Class*      ReadClass       (FILE* p_fp, bool p_trace);
-  void        ReadBytecode    (FILE* p_fp, bool p_trace, Function* p_function);
+  void        ReadBytecode    (FILE* p_fp, bool p_trace, BYTE** p_bytecode,int* p_size);
   Function*   ReadScript      (FILE* p_fp, bool p_trace);
   Internal    ReadInternal    (FILE* p_fp, bool p_trace);
   CString*    ReadExternal    (FILE* p_fp, bool p_trace);
