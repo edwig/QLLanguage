@@ -78,6 +78,8 @@ int   xqryClose (QLInterpreter* p_inter,int argc);
 int   xqryDoSQL (QLInterpreter* p_inter,int argc);
 int   xqryRecord(QLInterpreter* p_inter,int argc);
 int   xqryColumn(QLInterpreter* p_inter,int argc);
+int   xstrIndex (QLInterpreter* p_inter,int argc);
+int   xstrFind  (QLInterpreter* p_inter,int argc);
 
 /* init_functions - initialize the internal functions */
 void init_functions(QLVirtualMachine* p_vm)
@@ -134,6 +136,8 @@ void init_functions(QLVirtualMachine* p_vm)
   add_method(DTYPE_QUERY,    "DoSQLStatement",xqryDoSQL,  p_vm);
   add_method(DTYPE_QUERY,    "GetRecord",     xqryRecord, p_vm);
   add_method(DTYPE_QUERY,    "GetColumn",     xqryColumn, p_vm);
+  add_method(DTYPE_STRING,   "index",         xstrIndex,  p_vm);
+  add_method(DTYPE_STRING,   "find",          xstrFind,   p_vm);
 
   // Seed the random-number generator with the current time so that
   // the numbers will be different every time we run.
@@ -880,5 +884,34 @@ int xqryColumn(QLInterpreter* p_inter,int argc)
   }
   p_inter->IncrementStackPointer();
   sp[1] = result;
+  return 0;
+}
+
+
+int xstrIndex(QLInterpreter* p_inter,int argc)
+{
+  argcount(p_inter,argc,1);
+  p_inter->CheckType(0,DTYPE_INTEGER);
+  p_inter->CheckType(2,DTYPE_STRING);
+  MemObject** sp = p_inter->GetStackPointer();
+
+  CString* string = sp[2]->m_value.v_string;
+  int      index  = sp[0]->m_value.v_integer;
+
+  int result = 0;
+  if(index >= 0 && index < string->GetLength())
+  {
+    result = string->GetAt(index);
+  }
+  else if(index > -string->GetLength())
+  {
+    result = string->GetAt(string->GetLength() + index);
+  }
+  p_inter->SetInteger(0,result);
+  return 0;
+}
+
+int xstrFind(QLInterpreter* p_inter,int argc)
+{
   return 0;
 }

@@ -1,6 +1,10 @@
 BACKUS-NAUR DEFINITION OF Quantum Language
 ==========================================
 
+GLOBAL DEFINITION
+  global <variablename> [ = <value-expression> ];
+  <global-definition> , ... ;
+
 CLASS DEFINITION
   class <class-name> [: <base-class-name>]
   { <member-definition> ... }
@@ -87,8 +91,6 @@ GLOBAL-CONSTANT-OBJECTS
   stdin    (of type file)
   stdout   (of type file)
   stderr   (of type file)
-//  pi     (of type bcd)
-//  null   (of type int/bcd)
   this     (of type object)
 
 TYPES/OBJECTS
@@ -128,7 +130,7 @@ STANDARD FUNCTIONS
   <bcd> = round(x,y) (type: bcd,int)
   <bcd> = rand()   
 
-STANDARD OBJECT METHODS
+STANDARD INTERNAL FUNCTIONS
   file     = fopen(filename,mode)
   <int>    = fclose(file)
   <int>    = getc(file)
@@ -143,7 +145,15 @@ STANDARD OBJECT METHODS
   <bcd>    = tobcd(int | string | bcd)
   <int>    = toint(bcd | string | int)
   <string> = tostring(bcd | int | string)
+  <int>    = typeof(var)
 
+STANDARD NEW OBJECT FUNCTIONS
+  <dbase>  = newdbs([database[,user[,password]]])
+  <query>  = newquery(dbase)
+  <string> = newstring()
+  <array>  = newvector(size)
+
+STANDARD METHODS
   string.index(<expression>)
   string.reverseIndex(<expression>)
   string.find(<expression>)
@@ -175,8 +185,6 @@ STANDARD OBJECT METHODS
   bcd.*     (all bcd members)
   sqlvar.*  (all SQLVariant  members)
 
-  <dbase> = newdbs([database[,user[,password]]])
-  <query> = newquery(dbase)
   dbase.IsOpen()
   dbase.Close();
   query.DoSQLStatement(text)

@@ -79,6 +79,7 @@ public:
   BYTE*       GetBytecode();
   int         FindGlobal(CString p_name);
   CString     FindSymbolName(MemObject* p_object);
+  bool        HasInitCode();
 
   // FILE STREAMING OPERATIONS
   bool        WriteFile(char* p_filename,bool p_trace);
@@ -207,4 +208,10 @@ inline BYTE*
 QLVirtualMachine::GetBytecode()
 {
   return m_initcode;
+}
+
+inline bool
+QLVirtualMachine::HasInitCode()
+{
+  return m_initcode != nullptr;
 }

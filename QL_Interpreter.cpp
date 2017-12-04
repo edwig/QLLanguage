@@ -133,8 +133,11 @@ QLInterpreter::Execute(CString p_name)
   // Check the allocation of the stack
   AllocateStack();
 
-  // EXECUTE the global init code
-  Interpret(nullptr,nullptr);
+  // EXECUTE the global init code, if any
+  if(m_vm->HasInitCode())
+  {
+    Interpret(nullptr,nullptr);
+  }
 
   // Various parameters
   shortint   type   = 0;
@@ -186,6 +189,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
   MemObject**   topframe;
   MemObject*    val;
   int           number;
+  int           pop = 0;
   bcd           floating;
   CString       selector;
   Class*        vClass;
@@ -270,13 +274,15 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         m_frame_pointer = m_stack_top - m_frame_pointer[SF_OFF_FRAMEPNTR]->m_value.v_integer;
                         m_code = runFunction->GetBytecode();
                         m_pc   = m_code + pcoff;
-                        m_stack_pointer += STACKFRAME_SIZE + n;
+                        m_stack_pointer += STACKFRAME_SIZE; 
                         // Restore return value from function
-                        m_stack_pointer[0] = val;
+                        m_stack_pointer[n] = val;
                         if(m_trace)
                         {
                           m_debugger->PrintReturn(runFunction);
                         }
+                        // Pop this amount of variables from the stack
+                        pop = n;
                         break;
       case OP_LOAD:  		// REFERENCE (LOAD A VARIABLE VALUE)
                         m_stack_pointer[0] = m_vm->GetGlobal(*m_pc++);
@@ -562,6 +568,8 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         {
                           // SEND REQUEST TO INTERNAL OBJECT
                           DoSendInternal(n);
+                          // POP two of the stack
+                          pop = 2;
                         }
                         break;
       case OP_DUP2:     // Duplicate top two stack entries
@@ -602,6 +610,11 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
     {
       // Complete the trace by printing the object (optionally)
       m_debugger->PrintObject(m_stack_pointer[0]);
+    }
+    if(pop)
+    {
+      PopStack(pop);
+      pop = 0;
     }
   }
 }
@@ -1853,6 +1866,20 @@ QLInterpreter::CheckType(int p_offset,int p_type1,int p_type2 /*=0*/)
     BadType(p_offset,p_type1);
   }
 }
+
+void
+QLInterpreter::PopStack(int p_num)
+{
+  MemObject* val = m_stack_pointer[0];
+  m_stack_pointer += p_num;
+  m_stack_pointer[0] = val;
+
+  if(m_trace && m_debugger)
+  {
+    m_debugger->PopStack(p_num);
+  }
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 //

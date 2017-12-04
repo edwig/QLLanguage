@@ -244,3 +244,11 @@ QLDebugger::PrintObject(MemObject* p_stack)
   // Reset the print
   m_printObject = -1;
 }
+
+void
+QLDebugger::PopStack(int p_num)
+{
+  CString buffer;
+  buffer.Format("              POP    %2.2X\n",p_num);
+  osputs(buffer);
+}

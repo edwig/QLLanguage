@@ -50,6 +50,7 @@ public:
   void              IncrementStackPointer();
   void              IncrementStackPointer(int p_len);
   MemObject**       PushInteger(int p_num);
+  void              PopStack(int p_num);
   int               GetIntegerArgument(int p_num);
   CString           GetStringArgument(int p_num);
   bcd               GetBcdArgument(int p_num);
