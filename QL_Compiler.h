@@ -36,8 +36,9 @@
 typedef struct _pval
 {
   // int (*fcn)(int,int);
-  int pval_type;
-  int val;
+  int m_pval_type;
+  int m_value;
+  // int m_datatype;
 } 
 PVAL;
 
@@ -62,7 +63,7 @@ struct swentry
 
 typedef std::vector<CString> ARGUMENT;
 
-// foreware declarations
+// forward declarations
 class QLDebugger;
 
 class QLCompiler

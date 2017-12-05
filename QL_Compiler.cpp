@@ -152,7 +152,7 @@ QLCompiler::do_global_declaration()
   }
 }
 
-// do_class - handle class declarations 
+// Handle class declarations 
 void 
 QLCompiler::do_class()
 {
@@ -246,7 +246,7 @@ QLCompiler::do_class()
   }
 }
 
-// do_function - handle function declarations
+// handle function declarations
 void 
 QLCompiler::do_function(CString p_name)
 {
@@ -261,7 +261,7 @@ QLCompiler::do_function(CString p_name)
   }
 }
 
-// do_regular_function - parse a regular function definition 
+// parse a regular function definition 
 void 
 QLCompiler::do_regular_function(CString p_name)
 {
@@ -283,7 +283,7 @@ QLCompiler::do_regular_function(CString p_name)
   m_temporaries.clear();
 }
 
-// do_member_function - parse a member function definition
+// Parse a member function definition
 void 
 QLCompiler::do_member_function(Class* p_class)
 {
@@ -322,7 +322,7 @@ QLCompiler::do_member_function(Class* p_class)
   m_temporaries.clear();
 }
 
-// do_code - compile the code part of a function or method 
+// Compile the code part of a function or method 
 void
 QLCompiler::do_code(Function* p_function)
 {
@@ -385,7 +385,7 @@ QLCompiler::do_code(Function* p_function)
   }
 }
 
-// get_class - get the class associated with a symbol
+// Get the class associated with a symbol
 Class* 
 QLCompiler::get_class(CString p_name)
 {
@@ -397,7 +397,7 @@ QLCompiler::get_class(CString p_name)
   return sym;
 }
 
-// do_statement - compile a single statement
+// Compile a single statement
 void 
 QLCompiler::do_statement()
 {
@@ -456,7 +456,7 @@ QLCompiler::do_if()
   Fixup(nxt,cptr);
 }
 
-// addbreak - add a break level to the stack
+// Add a break level to the stack
 int* 
 QLCompiler::addbreak(int lbl)
 {
@@ -472,14 +472,14 @@ QLCompiler::addbreak(int lbl)
   return (old);
 }
 
-// rembreak - remove a break level from the stack
+// Remove a break level from the stack
 int 
 QLCompiler::rembreak(int* old,int* lbl)
 {
    return (bsp > old ? *bsp-- : (int)lbl);
 }
 
-// addcontinue - add a continue level to the stack
+// Add a continue level to the stack
 int* 
 QLCompiler::addcontinue(int lbl)
 {
@@ -502,7 +502,7 @@ QLCompiler::remcontinue(int* old)
   csp = old;
 }
 
-// do_while - compile the WHILE expression
+// Compile the WHILE expression
 void 
 QLCompiler::do_while()
 {
@@ -531,7 +531,7 @@ QLCompiler::do_while()
   Fixup(end,cptr);
 }
 
-// do_dowhile - compile the DO/WHILE expression
+// Compile the DO/WHILE expression
 void 
 QLCompiler::do_dowhile()
 {
@@ -560,7 +560,7 @@ QLCompiler::do_dowhile()
   Fixup(end,cptr);
 }
 
-/* do_for - compile the FOR statement */
+/* Compile the FOR statement */
 void 
 QLCompiler::do_for()
 {
@@ -621,7 +621,7 @@ QLCompiler::do_for()
   Fixup(end,cptr);
 }
 
-/* do_break - compile the BREAK statement */
+// Compile the BREAK statement 
 void 
 QLCompiler::do_break()
 {
@@ -636,7 +636,7 @@ QLCompiler::do_break()
   }
 }
 
-/* do_continue - compile the CONTINUE statement */
+// Compile the CONTINUE statement
 void 
 QLCompiler::do_continue()
 {
@@ -651,7 +651,7 @@ QLCompiler::do_continue()
   }
 }
 
-// add a switch level to the stack
+// Add a switch level to the stack
 SWENTRY*
 QLCompiler::AddSwitch()
 {
@@ -682,6 +682,7 @@ QLCompiler::RemoveSwitch(SWENTRY *old)
   ssp = old;
 }
 
+// Compile the SWITCH statement
 void
 QLCompiler::do_switch()
 {
@@ -736,6 +737,7 @@ QLCompiler::do_switch()
   RemoveSwitch(os);
 }
 
+// Compile the CASE statement
 void
 QLCompiler::do_case()
 {
@@ -800,7 +802,7 @@ QLCompiler::do_case()
   }
 }
 
-/* do_default - compile the 'default' statement */
+// Compile the 'default' statement
 void 
 QLCompiler::do_default()
 {
@@ -875,7 +877,7 @@ QLCompiler::do_block()
   }
 }
 
-/* do_return - handle the RETURN expression */
+// Handle the RETURN expression 
 void 
 QLCompiler::do_return()
 {
@@ -884,7 +886,7 @@ QLCompiler::do_return()
   putcbyte(OP_RETURN);
 }
 
-/* do_test - compile a test expression */
+// compile a test expression for an if/while
 void 
 QLCompiler::do_test()
 {
@@ -893,7 +895,7 @@ QLCompiler::do_test()
   FetchRequireToken(')');
 }
 
-// Do the initialising expression of a temporary
+// Do the initializing expression of a temporary
 void
 QLCompiler::do_init_expr()
 {
@@ -902,7 +904,7 @@ QLCompiler::do_init_expr()
   rvalue(&pv);
 }
 
-/* do_expr - parse an expression */
+// Parse an expression
 void 
 QLCompiler::do_expr()
 {
@@ -911,22 +913,22 @@ QLCompiler::do_expr()
   rvalue(&pv);
 }
 
-/* rvalue - get the rvalue of a partial expression */
+// get the rvalue of a partial expression
 void 
 QLCompiler::rvalue(PVAL* pv)
 {
-  if(pv->pval_type)
+  if(pv->m_pval_type)
   {
-    emit_code(pv->pval_type,LOAD,pv->val);
-    pv->pval_type = PV_NOVALUE;
+    emit_code(pv->m_pval_type,LOAD,pv->m_value);
+    pv->m_pval_type = PV_NOVALUE;
   }
 }
 
-/* chklvalue - make sure we've got an lvalue */
+// Make sure we've got an lvalue  (Left-value)
 void 
 QLCompiler::Check_LValue(PVAL* pv)
 {
-  if (pv->pval_type == PV_NOVALUE)
+  if (pv->m_pval_type == PV_NOVALUE)
   {
     m_scanner->ParseError("Expecting an lvalue");
   }
@@ -962,10 +964,10 @@ QLCompiler::do_expr2(PVAL* pv)
     Check_LValue(pv);
     switch (tkn) 
     {
-      case '=': 	    emit_code(pv->pval_type,PUSH,0);
+      case '=': 	    emit_code(pv->m_pval_type,PUSH,0);
                       do_expr1(&rhs); 
                       rvalue(&rhs);
-                      emit_code(pv->pval_type,STORE,pv->val);
+                      emit_code(pv->m_pval_type,STORE,pv->m_value);
                       break;
       case T_ADDEQ:	  do_assignment(pv,OP_ADD);	    break;
       case T_SUBEQ:	  do_assignment(pv,OP_SUB);	    break;
@@ -978,7 +980,7 @@ QLCompiler::do_expr2(PVAL* pv)
       case T_SHLEQ:	  do_assignment(pv,OP_SHL);	    break;
       case T_SHREQ:	  do_assignment(pv,OP_SHR);	    break;
     }
-    pv->pval_type = PV_NOVALUE;
+    pv->m_pval_type = PV_NOVALUE;
   }
   m_scanner->SaveToken(tkn);
 }
@@ -989,12 +991,12 @@ QLCompiler::do_assignment(PVAL* pv,int op)
 {
   PVAL rhs;
 
-  emit_code(pv->pval_type,DUP,0);
-  emit_code(pv->pval_type,LOAD,pv->val);
+  emit_code(pv->m_pval_type,DUP,0);
+  emit_code(pv->m_pval_type,LOAD,pv->m_value);
   putcbyte(OP_PUSH);
   do_expr1(&rhs); rvalue(&rhs);
   putcbyte(op);
-  emit_code(pv->pval_type,STORE,pv->val);
+  emit_code(pv->m_pval_type,STORE,pv->m_value);
 }
 
 /* do_expr3 - handle the '?:' operator */
@@ -1246,11 +1248,11 @@ QLCompiler::do_preincrement(PVAL* pv,int op)
 {
   do_expr15(pv);
   Check_LValue(pv);
-  emit_code(pv->pval_type,DUP,0);
-  emit_code(pv->pval_type,LOAD,pv->val);
+  emit_code(pv->m_pval_type,DUP,0);
+  emit_code(pv->m_pval_type,LOAD,pv->m_value);
   putcbyte(op);
-  emit_code(pv->pval_type,STORE,pv->val);
-  pv->pval_type = PV_NOVALUE;
+  emit_code(pv->m_pval_type,STORE,pv->m_value);
+  pv->m_pval_type = PV_NOVALUE;
 }
 
 /* do_postincrement - handle postfix '++' and '--' */
@@ -1258,12 +1260,12 @@ void
 QLCompiler::do_postincrement(PVAL* pv,int op)
 {
   Check_LValue(pv);
-  emit_code(pv->pval_type,DUP,0);
-  emit_code(pv->pval_type,LOAD,pv->val);
+  emit_code(pv->m_pval_type,DUP,0);
+  emit_code(pv->m_pval_type,LOAD,pv->m_value);
   putcbyte(op);
-  emit_code(pv->pval_type,STORE,pv->val);
+  emit_code(pv->m_pval_type,STORE,pv->m_value);
   putcbyte(op == OP_INC ? OP_DEC : OP_INC);
-  pv->pval_type = PV_NOVALUE;
+  pv->m_pval_type = PV_NOVALUE;
 }
 
 /* do_new - handle the 'new' operator */
@@ -1286,12 +1288,12 @@ QLCompiler::do_new(PVAL* pv)
   lit->m_flags &= ~FLAG_DEALLOC;
 
   putcbyte(OP_NEW);
-  pv->pval_type = PV_NOVALUE;
+  pv->m_pval_type = PV_NOVALUE;
     
   do_send(selector,pv);
 }
 
-/* do_expr15 - handle function calls */
+// Handle function calls
 void 
 QLCompiler::do_expr15(PVAL* pv)
 {
@@ -1337,13 +1339,13 @@ QLCompiler::do_primary(PVAL* pv)
                         FetchRequireToken(')');
                         break;
     case T_NUMBER:    	do_lit_integer((long)m_scanner->GetTokenAsInteger());
-                        pv->pval_type = PV_NOVALUE;
+                        pv->m_pval_type = PV_NOVALUE;
                         break;
     case T_FLOAT:       do_lit_float(m_scanner->GetTokenAsFloat());
-                        pv->pval_type = PV_NOVALUE;
+                        pv->m_pval_type = PV_NOVALUE;
                         break;
     case T_STRING:    	do_lit_string(m_scanner->GetTokenAsString());
-                        pv->pval_type = PV_NOVALUE;
+                        pv->m_pval_type = PV_NOVALUE;
                         break;
     case T_NIL:       	putcbyte(OP_NIL);
                         break;
@@ -1368,7 +1370,7 @@ QLCompiler::do_primary(PVAL* pv)
   }
 }
 
-/* do_call - compile a function call */
+// compile a function call
 void 
 QLCompiler::do_call(PVAL* pv)
 {
@@ -1395,10 +1397,10 @@ QLCompiler::do_call(PVAL* pv)
   putcbyte(n);
 
   /* we've got an rvalue now */
-  pv->pval_type = PV_NOVALUE;
+  pv->m_pval_type = PV_NOVALUE;
 }
 
-/* do_send - compile a message sending expression */
+// compile a message sending expression
 void 
 QLCompiler::do_send(CString selector,PVAL* pv)
 {
@@ -1437,26 +1439,21 @@ QLCompiler::do_send(CString selector,PVAL* pv)
   putcbyte(n);
 
   /* we've got an rvalue now */
-  pv->pval_type = PV_NOVALUE;
+  pv->m_pval_type = PV_NOVALUE;
 }
 
-/* do_index - compile an indexing operation */
+// Compile an indexing operation
 void 
 QLCompiler::do_index(PVAL* pv)
 {
   rvalue(pv);
   putcbyte(OP_PUSH);
-  // do_expr(pv);
   do_expr();
   FetchRequireToken(']');
-  // pv->fcn = (int (__cdecl *)(int,int))(this->code_index);
- 
-  // pv->fcn = (int (__cdecl *)(int,int)) &QLCompiler::code_index;
-  pv->pval_type = PV_CODE;
-  
+  pv->m_pval_type = PV_CODE;
 }
 
-/* get_id_list - get a comma separated list of identifiers */
+// get a comma separated list of identifiers
 int 
 QLCompiler::GetIDList(char* term,bool p_save /*=true*/)
 {
@@ -1480,7 +1477,7 @@ QLCompiler::GetIDList(char* term,bool p_save /*=true*/)
   return (cnt);
 }
 
-/* addargument - add a formal argument */
+// add a formal argument
 void 
 QLCompiler::AddArgument(CString p_name)
 {
@@ -1493,14 +1490,14 @@ QLCompiler::AddTemporary(CString p_name)
   m_temporaries.push_back(p_name);
 }
 
-/* freelist - free a list of arguments or temporaries */
+// free a list of arguments or temporaries
 void 
 QLCompiler::freelist(ARGUMENT* p_list)
 {
   p_list->clear();
 }
 
-/* findarg - find an argument offset */
+// find an argument offset 
 int 
 QLCompiler::FindArgument(CString p_name)
 {
@@ -1516,7 +1513,7 @@ QLCompiler::FindArgument(CString p_name)
   return (-1);
 }
 
-/* findtmp - find a temporary variable offset */
+// Find a temporary variable offset
 int 
 QLCompiler::FindTemporary(CString p_name)
 {
@@ -1532,7 +1529,7 @@ QLCompiler::FindTemporary(CString p_name)
   return -1;
 }
 
-/* finddatamember - find a class data member */
+// Find a class data member
 MemObject*
 QLCompiler::FindDataMember(CString p_name)
 {
@@ -1543,7 +1540,7 @@ QLCompiler::FindDataMember(CString p_name)
   return nullptr;
 }
 
-/* addliteral - add a literal */
+// add a literal
 int 
 QLCompiler::AddLiteral(int p_type,MemObject** p_result,CString p_name/*=""*/)
 {
@@ -1565,7 +1562,7 @@ QLCompiler::AddLiteral(int p_type,MemObject** p_result,CString p_name/*=""*/)
   return n;
 }
 
-/* freeliterals - free a list of literals */
+// Free a list of literals
 void 
 QLCompiler::FreeLiterals()
 {
@@ -1576,14 +1573,14 @@ QLCompiler::FreeLiterals()
   }
 }
 
-/* frequire - fetch a token and check it */
+// Fetch a token and check it
 void 
 QLCompiler::FetchRequireToken(int rtkn)
 {
   RequireToken(m_scanner->GetToken(),rtkn);
 }
 
-/* require - check for a required token */
+// check for a required token
 void 
 QLCompiler::RequireToken(int tkn,int rtkn)
 {
@@ -1598,7 +1595,7 @@ QLCompiler::RequireToken(int tkn,int rtkn)
   }
 }
 
-/* do_lit_integer - compile a literal integer */
+// compile a literal integer
 void 
 QLCompiler::do_lit_integer(long n)
 {
@@ -1615,14 +1612,14 @@ QLCompiler::do_lit_float(bcd fl)
   *(lit->m_value.v_floating) = fl;
 }
 
-/* do_lit_string - compile a literal string */
+// compile a literal string
 void 
 QLCompiler::do_lit_string(CString str)
 {
   code_literal(make_lit_string(str));
 }
 
-/* make_lit_string - make a literal string */
+// make a literal string
 int 
 QLCompiler::make_lit_string(CString p_string)
 {
@@ -1645,7 +1642,7 @@ QLCompiler::make_lit_integer(long p_value)
   return n;
 }
 
-/* make_lit_variable - make a literal reference to a variable */
+// make a literal reference to a variable
 int 
 QLCompiler::make_lit_variable(MemObject* p_sym)
 {
@@ -1665,37 +1662,34 @@ QLCompiler::make_lit_variable(MemObject* p_sym)
   return n;
 }
 
-// find a variable
+// Find a variable
 void 
 QLCompiler::FindVariable(CString p_name,PVAL* pv)
 {    
-  // DICT_ENTRY *entry;
-  int n;
+  int n = 0;
+
   if ((n = FindArgument(p_name)) >= 0) 
   {
-    // pv->fcn = (int (__cdecl *)(int,int))code_argument;
-    pv->pval_type = PV_ARGUMENT;
-    pv->val = n;
+    pv->m_pval_type = PV_ARGUMENT;
+    pv->m_value = n;
   }
   else if ((n = FindTemporary(p_name)) >= 0) 
   {
-    // pv->fcn = (int(__cdecl*)(int,int))code_temporary;
-    pv->pval_type = PV_TEMPORARY;
-    pv->val = n;
+    pv->m_pval_type = PV_TEMPORARY;
+    pv->m_value = n;
   }
   else if (m_methodclass == nullptr || 
           !FindClassVariable(m_methodclass,p_name,pv)) 
   {
     if((n = m_vm->FindGlobal(p_name)) >= 0)
     {
-      pv->pval_type = PV_VARIABLE;
-      pv->val = n;
+      pv->m_pval_type = PV_VARIABLE;
+      pv->m_value = n;
     }
     else
     {
-      // pv->fcn = (int(__cdecl*)(int,int))code_variable;
-      pv->pval_type = PV_LITERAL;
-      pv->val = make_lit_variable(m_vm->AddSymbol(p_name));
+      pv->m_pval_type = PV_LITERAL;
+      pv->m_value = make_lit_variable(m_vm->AddSymbol(p_name));
     }
   }
 }
@@ -1712,22 +1706,18 @@ QLCompiler::FindClassVariable(Class* p_class,CString p_name,PVAL* pv)
   }
   switch (entry->m_storage) 
   {
-    case ST_DATA:     	// pv->fcn = (int (__cdecl*)())code_member;
-                        pv->pval_type = PV_MEMBER;
+    case ST_DATA:     	pv->m_pval_type = PV_MEMBER;
                         p_class->RecursiveFindDataMember(p_name,offset);
-                        pv->val = offset;
+                        pv->m_value = offset;
                         break;
-    case ST_SDATA:	    // pv->fcn = (int(__cdecl*)())code_variable;
-                        pv->pval_type = PV_VARIABLE;
-                        pv->val = m_vm->AddGlobal(entry,p_name);
-                          // make_lit_variable(entry);
+    case ST_SDATA:	    pv->m_pval_type = PV_VARIABLE;
+                        pv->m_value = m_vm->AddGlobal(entry,p_name);
                         break;
     case ST_FUNCTION: 	FindVariable("this",pv);
                         do_send(p_name,pv);
                         break;
     case ST_SFUNCTION:	code_literal(make_lit_variable(entry));
-                        // pv->fcn = NULL;
-                        pv->pval_type = PV_NOVALUE;
+                        pv->m_pval_type = PV_NOVALUE;
                         break;
   }
   return (TRUE);
