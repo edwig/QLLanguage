@@ -1270,7 +1270,7 @@ QLCompiler::do_postincrement(PVAL* pv,int op)
   pv->m_pval_type = PV_NOVALUE;
 }
 
-/* do_new - handle the 'new' operator */
+// Handle the 'new' operator
 void 
 QLCompiler::do_new(PVAL* pv)
 {
@@ -1293,6 +1293,7 @@ QLCompiler::do_new(PVAL* pv)
   pv->m_pval_type = PV_NOVALUE;
     
   do_send(selector,pv);
+  putcbyte(OP_RETTHIS);
 }
 
 void
@@ -1300,10 +1301,7 @@ QLCompiler::do_delete(PVAL* pv)
 {
   CString object;
 
-  FetchRequireToken(T_IDENTIFIER);
-  object = m_scanner->GetTokenAsString();
-
-  FindVariable(object,pv);
+  do_expr15(pv);
   // Getting it. Cross our fingers it's an object
   rvalue(pv);
   putcbyte(OP_DELETE);

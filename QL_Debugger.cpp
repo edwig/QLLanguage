@@ -68,6 +68,7 @@ OTDEF opcode_table[] =
   {	OP_SEND,	  "SEND",		FMT_BYTE,  0 },  // Send message to an object
   {	OP_DUP2,	  "DUP2",		FMT_NONE, -1 },  // Duplicate top two stack entries
   {	OP_NEW,		  "NEW",		FMT_NONE,  0 },  // Create a new class object
+  { OP_RETTHIS, "RETTHIS",FMT_NONE,  0 },  // Return <this> from new
   { OP_DELETE,  "DELETE", FMT_NONE,  0 },  // Delete an object variable by calling Destroy
   { OP_DESTROY, "DESTROY",FMT_NONE,  0 },  // Realy destroy the object
   { OP_SWITCH,  "SWITCH", FMT_TABLE,-1 },  // Switch table entry

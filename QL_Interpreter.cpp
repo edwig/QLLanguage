@@ -585,12 +585,19 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         }
                         m_stack_pointer[0] = m_vm->NewObject(m_stack_pointer[0]->m_value.v_class);
                         break;
+      case OP_RETTHIS:  // Return <this> from the new operator
+                        if(m_stack_pointer[-1]->m_type == DTYPE_OBJECT)
+                        {
+                          m_stack_pointer[0] = m_stack_pointer[-1];
+                        }
+                        break;
       case OP_DELETE:   // Delete the object on the top of the stack
                         if(m_stack_pointer[0]->m_type != DTYPE_OBJECT)
                         {
                           BadType(0,DTYPE_OBJECT);
                         }
-                        val = m_stack_pointer[0]->m_value.v_object->GetClass()->RecursiveFindFuncMember("destroy");
+                        calObject = m_stack_pointer[0]->m_value.v_object;
+                        val = calObject->GetClass()->RecursiveFindFuncMember("destroy");
                         if(val && val->m_value.v_script)
                         {
                           calFunction = val->m_value.v_script;
@@ -598,7 +605,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                           CheckStack(STACKFRAME_SIZE);
                           PushObject(runObject);
                           PushFunction(runFunction);
-                          PushInteger(n);
+                          PushInteger(0); // No arguments
                           PushInteger(m_stack_top - m_frame_pointer);
                           PushInteger(m_pc - m_code);
                           m_code = m_pc   = calFunction->GetBytecode();

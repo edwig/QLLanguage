@@ -53,7 +53,8 @@
 #define OP_SEND		 0x29  // send a message to an object
 #define OP_DUP2		 0x2A  // duplicate top two elements on the stack
 #define OP_NEW		 0x2B  // create a new class object
-#define OP_DELETE  0x2C  // Delete a class object
-#define OP_DESTROY 0x2D  // Destroy deleted object
-#define OP_SWITCH  0x2E  // Switch jump table
-#define OP_LAST    0x2E  // LAST CODE IN ARRAY
+#define OP_RETTHIS 0x2C  // Return <this> from new
+#define OP_DELETE  0x2D  // Delete a class object
+#define OP_DESTROY 0x2E  // Destroy deleted object
+#define OP_SWITCH  0x2F  // Switch jump table
+#define OP_LAST    0x2F  // LAST CODE IN ARRAY

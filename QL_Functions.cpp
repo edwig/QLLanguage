@@ -11,6 +11,9 @@
 #include "QL_vm.h"
 #include "QL_Interpreter.h"
 #include "QL_Objects.h"
+#include "SQLDatabase.h"
+#include "SQLQuery.h"
+#include "SQLVariant.h"
 #include <stdio.h>
 #include <process.h>
 
@@ -23,128 +26,8 @@ static char THIS_FILE[] = __FILE__;
 #define MAX_PATH     260
 #define BUFFER_SIZE (32 * 1024)
 
-// forward declarations 
-void  add_file    (char* p_name,FILE* p_fp,QLVirtualMachine* p_vm);
-void  add_function(char* p_name,int (*p_fcn)(QLInterpreter*,int), QLVirtualMachine* p_vm);
-void  add_method  (int   p_type,char* p_name,int (*p_fcn)(QLInterpreter*,int), QLVirtualMachine* p_vm);
 
-// Allocations and handling of the stack
-int   xnewvector(QLInterpreter* p_inter,int argc);
-int   xnewstring(QLInterpreter* p_inter,int argc);
-int   xnewdbs   (QLInterpreter* p_inter,int argc);
-int   xnewquery (QLInterpreter* p_inter,INT argc);
-int   argcount  (QLInterpreter* p_inter,int n,int cnt);
-
-// Functions
-int   xtypeof(QLInterpreter* p_inter,int argc);
-int   xprint (QLInterpreter* p_inter,int argc);
-int   xfprint(QLInterpreter* p_inter,int argc);
-int   xgetarg(QLInterpreter* p_inter,int argc);
-int   xfclose(QLInterpreter* p_inter,int argc);
-int   xgetc  (QLInterpreter* p_inter,int argc);
-int   xputc  (QLInterpreter* p_inter,int argc);
-int   xgets  (QLInterpreter* p_inter,int argc);
-int   xputs  (QLInterpreter* p_inter,int argc);
-int   xsizeof(QLInterpreter* p_inter,int argc);
-int   xfopen (QLInterpreter* p_inter,int argc);
-int   xsystem(QLInterpreter* p_inter,int argc);
-int   xexit  (QLInterpreter* p_inter,int argc);
-int   xgc    (QLInterpreter* p_inter,int argc);
-int   xsin   (QLInterpreter* p_inter,int argc);
-int   xcos   (QLInterpreter* p_inter,int argc);
-int   xtan   (QLInterpreter* p_inter,int argc);
-int   xasin  (QLInterpreter* p_inter,int argc);
-int   xacos  (QLInterpreter* p_inter,int argc);
-int   xatan  (QLInterpreter* p_inter,int argc);
-int   xsqrt  (QLInterpreter* p_inter,int argc);
-int   xceil  (QLInterpreter* p_inter,int argc);
-int   xfloor (QLInterpreter* p_inter,int argc);
-int   xexp   (QLInterpreter* p_inter,int argc);
-int   xlog   (QLInterpreter* p_inter,int argc);
-int   xlogn  (QLInterpreter* p_inter,int argc);
-int   xlog10 (QLInterpreter* p_inter,int argc);
-int   xpow   (QLInterpreter* p_inter,int argc);
-int   xrand  (QLInterpreter* p_inter,int argc);
-int   xtobcd (QLInterpreter* p_inter,int argc);
-int   xtoint (QLInterpreter* p_inter,int argc);
-int   xtostr (QLInterpreter* p_inter,int argc);
-int   xabs   (QLInterpreter* p_inter,int argc);
-int   xround (QLInterpreter* p_inter,int argc);
-
-// Datatype Methods
-int   xdbsIsOpen(QLInterpreter* p_inter,int argc);
-int   xdbsClose (QLInterpreter* p_inter,int argc);
-int   xqryClose (QLInterpreter* p_inter,int argc);
-int   xqryDoSQL (QLInterpreter* p_inter,int argc);
-int   xqryRecord(QLInterpreter* p_inter,int argc);
-int   xqryColumn(QLInterpreter* p_inter,int argc);
-int   xstrIndex (QLInterpreter* p_inter,int argc);
-int   xstrFind  (QLInterpreter* p_inter,int argc);
-
-/* init_functions - initialize the internal functions */
-void init_functions(QLVirtualMachine* p_vm)
-{
-  // Adding default streams
-  add_file("stdin", stdin,  p_vm);
-  add_file("stdout",stdout, p_vm);
-  add_file("stderr",stderr, p_vm);
-
-  // Adding default functions
-  add_function("typeof",    xtypeof,      p_vm);
-  add_function("newvector", xnewvector,   p_vm);
-  add_function("newstring", xnewstring,   p_vm);
-  add_function("newdbs",    xnewdbs,      p_vm);
-  add_function("newquery",  xnewquery,    p_vm);
-  add_function("sizeof",    xsizeof,      p_vm);
-  add_function("fopen",     xfopen,       p_vm);
-  add_function("fclose",    xfclose,      p_vm);
-  add_function("getc",      xgetc,        p_vm);
-  add_function("putc",      xputc,        p_vm);
-  add_function("gets",      xgets,        p_vm);
-  add_function("puts",      xputs,        p_vm);
-  add_function("print",     xprint,       p_vm);
-  add_function("fprint",    xfprint,      p_vm);
-  add_function("getarg",    xgetarg,      p_vm);
-  add_function("system",    xsystem,      p_vm);
-  add_function("exit",      xexit,        p_vm);
-  add_function("gc",        xgc,          p_vm);
-  add_function("sin",       xsin,         p_vm);
-  add_function("cos",       xcos,         p_vm);
-  add_function("tan",       xtan,         p_vm);
-  add_function("asin",      xasin,        p_vm);
-  add_function("acos",      xacos,        p_vm);
-  add_function("atan",      xatan,        p_vm);
-  add_function("sqrt",      xsqrt,        p_vm);
-  add_function("ceil",      xceil,        p_vm);
-  add_function("floor",     xfloor,       p_vm);
-  add_function("exp",       xexp,         p_vm);
-  add_function("log",       xlog,         p_vm);
-  add_function("logn",      xlogn,        p_vm);
-  add_function("log10",     xlog10,       p_vm);
-  add_function("pow",       xpow,         p_vm);
-  add_function("rand",      xrand,        p_vm);
-  add_function("tobcd",     xtobcd,       p_vm);
-  add_function("toint",     xtoint,       p_vm);
-  add_function("tostring",  xtostr,       p_vm);
-  add_function("abs",       xabs,         p_vm);
-  add_function("round",     xround,       p_vm);
-
-  // Add all datatype methods
-  add_method(DTYPE_DATABASE, "IsOpen",        xdbsIsOpen, p_vm);
-  add_method(DTYPE_DATABASE, "Close",         xdbsClose,  p_vm);
-  add_method(DTYPE_QUERY,    "Close",         xqryClose,  p_vm);
-  add_method(DTYPE_QUERY,    "DoSQLStatement",xqryDoSQL,  p_vm);
-  add_method(DTYPE_QUERY,    "GetRecord",     xqryRecord, p_vm);
-  add_method(DTYPE_QUERY,    "GetColumn",     xqryColumn, p_vm);
-  add_method(DTYPE_STRING,   "index",         xstrIndex,  p_vm);
-  add_method(DTYPE_STRING,   "find",          xstrFind,   p_vm);
-
-  // Seed the random-number generator with the current time so that
-  // the numbers will be different every time we run.
-  srand((unsigned)time(NULL));
-}
-
-/* add_function - add a built-in function */
+// Add a built-in function
 static void
 add_function(char* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_vm)
 {
@@ -152,7 +35,7 @@ add_function(char* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_v
   sym->m_value.v_internal = p_fcn;
 }
 
-/* add_file - add a built-in file */
+// Add a built-in file
 static void add_file(char* p_name,FILE* p_fp,QLVirtualMachine* p_vm)
 {
   MemObject* sym = p_vm->AddSymbol(p_name);
@@ -161,13 +44,16 @@ static void add_file(char* p_name,FILE* p_fp,QLVirtualMachine* p_vm)
   sym->m_value.v_file = p_fp;
 }
 
+// Add a method for a built-in-datatype
 static void add_method(int p_type,char* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_vm)
 {
   Method* method = p_vm->AddMethod(p_name,p_type);
   method->m_internal = p_fcn;
 }
 
-static int argcount(QLInterpreter* p_inter,int n,int cnt)	
+// Check the number of arguments on the stack
+static int 
+argcount(QLInterpreter* p_inter,int n,int cnt)	
 { 
   QLVirtualMachine* vm = p_inter->GetVirtualMachine();
 
@@ -915,3 +801,73 @@ int xstrFind(QLInterpreter* p_inter,int argc)
 {
   return 0;
 }
+
+/////////////////////////////////////////////////////////////////////
+//
+// Now we can do the INIT of all functions
+//
+/////////////////////////////////////////////////////////////////////
+
+//  Initialize the internal functions
+void init_functions(QLVirtualMachine* p_vm)
+{
+  // Adding default streams
+  add_file("stdin", stdin,  p_vm);
+  add_file("stdout",stdout, p_vm);
+  add_file("stderr",stderr, p_vm);
+
+  // Adding default functions
+  add_function("typeof",    xtypeof,      p_vm);
+  add_function("newvector", xnewvector,   p_vm);
+  add_function("newstring", xnewstring,   p_vm);
+  add_function("newdbs",    xnewdbs,      p_vm);
+  add_function("newquery",  xnewquery,    p_vm);
+  add_function("sizeof",    xsizeof,      p_vm);
+  add_function("fopen",     xfopen,       p_vm);
+  add_function("fclose",    xfclose,      p_vm);
+  add_function("getc",      xgetc,        p_vm);
+  add_function("putc",      xputc,        p_vm);
+  add_function("gets",      xgets,        p_vm);
+  add_function("puts",      xputs,        p_vm);
+  add_function("print",     xprint,       p_vm);
+  add_function("fprint",    xfprint,      p_vm);
+  add_function("getarg",    xgetarg,      p_vm);
+  add_function("system",    xsystem,      p_vm);
+  add_function("exit",      xexit,        p_vm);
+  add_function("gc",        xgc,          p_vm);
+  add_function("sin",       xsin,         p_vm);
+  add_function("cos",       xcos,         p_vm);
+  add_function("tan",       xtan,         p_vm);
+  add_function("asin",      xasin,        p_vm);
+  add_function("acos",      xacos,        p_vm);
+  add_function("atan",      xatan,        p_vm);
+  add_function("sqrt",      xsqrt,        p_vm);
+  add_function("ceil",      xceil,        p_vm);
+  add_function("floor",     xfloor,       p_vm);
+  add_function("exp",       xexp,         p_vm);
+  add_function("log",       xlog,         p_vm);
+  add_function("logn",      xlogn,        p_vm);
+  add_function("log10",     xlog10,       p_vm);
+  add_function("pow",       xpow,         p_vm);
+  add_function("rand",      xrand,        p_vm);
+  add_function("tobcd",     xtobcd,       p_vm);
+  add_function("toint",     xtoint,       p_vm);
+  add_function("tostring",  xtostr,       p_vm);
+  add_function("abs",       xabs,         p_vm);
+  add_function("round",     xround,       p_vm);
+
+  // Add all datatype methods
+  add_method(DTYPE_DATABASE, "IsOpen",        xdbsIsOpen, p_vm);
+  add_method(DTYPE_DATABASE, "Close",         xdbsClose,  p_vm);
+  add_method(DTYPE_QUERY,    "Close",         xqryClose,  p_vm);
+  add_method(DTYPE_QUERY,    "DoSQLStatement",xqryDoSQL,  p_vm);
+  add_method(DTYPE_QUERY,    "GetRecord",     xqryRecord, p_vm);
+  add_method(DTYPE_QUERY,    "GetColumn",     xqryColumn, p_vm);
+  add_method(DTYPE_STRING,   "index",         xstrIndex,  p_vm);
+  add_method(DTYPE_STRING,   "find",          xstrFind,   p_vm);
+
+  // Seed the random-number generator with the current time so that
+  // the numbers will be different every time we run.
+  srand((unsigned)time(NULL));
+}
+

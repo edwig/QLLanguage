@@ -774,7 +774,7 @@ Object::Init(QLvm* p_vm,Class* p_class)
   m_class = p_class;
 
 
-  // Add all data members tot the object
+  // Add all data members to the object
   Array& members = p_class->GetAttributes();
   for(int ind = 0;ind < members.GetSize(); ++ind)
   {

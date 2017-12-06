@@ -17,17 +17,25 @@ firstclass::firstclass()
 class secondclass
 {
   secondclass();
+  identity();
   destroy();
+  number;
 }
 
-secondclass::secondclass()
+secondclass::secondclass(num)
 {
-  print("Created second\n");
+  number = num;
+  print("Created second: ",number,"\n");
 }
+  
+secondclass::identity()
+{
+  print("I am number: ",number,"\n");
+}  
   
 secondclass::destroy()
 {
-  print("Destroyed second class\n");
+  print("Destroyed second class: ",number,"\n");
 }
 
 // MAIN PROGRAM
@@ -35,10 +43,25 @@ secondclass::destroy()
 main()
 {
   local var1 = new firstclass();
-  local var2 = new secondclass();
-
+  local vec  = newvector(5);
+  local ind  = 0;
+  
+  for(ind = 0;ind < 5;++ind)
+  {
+    vec[ind] = new secondclass(ind);
+  }
+  
   delete var1;
-  delete var2;
+  
+  for(ind = 0;ind < 5;++ind)
+  {
+    vec[ind].identity();
+  }
+  
+  for(ind = 0;ind < 5;++ind)
+  {
+    delete vec[ind];
+  }
   
   print("All done\n");
 }
