@@ -117,6 +117,7 @@ private:
   void    do_preincrement(PVAL* pv,int op);
   void    do_postincrement(PVAL* pv,int op);
   void    do_new(PVAL* pv);
+  void    do_delete(PVAL* pv);
   void    do_send(CString selector,PVAL* pv);
   void    do_primary(PVAL* pv);
   void    do_call(PVAL* pv);

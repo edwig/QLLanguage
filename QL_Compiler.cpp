@@ -1218,27 +1218,29 @@ QLCompiler::do_expr14(PVAL* pv)
   int tkn;
   switch (tkn = m_scanner->GetToken()) 
   {
-    case '-': 	do_expr15(pv); 
-                rvalue(pv);
-                putcbyte(OP_NEG);
-                break;
-    case '!':	  do_expr15(pv); 
-                rvalue(pv);
-                putcbyte(OP_NOT);
-                break;
-    case '~':	  do_expr15(pv); 
-                rvalue(pv);
-                putcbyte(OP_BNOT);
-                break;
-    case T_INC: do_preincrement(pv,OP_INC);
-                break;
-    case T_DEC: do_preincrement(pv,OP_DEC);
-                break;
-    case T_NEW: do_new(pv);
-                break;
-    default:	  m_scanner->SaveToken(tkn);
-                do_expr15(pv);
-                return;
+    case '-': 	  do_expr15(pv); 
+                  rvalue(pv);
+                  putcbyte(OP_NEG);
+                  break;
+    case '!':	    do_expr15(pv); 
+                  rvalue(pv);
+                  putcbyte(OP_NOT);
+                  break;
+    case '~':	    do_expr15(pv); 
+                  rvalue(pv);
+                  putcbyte(OP_BNOT);
+                  break;
+    case T_INC:   do_preincrement(pv,OP_INC);
+                  break;
+    case T_DEC:   do_preincrement(pv,OP_DEC);
+                  break;
+    case T_NEW:   do_new(pv);
+                  break;
+    case T_DELETE:do_delete(pv);
+                  break;
+    default:	    m_scanner->SaveToken(tkn);
+                  do_expr15(pv);
+                  return;
   }
 }
 
@@ -1291,6 +1293,21 @@ QLCompiler::do_new(PVAL* pv)
   pv->m_pval_type = PV_NOVALUE;
     
   do_send(selector,pv);
+}
+
+void
+QLCompiler::do_delete(PVAL* pv)
+{
+  CString object;
+
+  FetchRequireToken(T_IDENTIFIER);
+  object = m_scanner->GetTokenAsString();
+
+  FindVariable(object,pv);
+  // Getting it. Cross our fingers it's an object
+  rvalue(pv);
+  putcbyte(OP_DELETE);
+  putcbyte(OP_DESTROY);
 }
 
 // Handle function calls

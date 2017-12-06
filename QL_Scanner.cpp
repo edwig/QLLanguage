@@ -37,6 +37,7 @@ static KeywordTable keywordTable[] =
   { "case",     T_CASE      },
   { "default",  T_DEFAULT   },
   { "new",      T_NEW       },
+  { "delete",   T_DELETE    },
   { "nil",      T_NIL       },
   { NULL, 0 }
 };
@@ -64,6 +65,7 @@ static char *tokenNames[] =
   "case",
   "default",
   "new",
+  "delete",
   "nil",
   "<=",
   "==",

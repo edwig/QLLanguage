@@ -76,9 +76,6 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="QL++Language2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="QL_vm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -107,6 +104,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="QL_vm_read.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QL_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -160,6 +160,18 @@
     </None>
     <None Include="readme.md">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Test\test_add.ql">
+      <Filter>Scripts</Filter>
+    </None>
+    <None Include="Test\test_delete.ql">
+      <Filter>Scripts</Filter>
+    </None>
+    <None Include="Test\test_globals.ql">
+      <Filter>Scripts</Filter>
+    </None>
+    <None Include="Test\test_string_index.ql">
+      <Filter>Scripts</Filter>
     </None>
   </ItemGroup>
 </Project>

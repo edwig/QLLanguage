@@ -585,6 +585,36 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         }
                         m_stack_pointer[0] = m_vm->NewObject(m_stack_pointer[0]->m_value.v_class);
                         break;
+      case OP_DELETE:   // Delete the object on the top of the stack
+                        if(m_stack_pointer[0]->m_type != DTYPE_OBJECT)
+                        {
+                          BadType(0,DTYPE_OBJECT);
+                        }
+                        val = m_stack_pointer[0]->m_value.v_object->GetClass()->RecursiveFindFuncMember("destroy");
+                        if(val && val->m_value.v_script)
+                        {
+                          calFunction = val->m_value.v_script;
+                          // Same as a OP_SEND method
+                          CheckStack(STACKFRAME_SIZE);
+                          PushObject(runObject);
+                          PushFunction(runFunction);
+                          PushInteger(n);
+                          PushInteger(m_stack_top - m_frame_pointer);
+                          PushInteger(m_pc - m_code);
+                          m_code = m_pc   = calFunction->GetBytecode();
+                          runFunction     = calFunction;
+                          runObject       = calObject;
+                          m_frame_pointer = m_stack_pointer;
+                          calFunction     = nullptr;
+                          calObject       = nullptr;
+                        }
+                        break;
+      case OP_DESTROY:  // At the end of the "Destroy" DTOR method
+                        // The compiler emits an OP_DESTROY after the OP_DELETE
+                        // so we always end up here after a "delete <object>"
+                        number = m_vm->DestroyObject(m_stack_pointer[0]);
+                        SetInteger(0,number);
+                        break;
       case OP_SWITCH:   // PERFORM A SWITCH STATEMENT
                         // Get number of cases
                         n   = GetWordOperand();

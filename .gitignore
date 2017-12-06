@@ -20,6 +20,7 @@
 x64/
 x86/
 bld/
+lib/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
@@ -72,6 +73,9 @@ artifacts/
 *.pidb
 *.svclog
 *.scc
+
+# Project specifics
+*.qob
 
 # Chutzpah Test files
 _Chutzpah*

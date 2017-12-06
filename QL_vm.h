@@ -68,10 +68,12 @@ public:
   // Adding various objects
   MemObject*  AddSymbol (CString p_name);
   void        AddClass  (Class* p_class);
-  MemObject*  NewObject (Class* p_class);
   int         AddGlobal (MemObject* p_object,CString p_name);
   void        AddLiteral(MemObject* p_object);
   void        AddBytecode(BYTE* p_bytecode,unsigned p_size);
+  // XTOR and DTOR an object
+  MemObject*  NewObject(Class* p_class);
+  int         DestroyObject(MemObject* p_object);
 
   MemObject*  GetGlobal(unsigned p_index);
   void        SetGlobal(unsigned p_index,MemObject* p_object);

@@ -79,21 +79,26 @@ EXPRESSION
   <expression>([<arguments>])
   <expression>.<function-name> ([<arguments>])
   <expression>-><function-name>([<arguments>])
-  super.<function-name) ([<arguments>])
+  <superclass>::<function-name) ([<arguments>])
   this.<expression>
   { <expression> ...}
   <variable-name>
   <number>
   <string>
-  this
 
-GLOBAL-CONSTANT-OBJECTS
+VARIABLE-NAME
+  <parameter>
+  <local-variable>
+  <global-variable>
+  <global-constant-object>
+
+GLOBAL-CONSTANT-OBJECT
   stdin    (of type file)
   stdout   (of type file)
   stderr   (of type file)
   this     (of type object)
 
-TYPES/OBJECTS
+BUILT-IN-TYPES
   int
   string
   bcd
@@ -105,47 +110,45 @@ TYPES/OBJECTS
 
 STANDARD OBJECT METHODS
   <objectname>::<objectname> -> XTOR
-  <objectname>::Destroy()    -> DTOR + gc.
+  <objectname>::destroy()    -> DTOR + gc.
   
-STANDARD FUNCTIONS
+STANDARD INTERNAL FUNCTIONS
   exit([exitcode])
   Trace(on-off)
   LoadSourceFile(<filename.ql>)
   LoadObjectFile(<filename.qb>)
-  <bcd> = abs(x)    (type: int, bcd)
-  <bcd> = sin(x)    (bcd)
-  <bcd> = cos(x)    (type: bcd)
-  <bcd> = tan(x)    (type: bcd)
-  <bcd> = asin(x)   (type: bcd)
-  <bcd> = acos(x)   (type: bcd)
-  <bcd> = atan(x)   (type: bcd)
-  <bcd> = sqrt(x)   (type: bcd)
-  <bcd> = ceil(x)   (type: bcd)
-  <bcd> = floor(x)  (type: bcd)
-  <bcd> = exp(x)    (type: bcd)
-  <bcd> = log(x)    (type: bcd)
-  <bcd> = logn(x)   (type: bcd)
-  <bcd> = log10(x)  (type: bcd)
-  <bcd> = pow(x,y)  (type: int)
-  <bcd> = round(x,y) (type: bcd,int)
-  <bcd> = rand()   
-
-STANDARD INTERNAL FUNCTIONS
-  file     = fopen(filename,mode)
-  <int>    = fclose(file)
-  <int>    = getc(file)
-  <int>    = putc(file,int)
-  <string> = gets(file)
-  <int>    = puts(file,string)
-  <nil>    = print(<expression> [, ...])
-  <nil>    = fprint(file,<expression> [, ...])
-  <string> = getarg(int)
-  <int>    = system(string)
-  <nil>    = gc();
-  <bcd>    = tobcd(int | string | bcd)
-  <int>    = toint(bcd | string | int)
-  <string> = tostring(bcd | int | string)
-  <int>    = typeof(var)
+  <bcd>     = abs(x)     (type: int, bcd)
+  <bcd>     = sin(x)     (type: bcd)
+  <bcd>     = cos(x)     (type: bcd)
+  <bcd>     = tan(x)     (type: bcd)
+  <bcd>     = asin(x)    (type: bcd)
+  <bcd>     = acos(x)    (type: bcd)
+  <bcd>     = atan(x)    (type: bcd)
+  <bcd>     = sqrt(x)    (type: bcd)
+  <bcd>     = ceil(x)    (type: bcd)
+  <bcd>     = floor(x)   (type: bcd)
+  <bcd>     = exp(x)     (type: bcd)
+  <bcd>     = log(x)     (type: bcd)
+  <bcd>     = logn(x)    (type: bcd)
+  <bcd>     = log10(x)   (type: bcd)
+  <bcd>     = pow(x,y)   (type: int)
+  <bcd>     = round(x,y) (type: bcd,int)
+  <bcd>     = rand()   
+  <file>    = fopen(filename,mode)
+  <int>     = fclose(file)
+  <int>     = getc(file)
+  <int>     = putc(file,int)
+  <string>  = gets(file)
+  <int>     = puts(file,string)
+  <nil>     = print(<expression> [, ...])
+  <nil>     = fprint(file,<expression> [, ...])
+  <string>  = getarg(int)
+  <int>     = system(string)
+  <nil>     = gc();
+  <bcd>     = tobcd(int | string | bcd)
+  <int>     = toint(bcd | string | int)
+  <string>  = tostring(bcd | int | string)
+  <int>     = typeof(var)
 
 STANDARD NEW OBJECT FUNCTIONS
   <dbase>  = newdbs([database[,user[,password]]])

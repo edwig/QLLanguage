@@ -508,6 +508,23 @@ QLVirtualMachine::NewObject(Class* p_class)
   return val;
 }
 
+int
+QLVirtualMachine::DestroyObject(MemObject* p_object)
+{
+  if(p_object->m_type == DTYPE_OBJECT)
+  {
+    FreeMemObject(p_object);
+
+    // Call the garbage collector every now and then!
+    if((m_allocs++ % m_threshold) == 0)
+    {
+      GC();
+    }
+    return 1;
+  }
+  return 0;
+}
+
 // Find existing global for the compiler
 int
 QLVirtualMachine::FindGlobal(CString p_name)
@@ -742,7 +759,6 @@ QLVirtualMachine::GC()
 
   // STEP B: Delete unmarked memory objects
   RemoveUnmarked();
-
 }
 
 void

@@ -14,7 +14,7 @@
     <ProjectGuid>{69E3D6AD-D883-461B-979F-A7E15834DEDA}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>QLLanguage2</RootNamespace>
-    <ProjectName>QL++Language</ProjectName>
+    <ProjectName>QL_Language</ProjectName>
     <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -117,7 +117,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="QL++Language2.cpp" />
+    <ClCompile Include="QL_main.cpp" />
     <ClCompile Include="QL_Compiler.cpp" />
     <ClCompile Include="QL_Debugger.cpp" />
     <ClCompile Include="QL_Exception.cpp" />
@@ -138,6 +138,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.md" />
+    <None Include="Test\test_add.ql" />
+    <None Include="Test\test_delete.ql" />
+    <None Include="Test\test_globals.ql" />
+    <None Include="Test\test_string_index.ql" />
     <None Include="test_array.ql">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </None>
