@@ -141,7 +141,7 @@ public:
   // Operational use of the object
   Class*      GetClass();
   MemObject*  GetAttribute(int p_index);
-  void        SetAttribute(int p_index,MemObject* p_attrib);
+  bool        SetAttribute(int p_index,MemObject* p_attrib);
   // Garbage collector
   void        Mark(QLvm* p_vm);
 private:

@@ -14,8 +14,15 @@ my_function(a,b,g)
     
 main()
 {
+  local num = 0;
+
   my_function(2,4,8); // Prints: "Sum: 6, Local: 14"
   my_function(3,5,7); // Prints: "Sum: 8, Local: 15"
+  
+  for(num = 0;num < 100; ++num)
+  {
+     print1number(num);
+  }
   
   print("All OK\n");
 }

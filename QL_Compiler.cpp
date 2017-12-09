@@ -356,6 +356,20 @@ QLCompiler::do_code(Function* p_function)
   // compile the code
   FetchRequireToken('{');
   do_block();
+
+  // Are we doing a constructor or destructor?
+  if(p_function->GetClass())
+  {
+    if((p_function->GetName().Compare(p_function->GetClass()->GetName()) == 0) ||
+       (p_function->GetName().Compare("destroy") == 0))
+    {
+      // End XTOR/DTOR with loading the 'this' pointer
+      putcbyte(OP_ALOAD);
+      putcbyte(0);
+    }
+  }
+
+  // Do the return proper
   putcbyte(OP_RETURN);
 
   // Count the temporaries
@@ -1293,7 +1307,6 @@ QLCompiler::do_new(PVAL* pv)
   pv->m_pval_type = PV_NOVALUE;
     
   do_send(selector,pv);
-  putcbyte(OP_RETTHIS);
 }
 
 void
@@ -1420,12 +1433,14 @@ void
 QLCompiler::do_send(CString selector,PVAL* pv)
 {
   MemObject *lit = nullptr;
-  int tkn,n=1;
+  int tkn = 0;
+  int n   = 1;    // Arguments is at minimum 1 for the this pointer
     
-  /* get the receiver value */
+  // get the receiver value
   rvalue(pv);
 
-  /* generate code to push the selector */
+  // generate code to push the selector
+  // Will be replaced by the 'this' pointer before the call!
   putcbyte(OP_PUSH);
   code_literal(AddLiteral(DTYPE_STRING,&lit,selector));
   if(lit)
@@ -1433,7 +1448,7 @@ QLCompiler::do_send(CString selector,PVAL* pv)
     *(lit->m_value.v_string) = selector;
   }
 
-  /* compile the argument list */
+  // compile the argument list
   FetchRequireToken('(');
   if ((tkn = m_scanner->GetToken()) != ')') 
   {
@@ -1449,11 +1464,11 @@ QLCompiler::do_send(CString selector,PVAL* pv)
   }
   RequireToken(tkn,')');
 
-  /* send the message */
+  // send the method message to the object
   putcbyte(OP_SEND);
   putcbyte(n);
 
-  /* we've got an rvalue now */
+  // we've got an rvalue now
   pv->m_pval_type = PV_NOVALUE;
 }
 

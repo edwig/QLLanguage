@@ -75,15 +75,22 @@ private:
   int         GetWordOperand();
   // Send request to internal object
   void        DoSendInternal(int p_offset);
+  // Stack offset of an argument reference (this-pointer, member arguments)
+  int         ArgumentReference(int n);
+  // Reserve stack space for local variables
+  void        ReserveSpace(int p_arguments);
 
   // Stack handling
   void        AllocateStack();
   void        DestroyStack();
   void        CheckStack(int p_size);
   void        StackOverflow();
-  MemObject** PushClass(Class* p_class);
   MemObject** PushFunction(Function* p_func);
   MemObject** PushObject (Object* p_object);
+
+  // Unary operators
+  void        Inter_increment();
+  void        Inter_decrement();
 
   // Do "operand operator operand"
   void        inter_operator       (BYTE p_operator);
@@ -116,6 +123,8 @@ private:
   CString     OperatorName(int p_opcode);
   // Report bad operator for top 2 types
   void        BadOperator(int p_oper);
+  // No such number of members on an object
+  void        BadMemberArgument(Object* p_object,int p_member);
   
   QLVirtualMachine* m_vm;             // Connected Virtual Machine
   QLDebugger*       m_debugger;       // Connected debugger

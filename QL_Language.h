@@ -27,7 +27,7 @@
 #define tracing(x)          if(p_trace) fprintf(stderr,x)
 #define tracingx(x,...)     if(p_trace) fprintf(stderr,x,__VA_ARGS__)
 
-// Maximum size of stack upto 0xFFFF
+// Maximum size of stack up to 0xFFFF
 #define STACK_MAX         0x7FFF // 32767
 #define STACK_DEFAULT     0x07D0 //  2000
 
@@ -90,7 +90,7 @@ class QLInterpreter;
 typedef int (*Internal)(QLInterpreter*,int);
 typedef unsigned char shortint;
 
-// Method for internal datataypes
+// Method for internal data types
 typedef struct _method
 {
   int       m_datatype;
@@ -121,7 +121,7 @@ public:
 
   shortint        m_type;           // Datatype of the object (DTYPE_XXX)
   shortint        m_generation;     // Garbage collector generation marks (GC_XXX)
-  shortint        m_flags;          // Type and optimazation flags (FLAG_XXX)
+  shortint        m_flags;          // Type and optimization flags (FLAG_XXX)
   shortint        m_storage;        // Class storage type (static/local data/function)
   union _value
   {

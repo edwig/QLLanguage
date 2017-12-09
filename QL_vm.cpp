@@ -249,9 +249,9 @@ QLVirtualMachine::AllocMemObject(int p_type,bool p_running /*=true*/)
   // Make the dependent object
   MemObjectSetType(object,p_type);
 
-#ifdef _DEBUG
-  TRACE("Number of allocs: %d\n",m_allocs);
-#endif
+// #ifdef _DEBUG
+//   TRACE("Number of allocs: %d\n",m_allocs);
+// #endif
 
   // Increment the number of allocs
   ++m_allocs;
@@ -313,9 +313,9 @@ QLVirtualMachine::AllocMemObject(MemObject* p_other)
   }
   object->m_type = p_other->m_type;
   
-#ifdef _DEBUG
-  TRACE("Number of allocs: %d\n",m_allocs);
-#endif
+// #ifdef _DEBUG
+//   TRACE("Number of allocs: %d\n",m_allocs);
+// #endif
 
   // Increment the number of allocs
   ++m_allocs;
@@ -341,9 +341,9 @@ QLVirtualMachine::FreeMemObject(MemObject* p_object,bool p_running /*=true*/)
       p_object->m_next->m_prev = p_object->m_prev;
     }
   }
-#ifdef _DEBUG
-  TRACE("Freeing an alloc: %d\n",--m_allocs);
-#endif
+// #ifdef _DEBUG
+//   TRACE("Freeing an alloc: %d\n",--m_allocs);
+// #endif
   // Now delete the memobject
   delete p_object;
 }

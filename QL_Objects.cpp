@@ -799,13 +799,15 @@ Object::GetAttribute(int p_index)
   return nullptr;
 }
 
-void
+bool
 Object::SetAttribute(int p_index,MemObject* p_attrib)
 {
   if(p_index >= 0 && p_index < m_attributes.GetSize())
   {
     m_attributes.SetEntry(p_index,p_attrib);
+    return true;
   }
+  return false;
 }
 
 void
