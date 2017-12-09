@@ -1,16 +1,16 @@
 // Comment outside all scopes
 
-global name = "Edwig Huisman";
-global surname;
-global num = 12;
+global string name = "Edwig Huisman";
+global string surname;
+global int    num = 12;
 
 // The main function
 // Globals must be initialized before calling this
 
 main()
 {
-  local t = "This is a text\n";
-  local i = 0;
+  string t = "This is a text\n";
+  int    i = 0;
 
   print("The name is: ",name,"\n");
   print(t);

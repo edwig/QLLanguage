@@ -125,6 +125,8 @@ private:
   void        BadOperator(int p_oper);
   // No such number of members on an object
   void        BadMemberArgument(Object* p_object,int p_member);
+  // Test correct data types and number of arguments
+  void        TestFunctionArguments(Function* p_function,int p_num);
   
   QLVirtualMachine* m_vm;             // Connected Virtual Machine
   QLDebugger*       m_debugger;       // Connected debugger

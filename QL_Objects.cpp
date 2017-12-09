@@ -584,6 +584,12 @@ Function::~Function()
 }
 
 // Operations
+void
+Function::AddArgument(int p_type)
+{
+  m_arguments.push_back(p_type);
+}
+
 void    
 Function::AddLiteral(QLvm* p_vm,CString p_literal)
 {
@@ -648,6 +654,22 @@ Function::GetClass()
   return m_class;
 }
 
+int
+Function::GetArgument(int p_arg)
+{
+  if(p_arg >= 0 && p_arg < (int)m_arguments.size())
+  {
+    return m_arguments[p_arg];
+  }
+  return DTYPE_NIL;
+}
+
+int
+Function::GetNumberOfArguments()
+{
+  return (int)m_arguments.size();
+}
+
 BYTE*   
 Function::GetBytecode()
 {
@@ -698,6 +720,12 @@ Function::GetLiteralsSize()
     return (int)m_literals->GetSize();
   }
   return 0;
+}
+
+ArgTypes& 
+Function::GetArgumentTypes()
+{
+  return m_arguments;
 }
 
 void

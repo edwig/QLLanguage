@@ -242,6 +242,9 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         }
                         if(calFunction)
                         {
+                          // Test number of arguments and data types
+                          TestFunctionArguments(calFunction,n);
+
                           CheckStack(STACKFRAME_SIZE);
                           PushInteger(0);                               // No object
                           PushFunction(runFunction);                    // Running function
@@ -346,24 +349,10 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         ReserveSpace(*m_pc++);
                         break;
       case OP_BRT:  		// BRANCH if TRUE
-                        if (istrue(m_stack_pointer[0]))
-                        {
-                          m_pc = m_code + GetWordOperand();
-                        }
-                        else
-                        {
-                          m_pc += 2;
-                        }
+                        m_pc = (istrue(m_stack_pointer[0])) ? m_pc = m_code + GetWordOperand() : m_pc + 2;
                         break;
       case OP_BRF:  		// BRANCH IF FALSE
-                        if (istrue(m_stack_pointer[0]))
-                        {
-                          m_pc += 2;
-                        }
-                        else
-                        {
-                          m_pc = m_code + GetWordOperand();
-                        }
+                        m_pc = (istrue(m_stack_pointer[0])) ? m_pc + 2 : m_pc = m_code + GetWordOperand();
                         break;
       case OP_BR:   		// UNCONDITIONAL BRANCH
                         m_pc = m_code + GetWordOperand();
@@ -373,7 +362,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         break;
       case OP_PUSH: 		// PUSH INTEGER TO TOS
                         CheckStack(1);
-                        PushInteger(FALSE);
+                        PushInteger(0);
                         break;
       case OP_NOT:		  // NOT OPERATOR ON TOS
                         SetInteger(0,istrue(m_stack_pointer[0]) ? FALSE : TRUE);
@@ -442,7 +431,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         }
                         ++m_stack_pointer;
                         break;
-      case OP_SHR:  		// OEPRATOR BINARY SHIFT RIGHT
+      case OP_SHR:  		// OPERATOR BINARY SHIFT RIGHT
                         CheckType(0,DTYPE_INTEGER);
                         CheckType(1,DTYPE_INTEGER);
                         m_stack_pointer[1]->m_value.v_integer >>= m_stack_pointer[0]->m_value.v_integer;
@@ -525,6 +514,9 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                           }
                           if(calFunction)
                           {
+                            // Test arguments. Allow for 'this' pointer as extra argument
+                            TestFunctionArguments(calFunction,n - 1);
+
                             CheckStack(STACKFRAME_SIZE);
                             PushObject(runObject);
                             PushFunction(runFunction);
@@ -560,7 +552,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         }
                         m_stack_pointer[0] = m_vm->NewObject(m_stack_pointer[0]->m_value.v_class);
                         break;
-      case OP_DELETE:   // Delete the object on the top of the stack
+      case OP_DESTROY:  // Delete the object on the top of the stack
                         if(m_stack_pointer[0]->m_type != DTYPE_OBJECT)
                         {
                           BadType(0,DTYPE_OBJECT);
@@ -574,7 +566,9 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         val = calObject->GetClass()->RecursiveFindFuncMember("destroy");
                         if(val && val->m_value.v_script)
                         {
+                          // Use destroy function: no arguments allowed
                           calFunction = val->m_value.v_script;
+                          TestFunctionArguments(calFunction,0);
                           // Same as a OP_SEND method
                           CheckStack(STACKFRAME_SIZE);
                           PushObject(runObject);
@@ -590,12 +584,11 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                           calObject       = nullptr;
                         }
                         break;
-      case OP_DESTROY:  // At the end of the "Destroy" DTOR method
-                        // The compiler emits an OP_DESTROY after the OP_DELETE
-                        // so we always end up here after a "delete <object>"
+      case OP_DELETE:   // At the end of the "Destroy" DTOR method
+                        // The compiler emits an OP_DELETE after the OP_DESTROY
+                        // so we always end up here after a "destroy <object>"
                         number = m_vm->DestroyObject(m_stack_pointer[0]);
                         SetInteger(0,number);
-
                         break;
       case OP_SWITCH:   // PERFORM A SWITCH STATEMENT
                         // Get number of cases
@@ -632,6 +625,29 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
 //     int stacklen = m_stack_top - m_stack_pointer;
 //     TRACE("Stack length: %d\n",stacklen);
 // #endif
+  }
+}
+
+// Test correct data types and number of arguments
+void
+QLInterpreter::TestFunctionArguments(Function* p_function,int p_num)
+{
+  // Check number of arguments
+  if(p_function->GetNumberOfArguments() != p_num)
+  {
+    m_vm->Error("Wrong number of arguments [%d] in call to function: %s. Needed: %d\n"
+               ,p_num
+               ,p_function->GetFullName()
+               ,p_function->GetNumberOfArguments());
+  }
+
+  // Check all arguments, in order of appearance
+  for(int ind = p_num - 1;ind >= 0; --ind)
+  {
+    if(m_stack_pointer[ind]->m_type != p_function->GetArgument(ind))
+    {
+      m_vm->Error("Wrong datatype in parameter %d to function %s\n",p_num - ind,p_function->GetFullName());
+    }
   }
 }
 
@@ -1730,7 +1746,7 @@ QLInterpreter::StringSet()
   SetInteger(2,cc);
 }
 
-// getwoperand - get data word from program counter
+// Get data word from program counter
 int 
 QLInterpreter::GetWordOperand()
 {
@@ -1740,7 +1756,7 @@ QLInterpreter::GetWordOperand()
 }
 
 // Send request to a method of an internal data type
-// eg. DTYPE_DATABASE object gets an "Open" request
+// e.g. DTYPE_DATABASE object gets an "Open" request
 void
 QLInterpreter::DoSendInternal(int p_offset)
 {
@@ -1795,7 +1811,7 @@ QLInterpreter::GetTypename(int type)
   return buffer;
 }
 
-// badtype - report a bad operand type 
+// Report a bad operand type 
 int
 QLInterpreter::BadType(int off,int type)
 {
@@ -1855,7 +1871,7 @@ QLInterpreter::BadOperator(int p_oper)
   m_vm->Error("Bad operator type");
 }
 
-/* no-method - report a failure to find a method for a selector */
+// Report a failure to find a method for a selector
 void 
 QLInterpreter::NoMethod(CString selector)
 {
@@ -1870,7 +1886,7 @@ QLInterpreter::BadMemberArgument(Object* p_object,int p_member)
   m_vm->Error("Object of class [%s] does not have %d members",classname,p_member);
 }
 
-/* stack overflow - report a stack overflow error */
+// Report a stack overflow error
 void 
 QLInterpreter::StackOverflow()
 {
@@ -1923,12 +1939,14 @@ QLInterpreter::PushObject(Object* p_object)
   return m_stack_pointer;
 }
 
+// Set stack[offset] to NIL
 void
 QLInterpreter::SetNil(int p_offset)
 {
   m_stack_pointer[p_offset] = m_vm->AllocMemObject(DTYPE_NIL);
 }
 
+// Set stack[offset] to an INTEGER
 void
 QLInterpreter::SetInteger(int p_offset,int p_value)
 {
@@ -1937,6 +1955,7 @@ QLInterpreter::SetInteger(int p_offset,int p_value)
   m_stack_pointer[p_offset] = object;
 }
 
+// Set stack[offset] to a STRING
 void
 QLInterpreter::SetString(int p_offset,int p_len)
 {
@@ -1946,6 +1965,7 @@ QLInterpreter::SetString(int p_offset,int p_len)
   m_stack_pointer[p_offset] = object;
 }
 
+// Set stack[offset] to a FILE
 void
 QLInterpreter::SetFile(int p_offset,FILE* p_fp)
 {
@@ -1954,6 +1974,7 @@ QLInterpreter::SetFile(int p_offset,FILE* p_fp)
   m_stack_pointer[p_offset] = object;
 }
 
+// Set stack[offset] to a BCD
 void
 QLInterpreter::SetBcd(int p_offset, bcd p_float)
 {
@@ -1962,6 +1983,7 @@ QLInterpreter::SetBcd(int p_offset, bcd p_float)
   m_stack_pointer[p_offset] = object;
 }
 
+// Set stack[offset] to a VARIANT
 void
 QLInterpreter::SetVariant(int p_offset,SQLVariant p_variant)
 {
@@ -1970,6 +1992,7 @@ QLInterpreter::SetVariant(int p_offset,SQLVariant p_variant)
   m_stack_pointer[p_offset] = object;
 }
 
+// Check that the TOS[offset] is of one of two types
 void
 QLInterpreter::CheckType(int p_offset,int p_type1,int p_type2 /*=0*/)
 {
@@ -1986,6 +2009,7 @@ QLInterpreter::CheckType(int p_offset,int p_type1,int p_type2 /*=0*/)
   }
 }
 
+// Pop from the stack will dragging the TOS after us
 void
 QLInterpreter::PopStack(int p_num)
 {
@@ -1999,13 +2023,13 @@ QLInterpreter::PopStack(int p_num)
   }
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 //
 // Getting an argument for the QL_Functions module
 //
 //////////////////////////////////////////////////////////////////////////
 
+// Getting an argument as an INTEGER
 int
 QLInterpreter::GetIntegerArgument(int p_num)
 {
@@ -2027,6 +2051,7 @@ QLInterpreter::GetIntegerArgument(int p_num)
   return number;
 }
 
+// Getting an argument as a STRING
 CString
 QLInterpreter::GetStringArgument(int p_num)
 {
@@ -2047,6 +2072,7 @@ QLInterpreter::GetStringArgument(int p_num)
   return str;
 }
 
+// Getting an argument as a BCD
 bcd
 QLInterpreter::GetBcdArgument(int p_num)
 {

@@ -22,7 +22,7 @@ class secondclass
   number;
 }
 
-secondclass::secondclass(num)
+secondclass::secondclass(int num)
 {
   number = num;
   print("Created second: ",number,"\n");

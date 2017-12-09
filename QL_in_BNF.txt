@@ -2,7 +2,7 @@ BACKUS-NAUR DEFINITION OF Quantum Language
 ==========================================
 
 GLOBAL DEFINITION
-  global <variablename> [ = <value-expression> ];
+  global <datatype> <variablename> [ = <value-expression> ];
   <global-definition> , ... ;
 
 CLASS DEFINITION
@@ -21,11 +21,21 @@ FUNCTION DEFINITION
   }
 
 FORMAL-ARGUMENT-LIST
-  <parameter>,...
+  <datatype> <parameter>,...
 
 LOCAL-DECLARATION
-  local <variablename> [ = <value-expression> ];
+  <datatype> <variablename> [ = <value-expression> ];
   <local-declaration> , ...;
+
+DATATYPE
+  int
+  string
+  bcd
+  file
+  database
+  query
+  variant
+  <class-name>
 
 STATEMENT
   if ( <test-expression> ) <then-statement> [else <else-statement>];

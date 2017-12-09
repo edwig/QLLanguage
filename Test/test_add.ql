@@ -2,13 +2,13 @@
 
 main()
 {
-   local str1 = "This is a ";
-   local str2 = "STRING";
-   local str3;
+   string str1 = "This is a ";
+   string str2 = "STRING";
+   string str3,str4;
    
-   local num1 = 12;
-   local num2 = 24;
-   local num3;
+   int num1 = 12;
+   int num2 = 24;
+   int num3 = 3, num4 = 4;
    
    str3 = str1 + str2;
    num3 = num1 + num2;

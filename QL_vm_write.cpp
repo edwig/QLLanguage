@@ -13,6 +13,7 @@
 #include "QL_Objects.h"
 #include "QL_Interpreter.h"
 #include "QL_Functions.h"
+#include "QL_Objects.h"
 #include "bcd.h"
 #include <stdarg.h>
 
@@ -404,12 +405,30 @@ QLVirtualMachine::WriteScript(FILE* p_fp,bool p_trace,Function*  p_script)
   WriteString(p_fp,p_trace,&functionName,"Functionname");
   // Write class name (if any)
   WriteString(p_fp,p_trace,&className,"Classname");
-  // Write bytecode 
-  WriteBytecode(p_fp,p_trace,p_script->GetBytecode(),p_script->GetBytecodeSize());
+  // Write number of arguments and data types
+  WriteTypes(p_fp,p_trace,p_script->GetArgumentTypes());
   // Write literals array
   WriteArray(p_fp,p_trace,p_script->GetLiterals(),"LITERALS");
+  // Write bytecode 
+  WriteBytecode(p_fp,p_trace,p_script->GetBytecode(),p_script->GetBytecodeSize());
 
   TracingText(p_trace,"END SCRIPT");
+}
+
+void 
+QLVirtualMachine::WriteTypes(FILE* p_fp,bool p_trace,ArgTypes& p_types)
+{
+  int num = (int)p_types.size();
+
+  Putc(DTYPE_ARRAY,p_fp,p_trace);
+  TracingText(p_trace,"Number of arguments");
+  WriteInteger(p_fp,p_trace,num);
+
+  for(int ind = 0;ind < num; ++ind)
+  {
+    WriteInteger(p_fp,p_trace,p_types[ind]);
+    TracingText(p_fp,"Datatype argument %d",ind);
+  }
 }
 
 void

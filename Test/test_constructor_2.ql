@@ -2,14 +2,14 @@
 
 class firstclass
 {
-  firstclass(a,b);
+  firstclass(int a,int b);
   identity();
   plus();
   x;
   y;
 }
 
-firstclass::firstclass(a,b)
+firstclass::firstclass(int a,int b)
 {
   x = a;
   y = b;

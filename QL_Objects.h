@@ -12,6 +12,7 @@
 class QLVirtualMachine;
 
 typedef std::vector<MemObject*> Members;
+typedef std::vector<int>        ArgTypes;
 
 // Finding your datatype name with DTYPE_* macros
 extern char* datatype_names[];
@@ -22,6 +23,7 @@ public:
   Array();
   Array(QLvm* p_vm,int p_size);
  ~Array();
+
   MemObject*   FindEntry(CString p_name);
   MemObject*   FindEntry(CString p_name,int& p_entryNum);
   int          FindEntry(MemObject* p_object);
@@ -53,6 +55,7 @@ public:
  ~Function();
 
   // Operations
+  void        AddArgument(int p_type);
   void        AddLiteral(QLvm* p_vm,CString p_literal);
   void        AddLiteral(QLvm* p_vm,MemObject* p_object);
   void        SetBytecode(BYTE* p_bytecode,unsigned p_size);
@@ -64,6 +67,8 @@ public:
   CString     GetName();
   CString     GetFullName();
   Class*      GetClass();
+  int         GetArgument(int p_arg);
+  int         GetNumberOfArguments();
   BYTE*       GetBytecode();
   int         GetBytecodeSize();
   bool        GetWriting();
@@ -71,6 +76,7 @@ public:
   CString     GetLiteralString(unsigned p_number);
   Array*      GetLiterals();
   int         GetLiteralsSize();
+  ArgTypes&   GetArgumentTypes();
 
   // Setters
   void        SetLiteral(unsigned p_number,MemObject* p_object);
@@ -81,6 +87,7 @@ public:
 private:
   Class*      m_class;
   CString     m_name;
+  ArgTypes    m_arguments;
   int         m_bytecode_size;
   BYTE*       m_bytecode;
   Array*      m_literals;

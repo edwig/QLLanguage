@@ -1,28 +1,36 @@
-print1number(a)
+print1number(int a)
 {
   print("The number is: ",a,"\n");
 }
 
-my_function(a,b,g)
+my_function(int a,int b,int g)
 {
-  local c = 12 + a;
-  local d = a  + b;
+  int c = 12 + a;
+  int d = a  + b;
     
   print("Sum: ",d," Local: ",c,"\n");
   print1number(g);
 }
     
+AllOK()
+{
+  print("All OK\n");
+}	
+
+	
 main()
 {
-  local num = 0;
+  int num = 0;
 
+  // my_function(3,4,"test");
+  
   my_function(2,4,8); // Prints: "Sum: 6, Local: 14"
   my_function(3,5,7); // Prints: "Sum: 8, Local: 15"
   
-  for(num = 0;num < 100; ++num)
+  for(num = 0;num < 20; ++num)
   {
      print1number(num);
   }
-  
-  print("All OK\n");
+
+  AllOK();
 }

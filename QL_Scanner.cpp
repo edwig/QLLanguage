@@ -24,7 +24,6 @@ static KeywordTable keywordTable[] =
   { "class",    T_CLASS     },
   { "static",   T_STATIC    },
   { "global",   T_GLOBAL    },
-  { "local",    T_LOCAL     },
   { "if",       T_IF        },
   { "else",     T_ELSE      },
   { "while",    T_WHILE     },

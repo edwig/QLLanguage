@@ -126,6 +126,7 @@ private:
   void    do_lit_string(CString str);
   void    do_lit_float(bcd fl);
 
+  int       FindDataType(CString p_name);
   void      FindVariable(CString p_name,PVAL* pv);
   int       FindClassVariable(Class* p_class,CString p_name,PVAL* pv);
   MemObject* FindDataMember(CString p_name);
@@ -136,7 +137,7 @@ private:
   void      remcontinue(int* old);
   void      rvalue(PVAL* pv);
   void      Check_LValue(PVAL* pv);
-  int       GetIDList (char* term,bool p_save = true);
+  int       GetArgumentList(Function* p_function);
   void      AddArgument (CString p_name);
   void      AddTemporary(CString p_name);
   void      freelist(ARGUMENT* p_list);

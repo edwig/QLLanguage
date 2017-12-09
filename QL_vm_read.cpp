@@ -470,20 +470,31 @@ QLVirtualMachine::ReadScript(FILE* p_fp, bool p_trace)
     }
   }
 
+  // Create the script function
   Function* function = new Function(functionName);
   function->SetClass(theClass);
 
-  // Read the bytecode for the function
-  BYTE* bytecode = nullptr;
-  int   bytecode_size = 0;
+  // Read argument data types
+  int type = Getc(p_fp,p_trace);
+  if(type == DTYPE_ARRAY)
+  {
+    long num = 0;
+    MustReadInteger(p_fp,p_trace,&num,"Number of arguments");
 
-  ReadBytecode(p_fp,p_trace,&bytecode,&bytecode_size);
-  function->SetBytecode(bytecode,bytecode_size);
-
-  delete [] bytecode;
+    for(int ind = 0;ind < num; ++ind)
+    {
+      long arg = 0;
+      MustReadInteger(p_fp,p_trace,&arg,"Argument");
+      function->AddArgument(arg);
+    }
+  }
+  else
+  {
+    throw QLException("Unknown argument marker for script!");
+  }
 
   // Read literals array
-  int type = Getc(p_fp,p_trace);
+  type = Getc(p_fp,p_trace);
   if(type == DTYPE_ARRAY)
   {
     function->SetLiterals(ReadArray(p_fp,p_trace,nullptr,"LITERALS"));
@@ -492,6 +503,17 @@ QLVirtualMachine::ReadScript(FILE* p_fp, bool p_trace)
   {
     throw QLException("Unknown literal marker for script!");
   }
+
+  // Read the bytecode for the function
+  BYTE* bytecode = nullptr;
+  int   bytecode_size = 0;
+
+  ReadBytecode(p_fp,p_trace,&bytecode,&bytecode_size);
+  function->SetBytecode(bytecode,bytecode_size);
+
+  delete[] bytecode;
+
+
   TracingText(p_trace,"END SCRIPT");
 
   return function;

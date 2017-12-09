@@ -8,6 +8,7 @@
 #pragma once
 #include "stdafx.h"
 #include "QL_Language.h"
+#include "QL_Objects.h"
 
 // Values for the GC alloc counter
 #define THRESHOLD_DEFAULT      1000
@@ -120,6 +121,7 @@ private:
   void        WriteClass    (FILE* p_fp, bool p_trace, Class*     p_class);
   void        WriteBytecode (FILE* p_fp, bool p_trace, BYTE*      p_bytecode, int p_length);
   void        WriteScript   (FILE* p_fp, bool p_trace, Function*  p_script);
+  void        WriteTypes    (FILE* p_fp, bool p_trace, ArgTypes&  p_types);
   void        WriteInternal (FILE* p_fp, bool p_trace, MemObject* p_internal);
   void        WriteExternal (FILE* p_fp, bool p_trace, CString*   p_external);
   void        WriteReference(FILE* p_fp, bool p_trace, MemObject* p_object);

@@ -56,7 +56,7 @@ QLCompiler::CompileDefinitions(int (*getcf)(void*),void *getcd)
   CString name;
   int tkn;
 
-  //* initialize the scanner
+  // initialize the scanner
   m_scanner = new QLScanner(getcf,getcd);
   bsp       = &bstack[-1];
   csp       = &cstack[-1];
@@ -111,9 +111,18 @@ QLCompiler::do_global_declaration()
     // parse each variable and initializer
     do
     {
+      // Fetch datatype
+      FetchRequireToken(T_IDENTIFIER);
+      CString datatype = m_scanner->GetTokenAsString();
+      int type = FindDataType(datatype);
+      if(type == DTYPE_NIL)
+      {
+        m_scanner->ParseError("Unknown global data type: " + datatype);
+      }
       // Get local variable name
       FetchRequireToken(T_IDENTIFIER);
-      int global = m_vm->AddGlobal(nullptr,m_scanner->GetTokenAsString());
+      CString variable = m_scanner->GetTokenAsString();
+      int global = m_vm->AddGlobal(nullptr,variable);
 
       if((tkn = m_scanner->GetToken()) == '=')
       {
@@ -220,7 +229,7 @@ QLCompiler::do_class()
     // Ignoring the parameter list for now
     if ((tkn = m_scanner->GetToken()) == '(') 
     {
-      GetIDList(")",false);
+      GetArgumentList(nullptr);
       FetchRequireToken(')');
       theClass->AddFunctionMember(m_vm,member,type == T_STATIC ? ST_SFUNCTION : ST_FUNCTION);
     }
@@ -344,7 +353,7 @@ QLCompiler::do_code(Function* p_function)
   m_methodclass = p_function->GetClass();
     
   // get the argument list
-  GetIDList(")");
+  GetArgumentList(p_function);
 
   tkn = m_scanner->GetToken();
   RequireToken(tkn,')');
@@ -551,36 +560,36 @@ QLCompiler::do_dowhile()
 {
   int nxt,end=0,*ob,*oc;
 
-  /* remember the start of the loop */
+  // remember the start of the loop
   nxt = cptr;
 
-  /* compile the loop body */
+  // compile the loop body
   ob = addbreak(0);
   oc = addcontinue(nxt);
   do_statement();
   end = rembreak(ob,(int*)end);
   remcontinue(oc);
 
-  /* compile the test expression */
+  // compile the test expression
   FetchRequireToken(T_WHILE);
   do_test();
   FetchRequireToken(';');
 
-  /* branch to the top if the expression is true */
+  // branch to the top if the expression is true
   putcbyte(OP_BRT);
   putcword(nxt);
 
-  /* handle the end of the statement */
+  // handle the end of the statement
   Fixup(end,cptr);
 }
 
-/* Compile the FOR statement */
+// Compile the FOR statement 
 void 
 QLCompiler::do_for()
 {
   int tkn,nxt,end,body,update,*ob,*oc;
 
-  /* compile the initialization expression */
+  // compile the initialization expression 
   FetchRequireToken('(');
   if ((tkn = m_scanner->GetToken()) != ';') 
   {
@@ -589,7 +598,7 @@ QLCompiler::do_for()
     FetchRequireToken(';');
   }
 
-  /* compile the test expression */
+  // compile the test expression 
   nxt = cptr;
   if ((tkn = m_scanner->GetToken()) != ';') 
   {
@@ -598,15 +607,15 @@ QLCompiler::do_for()
     FetchRequireToken(';');
   }
 
-  /* branch to the loop body if the expression is true */
+  // branch to the loop body if the expression is true
   putcbyte(OP_BRT);
   body = putcword(0);
 
-  /* branch to the end if the expression is false */
+  // branch to the end if the expression is false
   putcbyte(OP_BR);
   end = putcword(0);
 
-  /* compile the update expression */
+  // compile the update expression
   update = cptr;
   if ((tkn = m_scanner->GetToken()) != ')') 
   {
@@ -615,11 +624,11 @@ QLCompiler::do_for()
     FetchRequireToken(')');
   }
 
-  /* branch back to the test code */
+  // branch back to the test code
   putcbyte(OP_BR);
   putcword(nxt);
 
-  /* compile the loop body */
+  // compile the loop body
   Fixup(body,cptr);
   ob = addbreak(end);
   oc = addcontinue(update);
@@ -627,11 +636,11 @@ QLCompiler::do_for()
   end = rembreak(ob,(int*)end);
   remcontinue(oc);
 
-  /* branch back to the update code */
+  // branch back to the update code
   putcbyte(OP_BR);
   putcword(update);
 
-  /* handle the end of the statement */
+  // handle the end of the statement
   Fixup(end,cptr);
 }
 
@@ -705,29 +714,29 @@ QLCompiler::do_switch()
   SWENTRY* os;
   CENTRY*  e;
 
-  /* compile the test expression */
+  // compile the test expression
   do_test();
 
-  /* branch to the dispatch code */
+  // branch to the dispatch code
   putcbyte(OP_BR);
   dispatch = putcword(0);
 
-  /* compile the body of the switch statement */
+  // compile the body of the switch statement
   os = AddSwitch();
   ob = addbreak(0);
   do_statement();
   end = rembreak(ob,0);
 
-  /* branch to the end of the statement */
+  // branch to the end of the statement
   putcbyte(OP_BR);
   end = putcword(end);
 
-  /* compile the dispatch code */
+  // compile the dispatch code
   Fixup(dispatch,cptr);
   putcbyte(OP_SWITCH);
   putcword(ssp->nCases);
 
-  /* output the case table */
+  // output the case table
   cnt = ssp->nCases;
   e   = ssp->cases;
   while (--cnt >= 0) 
@@ -744,10 +753,10 @@ QLCompiler::do_switch()
   {
     end = putcword(end);
   }
-  /* resolve break targets */
+  //resolve break targets
   Fixup(end,cptr);
 
-  /* remove the switch context */
+  // remove the switch context
   RemoveSwitch(os);
 }
 
@@ -769,7 +778,7 @@ QLCompiler::do_case()
                                               value = make_lit_string(m_scanner->GetTokenAsString());
                                               break;
                           default:            m_scanner->ParseError("Expecting a literal symbol");
-                                              value = 0; /* never reached */
+                                              value = 0; // never reached
                         }
                         break;
       case T_NUMBER:    value = make_lit_integer(m_scanner->GetTokenAsInteger());
@@ -797,7 +806,7 @@ QLCompiler::do_case()
       }
     }
 
-    /* add the case to the list of cases */
+    // add the case to the list of cases
     if ((entry = (CENTRY *)calloc(1,sizeof(CENTRY))) == NULL)
     {
       m_scanner->ParseError("Out of memory");
@@ -807,7 +816,7 @@ QLCompiler::do_case()
     entry->next = *pNext;
     *pNext = entry;
 
-    /* increment the number of cases */
+    // increment the number of cases
     ++ssp->nCases;
   }
   else
@@ -842,9 +851,9 @@ QLCompiler::CountOfTemporaries()
 void 
 QLCompiler::do_block()
 {
-  int tkn;
+  int tkn = m_scanner->GetToken();
 
-  if((tkn = m_scanner->GetToken()) == T_LOCAL)
+  if(FindDataType(m_scanner->GetTokenAsString()) != DTYPE_NIL)
   {
     int tcnt = CountOfTemporaries();
     // parse each local declaration 
@@ -870,9 +879,12 @@ QLCompiler::do_block()
         }
       } 
       while ((tkn = m_scanner->GetToken()) == ',');
+      // Now end in semi-colon
       RequireToken(tkn,';');
+      // Next also a declaration?
+      tkn = m_scanner->GetToken();
     } 
-    while ((tkn = m_scanner->GetToken()) == T_LOCAL);
+    while(FindDataType(m_scanner->GetTokenAsString()) != DTYPE_NIL);
   }
 
   // Now do the rest of the block
@@ -948,7 +960,7 @@ QLCompiler::Check_LValue(PVAL* pv)
   }
 }
 
-/* do_expr1 - handle the ',' operator */
+// handle the ',' operator
 void 
 QLCompiler::do_expr1(PVAL* pv)
 {
@@ -962,7 +974,7 @@ QLCompiler::do_expr1(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_expr2 - handle the assignment operators */
+// do_expr2 - handle the assignment operators
 void 
 QLCompiler::do_expr2(PVAL* pv)
 {
@@ -999,7 +1011,7 @@ QLCompiler::do_expr2(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_assignment - handle assignment operations */
+// do_assignment - handle assignment operations
 void 
 QLCompiler::do_assignment(PVAL* pv,int op)
 {
@@ -1013,7 +1025,7 @@ QLCompiler::do_assignment(PVAL* pv,int op)
   emit_code(pv->m_pval_type,STORE,pv->m_value);
 }
 
-/* do_expr3 - handle the '?:' operator */
+// do_expr3 - handle the '?:' operator
 void 
 QLCompiler::do_expr3(PVAL* pv)
 {
@@ -1035,7 +1047,7 @@ QLCompiler::do_expr3(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_expr4 - handle the '||' operator */
+// do_expr4 - handle the '||' operator
 void 
 QLCompiler::do_expr4(PVAL* pv)
 {
@@ -1052,7 +1064,7 @@ QLCompiler::do_expr4(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_expr5 - handle the '&&' operator */
+// do_expr5 - handle the '&&' operator
 void 
 QLCompiler::do_expr5(PVAL* pv)
 {
@@ -1069,7 +1081,7 @@ QLCompiler::do_expr5(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_expr6 - handle the '|' operator */
+// do_expr6 - handle the '|' operator
 void 
 QLCompiler::do_expr6(PVAL* pv)
 {
@@ -1085,7 +1097,7 @@ QLCompiler::do_expr6(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_expr7 - handle the '^' operator */
+// do_expr7 - handle the '^' operator
 void 
 QLCompiler::do_expr7(PVAL * pv)
 {
@@ -1101,7 +1113,7 @@ QLCompiler::do_expr7(PVAL * pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_expr8 - handle the '&' operator */
+// do_expr8 - handle the '&' operator
 void 
 QLCompiler::do_expr8(PVAL* pv)
 {
@@ -1117,7 +1129,7 @@ QLCompiler::do_expr8(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_expr9 - handle the '==' and '!=' operators */
+// do_expr9 - handle the '==' and '!=' operators
 void 
 QLCompiler::do_expr9(PVAL* pv)
 {
@@ -1138,7 +1150,7 @@ QLCompiler::do_expr9(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_expr10 - handle the '<', '<=', '>=' and '>' operators */
+// do_expr10 - handle the '<', '<=', '>=' and '>' operators
 void 
 QLCompiler::do_expr10(PVAL* pv)
 {
@@ -1161,7 +1173,7 @@ QLCompiler::do_expr10(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_expr11 - handle the '<<' and '>>' operators */
+// do_expr11 - handle the '<<' and '>>' operators
 void 
 QLCompiler::do_expr11(PVAL* pv)
 {
@@ -1182,7 +1194,7 @@ QLCompiler::do_expr11(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_expr12 - handle the '+' and '-' operators */
+// do_expr12 - handle the '+' and '-' operators
 void 
 QLCompiler::do_expr12(PVAL* pv)
 {
@@ -1203,7 +1215,7 @@ QLCompiler::do_expr12(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_expr13 - handle the '*' and '/' operators */
+// do_expr13 - handle the '*' and '/' operators
 void 
 QLCompiler::do_expr13(PVAL* pv)
 {
@@ -1225,7 +1237,7 @@ QLCompiler::do_expr13(PVAL* pv)
   m_scanner->SaveToken(tkn);
 }
 
-/* do_expr14 - handle unary operators */
+// do_expr14 - handle unary operators
 void 
 QLCompiler::do_expr14(PVAL* pv)
 {
@@ -1258,7 +1270,7 @@ QLCompiler::do_expr14(PVAL* pv)
   }
 }
 
-/* do_preincrement - handle prefix '++' and '--' */
+// do_preincrement - handle prefix '++' and '--'
 void 
 QLCompiler::do_preincrement(PVAL* pv,int op)
 {
@@ -1271,7 +1283,7 @@ QLCompiler::do_preincrement(PVAL* pv,int op)
   pv->m_pval_type = PV_NOVALUE;
 }
 
-/* do_postincrement - handle postfix '++' and '--' */
+// do_postincrement - handle postfix '++' and '--'
 void 
 QLCompiler::do_postincrement(PVAL* pv,int op)
 {
@@ -1317,8 +1329,10 @@ QLCompiler::do_delete(PVAL* pv)
   do_expr15(pv);
   // Getting it. Cross our fingers it's an object
   rvalue(pv);
-  putcbyte(OP_DELETE);
+  // Send optionally to the 'destroy' method
   putcbyte(OP_DESTROY);
+  // Really delete the object
+  putcbyte(OP_DELETE);
 }
 
 // Handle function calls
@@ -1404,10 +1418,10 @@ QLCompiler::do_call(PVAL* pv)
 {
   int tkn,n=0;
     
-  /* get the value of the function */
+  // get the value of the function
   rvalue(pv);
 
-  /* compile each argument expression */
+  // compile each argument expression
   if ((tkn = m_scanner->GetToken()) != ')') 
   {
     m_scanner->SaveToken(tkn);
@@ -1424,7 +1438,7 @@ QLCompiler::do_call(PVAL* pv)
   putcbyte(OP_CALL);
   putcbyte(n);
 
-  /* we've got an rvalue now */
+  // we've got an rvalue now
   pv->m_pval_type = PV_NOVALUE;
 }
 
@@ -1485,19 +1499,28 @@ QLCompiler::do_index(PVAL* pv)
 
 // get a comma separated list of identifiers
 int 
-QLCompiler::GetIDList(char* term,bool p_save /*=true*/)
+QLCompiler::GetArgumentList(Function* p_function)
 {
   int tkn,cnt=0;
   tkn = m_scanner->GetToken();
-  if (!strchr(term,tkn)) 
+  if(tkn != ')')
   {
     m_scanner->SaveToken(tkn);
     do 
     {
       FetchRequireToken(T_IDENTIFIER);
-      if(p_save)
+      CString datatype = m_scanner->GetTokenAsString();
+      int type = FindDataType(datatype);
+      if(type == DTYPE_NIL)
       {
-        AddArgument(m_scanner->GetTokenAsString());
+        m_scanner->ParseError("Expected a valid argument data type");
+      }
+      FetchRequireToken(T_IDENTIFIER);
+      CString argument = m_scanner->GetTokenAsString();
+      if(p_function)
+      {
+        p_function->AddArgument(type);
+        AddArgument(argument);
       }
       ++cnt;
     } 
@@ -1505,6 +1528,37 @@ QLCompiler::GetIDList(char* term,bool p_save /*=true*/)
   }
   m_scanner->SaveToken(tkn);
   return (cnt);
+}
+
+// DTYPE MACRO + 3!!
+const char* internal_datatypes[]
+{
+   "int"
+  ,"string"
+  ,"bcd"
+  ,"file"
+  ,"database"
+  ,"query"
+  ,"variant"
+};
+
+int
+QLCompiler::FindDataType(CString p_name)
+{
+  int index = DTYPE_INTEGER;
+  for(auto& name : internal_datatypes)
+  {
+    if(p_name.Compare(name) == 0)
+    {
+      return index;
+    }
+    ++index;
+  }
+  if(m_vm->FindClass(p_name))
+  {
+    return DTYPE_OBJECT;
+  }
+  return DTYPE_NIL;
 }
 
 // add a formal argument
@@ -1768,7 +1822,7 @@ QLCompiler::emit_code(int p_type,int p_code,int p_value)
   }
 }
 
-/* code_argument - compile an argument reference */
+// compile an argument reference
 void 
 QLCompiler::code_argument(int fcn,int n)
 {
@@ -1779,7 +1833,7 @@ QLCompiler::code_argument(int fcn,int n)
   }
 }
 
-/* code_temporary - compile a temporary variable reference */
+// compile a temporary variable reference
 void 
 QLCompiler::code_temporary(int fcn,int n)
 {
@@ -1790,7 +1844,7 @@ QLCompiler::code_temporary(int fcn,int n)
   }
 }
 
-/* code_member - compile a data member reference */
+// compile a data member reference
 void 
 QLCompiler::code_member(int fcn,int n)
 {
@@ -1801,7 +1855,7 @@ QLCompiler::code_member(int fcn,int n)
   }
 }
 
-/* code_variable - compile a variable reference */
+// Compile a variable reference
 void 
 QLCompiler::code_variable(int fcn,int n)
 {
@@ -1812,7 +1866,7 @@ QLCompiler::code_variable(int fcn,int n)
   }
 }
 
-/* code_index - compile an indexed reference */
+// Compile an indexed reference
 int
 QLCompiler::code_index(int fcn)
 {
@@ -1855,14 +1909,14 @@ QLCompiler::putcword(int w)
   return (cptr-2);
 }
 
-// fixup a single bytecode reference
+// Fixup a single bytecode reference
 void
 QLCompiler::fixup_ref(int chn,int val)
 {
   cbuff[chn] = val & 0xFF;
 }
 
-// fixup a reference chain
+// Fixup a reference chain
 void 
 QLCompiler::Fixup(int chn,int val)
 {
