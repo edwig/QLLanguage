@@ -22,7 +22,8 @@ main()
 {
   int num = 0;
 
-  // my_function(3,4,"test");
+  // Cannot call with other than integers!
+  // my_function(3,4,"test");    // ERROR!
   
   my_function(2,4,8); // Prints: "Sum: 6, Local: 14"
   my_function(3,5,7); // Prints: "Sum: 8, Local: 15"

@@ -5,8 +5,9 @@ class firstclass
   firstclass(int a,int b);
   identity();
   plus();
-  x;
-  y;
+
+  int x;
+  int y;
 }
 
 firstclass::firstclass(int a,int b)
@@ -31,8 +32,8 @@ firstclass::plus()
 
 main()
 {
-  local var1 = new firstclass(13,7);
-  local var2 = new firstclass(12,88);
+  firstclass var1 = new firstclass(13,7);
+  firstclass var2 = new firstclass(12,88);
 
   var1.identity();
   var2.identity();

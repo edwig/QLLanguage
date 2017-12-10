@@ -80,7 +80,7 @@ QLInterpreter::SetTracing(bool p_trace)
   if(m_debugger)
   {
     delete m_debugger;
-    m_debugger = NULL;
+    m_debugger = nullptr;
   }
   if(m_trace)
   {
@@ -2091,4 +2091,14 @@ QLInterpreter::GetBcdArgument(int p_num)
                         break;
   }  
   return number;
+}
+
+SQLVariant*
+QLInterpreter::GetSQLVariantArgument(int p_num)
+{
+  if(m_stack_pointer[p_num]->m_type == DTYPE_VARIANT)
+  {
+    return m_stack_pointer[p_num]->m_value.v_variant;
+  }
+  return nullptr;
 }

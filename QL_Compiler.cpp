@@ -233,14 +233,25 @@ QLCompiler::do_class()
       FetchRequireToken(')');
       theClass->AddFunctionMember(m_vm,member,type == T_STATIC ? ST_SFUNCTION : ST_FUNCTION);
     }
-
-    // handle data members
     else 
     {
+      // handle data members
       while(true)
       {
+        int type = FindDataType(member);
+        if(type == DTYPE_NIL)
+        {
+          m_scanner->ParseError("Class data members must have a data type");
+        }
+        if(tkn != T_IDENTIFIER)
+        {
+          m_scanner->ParseError("Class data member must be an identifier");
+        }
+        member = m_scanner->GetTokenAsString();
         theClass->AddDataMember(m_vm,member,type == T_STATIC ? ST_SDATA : ST_DATA);
 
+        // Getting next token
+        tkn = m_scanner->GetToken();
         if (tkn != ',')
         {
           m_scanner->SaveToken(tkn);
@@ -1391,6 +1402,12 @@ QLCompiler::do_primary(PVAL* pv)
                         break;
     case T_NIL:       	putcbyte(OP_NIL);
                         break;
+    case T_TRUE:        do_lit_integer(1);
+                        pv->m_pval_type = PV_NOVALUE;
+                        break;
+    case T_FALSE:       do_lit_integer(0);
+                        pv->m_pval_type = PV_NOVALUE;
+                        break;
     case T_IDENTIFIER:	id = m_scanner->GetTokenAsString();
                         if ((tkn = m_scanner->GetToken()) == T_CC) 
                         {
@@ -1540,6 +1557,7 @@ const char* internal_datatypes[]
   ,"database"
   ,"query"
   ,"variant"
+  ,"array"
 };
 
 int

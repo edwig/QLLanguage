@@ -54,6 +54,7 @@ public:
   int               GetIntegerArgument(int p_num);
   CString           GetStringArgument(int p_num);
   bcd               GetBcdArgument(int p_num);
+  SQLVariant*       GetSQLVariantArgument(int p_num);
   void              SetNil    (int p_offset);
   void              SetInteger(int p_offset,int p_value);
   void              SetString (int p_offset,int p_len);

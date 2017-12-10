@@ -3,8 +3,8 @@
 class firstclass
 {
   firstclass();
-  one;
-  two;
+  int one;
+  int two;
 }
 
 firstclass::firstclass()
@@ -19,7 +19,8 @@ class secondclass
   secondclass();
   identity();
   destroy();
-  number;
+  
+  int number;
 }
 
 secondclass::secondclass(int num)
@@ -45,9 +46,9 @@ secondclass::destroy()
 
 main()
 {
-  local var1 = new firstclass();
-  local vec  = newvector(5);
-  local ind  = 0;
+  firstclass var1 = new firstclass();
+  array vec  = newarray(5);
+  int   ind  = 0;
   
   for(ind = 0;ind < 5;++ind)
   {

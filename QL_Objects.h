@@ -156,14 +156,3 @@ private:
   Array       m_attributes;   // m_class->m_size of attributes
 };
 
-class Variable
-{
-public:
-  Variable();
-  Variable(CString p_name);
-  Variable(CString p_name,MemObject* p_value);
-private:
-  CString    m_name;
-  Object*    m_class; // Optional
-  MemObject* m_value;
-};

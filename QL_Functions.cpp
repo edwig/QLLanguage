@@ -36,7 +36,8 @@ add_function(char* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_v
 }
 
 // Add a built-in file
-static void add_file(char* p_name,FILE* p_fp,QLVirtualMachine* p_vm)
+static void 
+add_file(char* p_name,FILE* p_fp,QLVirtualMachine* p_vm)
 {
   MemObject* sym = p_vm->AddSymbol(p_name);
   p_vm->MemObjectSetType(sym,DTYPE_NIL);
@@ -45,7 +46,8 @@ static void add_file(char* p_name,FILE* p_fp,QLVirtualMachine* p_vm)
 }
 
 // Add a method for a built-in-datatype
-static void add_method(int p_type,char* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_vm)
+static void 
+add_method(int p_type,char* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_vm)
 {
   Method* method = p_vm->AddMethod(p_name,p_type);
   method->m_internal = p_fcn;
@@ -82,7 +84,7 @@ argcount(QLInterpreter* p_inter,int n,int cnt)
 //
 //////////////////////////////////////////////////////////////////////////
 
-/* xtypeof - get the data type of a value */
+// Get the data type of a value
 static int xtypeof(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
@@ -91,8 +93,8 @@ static int xtypeof(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-/* xnewvector - allocate a new vector */
-static int xnewvector(QLInterpreter* p_inter,int argc)
+// Allocate a new array vector
+static int xnewarray(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   int size = p_inter->GetIntegerArgument(0);
@@ -108,7 +110,7 @@ static int xnewvector(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-/* xnewstring - allocate a new string */
+// Allocate a new string
 static int xnewstring(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
@@ -117,7 +119,7 @@ static int xnewstring(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-/* xsizeof - get the size of a vector or string */
+// Get the size of a vector or string
 static int xsizeof(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
@@ -145,7 +147,17 @@ static int xsizeof(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-/* xfopen - open a file */
+// Turn trace on or off
+static int xtrace(QLInterpreter* p_inter,int argc)
+{
+  argcount(p_inter,argc,1);
+  p_inter->CheckType(0,DTYPE_INTEGER);
+  int onoff = p_inter->GetIntegerArgument(0);
+  p_inter->SetTracing(onoff != 0 ? true : false);
+  return 0;
+}
+
+// open a file
 static int xfopen(QLInterpreter* p_inter,int argc)
 {
   FILE*  fp = NULL;
@@ -166,7 +178,7 @@ static int xfopen(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-/* xfclose - close a file */
+// Close a file
 static int xfclose(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
@@ -175,7 +187,7 @@ static int xfclose(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-/* xgetc - get a character from a file */
+// Get a character from a file
 static int  xgetc(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
@@ -185,7 +197,7 @@ static int  xgetc(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-/* xputc - output a character to a file */
+// Output a character to a file
 static int xputc(QLInterpreter* p_inter,int argc)
 {
   MemObject** sp = p_inter->GetStackPointer();
@@ -197,6 +209,7 @@ static int xputc(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Get a string from standard input
 static int xgets(QLInterpreter* p_inter,int argc)
 {
   int cc = 0;
@@ -225,7 +238,7 @@ static int xputs(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-/* xprint - generic print function */
+// Generic print function to standard output
 static int xprint(QLInterpreter* p_inter,int argc)
 {
   int len = 0;
@@ -244,7 +257,7 @@ static int xprint(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-/* xprintf - generic print function */
+// Generic print function to a file descriptor
 static int xfprint(QLInterpreter* p_inter,int argc)
 {
   int len = 0;
@@ -265,7 +278,7 @@ static int xfprint(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-/* xgetarg - get an argument from the argument list */
+// Get an argument from the argument list
 static int xgetarg(QLInterpreter* p_inter,int argc)
 {
   MemObject** sp = p_inter->GetStackPointer();
@@ -285,7 +298,7 @@ static int xgetarg(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-/* xsystem - execute a system command */
+// Execute a system command
 static int xsystem(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
@@ -294,6 +307,7 @@ static int xsystem(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Exit the system
 static int xexit(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
@@ -302,6 +316,7 @@ static int xexit(QLInterpreter* p_inter,int argc)
   exit(ex);
 }
 
+// Do the garbage collection
 static int xgc(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,0);
@@ -316,6 +331,7 @@ static int xgc(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Trigonometric Sine
 static int xsin(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
@@ -324,6 +340,7 @@ static int xsin(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Trigonometric Cosine
 static int xcos(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
@@ -332,6 +349,7 @@ static int xcos(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Trigonometric Tangent
 static int xtan(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
@@ -340,6 +358,7 @@ static int xtan(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Trigonometric Arcsine
 static int xasin(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
@@ -348,6 +367,7 @@ static int xasin(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Trigonometric Arccosine
 static int xacos(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
@@ -356,6 +376,7 @@ static int xacos(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Trigonometric Arctangent
 static int xatan(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
@@ -364,6 +385,7 @@ static int xatan(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Mathematical square root
 static int xsqrt(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
@@ -372,6 +394,7 @@ static int xsqrt(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Mathematical ceiling
 static int xceil(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
@@ -380,6 +403,7 @@ static int xceil(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Mathematical floor
 static int xfloor(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
@@ -388,6 +412,7 @@ static int xfloor(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Mathematical exponent
 static int xexp(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
@@ -396,14 +421,16 @@ static int xexp(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Mathematical 10 base logarithm
 static int xlog(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.Log());
+  p_inter->SetBcd(0, val.Log10());
   return 0;
 }
 
+// Mathematical natural logarithm
 static int xlogn(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
@@ -412,6 +439,7 @@ static int xlogn(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Mathematical 10 base logarithm
 static int xlog10(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
@@ -420,6 +448,7 @@ static int xlog10(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Mathematical power
 static int xpow(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,2);
@@ -430,6 +459,7 @@ static int xpow(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Mathematical random number
 static int xrand(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,0);
@@ -443,6 +473,7 @@ static int xrand(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Conversion to BCD
 static int xtobcd(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
@@ -460,6 +491,11 @@ static int xtobcd(QLInterpreter* p_inter,int argc)
     bcd val(str);
     p_inter->SetBcd(0,val);
   }
+  else if(object->m_type == DTYPE_VARIANT)
+  {
+    bcd val = p_inter->GetSQLVariantArgument(0)->GetAsBCD();
+    p_inter->SetBcd(0,val);
+  }
   else if(object->m_type == DTYPE_BCD)
   {
     // Nothing to be done
@@ -471,6 +507,7 @@ static int xtobcd(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Conversion to INTEGER
 static int xtoint(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
@@ -486,6 +523,11 @@ static int xtoint(QLInterpreter* p_inter,int argc)
     CString str = p_inter->GetStringArgument(0);
     p_inter->SetInteger(0,atoi(str));
   }
+  else if(object->m_type == DTYPE_VARIANT)
+  {
+    int val = p_inter->GetSQLVariantArgument(0)->GetAsSLong();
+    p_inter->SetInteger(0,val);
+  }
   else if(object->m_type == DTYPE_INTEGER)
   {
     // NOTHING TO BE DONE
@@ -497,6 +539,7 @@ static int xtoint(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Conversion to STRING
 static int xtostr(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
@@ -517,6 +560,12 @@ static int xtostr(QLInterpreter* p_inter,int argc)
     p_inter->SetString(0,0);
     *(object->m_value.v_string) = val;
   }
+  else if(object->m_type == DTYPE_VARIANT)
+  {
+    CString str(p_inter->GetSQLVariantArgument(0)->GetAsChar());
+    p_inter->SetString(0,0);
+    *(object->m_value.v_string) = str;
+  }
   else if(object->m_type == DTYPE_STRING)
   {
     // NOTHING TO BE DONE
@@ -528,6 +577,7 @@ static int xtostr(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Mathematical absolute value
 static int xabs(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
@@ -818,11 +868,12 @@ void init_functions(QLVirtualMachine* p_vm)
 
   // Adding default functions
   add_function("typeof",    xtypeof,      p_vm);
-  add_function("newvector", xnewvector,   p_vm);
+  add_function("newarray",  xnewarray,    p_vm);
   add_function("newstring", xnewstring,   p_vm);
   add_function("newdbs",    xnewdbs,      p_vm);
   add_function("newquery",  xnewquery,    p_vm);
   add_function("sizeof",    xsizeof,      p_vm);
+  add_function("trace",     xtrace,       p_vm);
   add_function("fopen",     xfopen,       p_vm);
   add_function("fclose",    xfclose,      p_vm);
   add_function("getc",      xgetc,        p_vm);

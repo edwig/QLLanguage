@@ -21,10 +21,12 @@ FUNCTION DEFINITION
   }
 
 FORMAL-ARGUMENT-LIST
-  <datatype> <parameter>,...
+  <built-in-datatype> <parameter>,...
+  <classname> <parameter>,...
 
 LOCAL-DECLARATION
-  <datatype> <variablename> [ = <value-expression> ];
+  <built-in-datatype> <variablename> [ = <value-expression> ];
+  <classname> <parameter> [ = new <classname>( [<formal-argument-list>] )];
   <local-declaration> , ...;
 
 DATATYPE
@@ -93,8 +95,7 @@ EXPRESSION
   this.<expression>
   { <expression> ...}
   <variable-name>
-  <number>
-  <string>
+  <constant>
 
 VARIABLE-NAME
   <parameter>
@@ -102,21 +103,28 @@ VARIABLE-NAME
   <global-variable>
   <global-constant-object>
 
+CONSTANT
+  false
+  true
+  <string>
+  <integer number>
+  <floating point number>
+
 GLOBAL-CONSTANT-OBJECT
   stdin    (of type file)
   stdout   (of type file)
   stderr   (of type file)
   this     (of type object)
 
-BUILT-IN-TYPES
+BUILT-IN-DATATYPES
   int
   string
   bcd
-  array
   file
   dbase
   query
   variant
+  array
 
 STANDARD OBJECT METHODS
   <objectname>::<objectname> -> XTOR
@@ -124,7 +132,7 @@ STANDARD OBJECT METHODS
   
 STANDARD INTERNAL FUNCTIONS
   exit([exitcode])
-  Trace(on-off)
+  trace(on-off)
   LoadSourceFile(<filename.ql>)
   LoadObjectFile(<filename.qb>)
   <bcd>     = abs(x)     (type: int, bcd)
@@ -164,39 +172,35 @@ STANDARD NEW OBJECT FUNCTIONS
   <dbase>  = newdbs([database[,user[,password]]])
   <query>  = newquery(dbase)
   <string> = newstring()
-  <array>  = newvector(size)
+  <array>  = newarray(size)
 
 STANDARD METHODS
   string.index(<expression>)
+  // string methods to implement:
   string.reverseIndex(<expression>)
   string.find(<expression>)
   string.reverseFind(<expression>)
   string.substring(<expression>[,<expression])
   string.size()
-  vector.push_front(<expression>)
-  vector.push_back (<expression>)
-  vector.pop_front()
-  vector.pop_back()
-  vector.front()
-  vector.back()
-  vector.size()
-  vector.find(<expression>)
-  vector.get(n)
-  vector.next()
-  vector.prev()
-  vector.clear()
-  map.insert(<int>   ,<expression>)
-  map.insert(<string>,<expression>)
-  map.find(string | int)
-  map.begin()
-  map.end()
-  map.next()
-  map.prev()
-  map.erase([string | int])
-  map.clear()
+  // array methods to implment
+  array.push_front(<expression>)
+  array.push_back (<expression>)
+  array.pop_front()
+  array.pop_back()
+  array.front()
+  array.back()
+  array.size()
+  array.find(<expression>)
+  array.get(n)
+  array.next()
+  array.prev()
+  array.clear()
 
-  bcd.*     (all bcd members)
+  // Stil to implement:
+  bcd.*     (all bcd         members)
   sqlvar.*  (all SQLVariant  members)
+  query.*   (all SQLQuery    members)
+  dbase.*   (all SQLDatabase members)
 
   dbase.IsOpen()
   dbase.Close();
@@ -233,5 +237,3 @@ QLLinker program
 QLLinker -o <outputfile[.qob]> <inputfile[.qob]> ...
 
 (links all but first header, wich rewrites)
-
-

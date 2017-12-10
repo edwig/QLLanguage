@@ -35,29 +35,31 @@
 #define T_NEW		      274
 #define T_DELETE      275
 #define T_NIL		      276
-#define T_LE		      277	/* '<=' */
-#define T_EQ		      278	/* '==' */
-#define T_NE		      279	/* '!=' */
-#define T_GE		      280	/* '>=' */
-#define T_SHL		      281	/* '<<' */
-#define T_SHR		      282	/* '>>' */
-#define T_AND		      283	/* '&&' */
-#define T_OR		      284	/* '||' */
-#define T_INC		      285	/* '++' */
-#define T_DEC		      286	/* '--' */
-#define T_ADDEQ		    287	/* '+=' */
-#define T_SUBEQ		    288	/* '-=' */
-#define T_MULEQ		    289	/* '*=' */
-#define T_DIVEQ		    290	/* '/=' */
-#define T_REMEQ		    291	/* '%=' */
-#define T_ANDEQ		    292	/* '&=' */
-#define T_OREQ		    293	/* '|=' */
-#define T_XOREQ		    294	/* '^=' */
-#define T_SHLEQ		    295	/* '<<=' */
-#define T_SHREQ		    296	/* '>>=' */
-#define T_CC		      297	/* '::' */
-#define T_MEMREF	    298	/* '->' */
-#define _TMAX		      298
+#define T_FALSE       277
+#define T_TRUE        278
+#define T_LE		      279	/* '<=' */
+#define T_EQ		      280	/* '==' */
+#define T_NE		      281	/* '!=' */
+#define T_GE		      282	/* '>=' */
+#define T_SHL		      283	/* '<<' */
+#define T_SHR		      284	/* '>>' */
+#define T_AND		      285	/* '&&' */
+#define T_OR		      286	/* '||' */
+#define T_INC		      287	/* '++' */
+#define T_DEC		      288	/* '--' */
+#define T_ADDEQ		    289	/* '+=' */
+#define T_SUBEQ		    290	/* '-=' */
+#define T_MULEQ		    291	/* '*=' */
+#define T_DIVEQ		    292	/* '/=' */
+#define T_REMEQ		    293	/* '%=' */
+#define T_ANDEQ		    294	/* '&=' */
+#define T_OREQ		    295	/* '|=' */
+#define T_XOREQ		    296	/* '^=' */
+#define T_SHLEQ		    297	/* '<<=' */
+#define T_SHREQ		    298	/* '>>=' */
+#define T_CC		      299	/* '::' */
+#define T_MEMREF	    300	/* '->' */
+#define _TMAX		      300
 
 typedef struct _keyword_table
 {

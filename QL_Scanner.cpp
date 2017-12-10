@@ -38,7 +38,9 @@ static KeywordTable keywordTable[] =
   { "new",      T_NEW       },
   { "delete",   T_DELETE    },
   { "nil",      T_NIL       },
-  { NULL, 0 }
+  { "false",    T_FALSE     },
+  { "true",     T_TRUE      },
+  { NULL,       0           }
 };
 
 // token name table 
@@ -66,6 +68,8 @@ static char *tokenNames[] =
   "new",
   "delete",
   "nil",
+  "false",
+  "true",
   "<=",
   "==",
   "!=",
