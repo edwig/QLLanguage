@@ -1312,7 +1312,7 @@ void
 QLCompiler::do_new(PVAL* pv)
 {
   CString selector;
-  MemObject* lit;
+  MemObject* lit = nullptr;
   Class* v_class;
 
   FetchRequireToken(T_IDENTIFIER);
@@ -1644,7 +1644,7 @@ QLCompiler::FindDataMember(CString p_name)
 
 // add a literal
 int 
-QLCompiler::AddLiteral(int p_type,MemObject** p_result,CString p_name/*=""*/)
+QLCompiler::AddLiteral(int p_type,MemObject** p_result,CString p_name/*=""*/,int p_value /*= 0*/)
 {
   if(m_literals == nullptr)
   {
@@ -1655,9 +1655,26 @@ QLCompiler::AddLiteral(int p_type,MemObject** p_result,CString p_name/*=""*/)
     int n = m_literals->FindStringEntry(p_name);
     if(n >= 0)
     {
+      if(*p_result == nullptr)
+      {
+        *p_result = m_literals->GetEntry(n);
+      }
       return n;
     }
   }
+  if(p_type == DTYPE_INTEGER)
+  {
+    int n = m_literals->FindIntegerEntry(p_value);
+    if(n >= 0)
+    {
+      if(*p_result == nullptr)
+      {
+        *p_result = m_literals->GetEntry(n);
+      }
+      return n;
+    }
+  }
+
   int n = m_literals->GetSize();
   MemObject* lit = m_literals->AddEntryOfType(m_vm,p_type);
   *p_result = lit;
@@ -1701,15 +1718,15 @@ QLCompiler::RequireToken(int tkn,int rtkn)
 void 
 QLCompiler::do_lit_integer(long n)
 {
-  MemObject *lit;
-  code_literal(AddLiteral(DTYPE_INTEGER,&lit));
+  MemObject* lit = nullptr;
+  code_literal(AddLiteral(DTYPE_INTEGER,&lit,nullptr,n));
   lit->m_value.v_integer = n;
 }
 
 void
 QLCompiler::do_lit_float(bcd fl)
 {
-  MemObject* lit;
+  MemObject* lit = nullptr;
   code_literal(AddLiteral(DTYPE_BCD,&lit));
   *(lit->m_value.v_floating) = fl;
 }

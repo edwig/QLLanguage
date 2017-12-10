@@ -29,6 +29,7 @@ public:
   int          FindEntry(MemObject* p_object);
   MemObject*   FindFuncEntry(CString p_name);
   int          FindStringEntry(CString p_name);
+  int          FindIntegerEntry(int p_value);
 
   // Add an array member (all datamembers)
   MemObject*   AddEntry(QLvm* p_vm,CString p_string);

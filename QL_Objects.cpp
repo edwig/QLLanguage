@@ -223,6 +223,22 @@ Array::FindStringEntry(CString p_name)
   return -1;
 }
 
+int
+Array::FindIntegerEntry(int p_value)
+{
+  for(unsigned ind = 0;ind < m_members.size(); ++ind)
+  {
+    if(m_members[ind]->m_type == DTYPE_INTEGER)
+    {
+      if(m_members[ind]->m_value.v_integer == p_value)
+      {
+        return ind;
+      }
+    }
+  }
+  return -1;
+}
+
 // FInd by object reference (literals e.g.)
 int
 Array::FindEntry(MemObject* p_object)
