@@ -676,7 +676,7 @@ static int xnewdbs(QLInterpreter* p_inter,int argc)
     }
     catch(CString& s)
     {
-      vm->Info("Open sql database: %s",s);
+      vm->Info("Open SQL database: %s",s);
     }
   }
   else
@@ -696,7 +696,7 @@ static int xnewdbs(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-int xnewquery(QLInterpreter* p_inter,INT argc)
+static int xnewquery(QLInterpreter* p_inter,INT argc)
 {
   argcount(p_inter,argc,1);
   MemObject** sp = p_inter->GetStackPointer();
@@ -714,7 +714,7 @@ int xnewquery(QLInterpreter* p_inter,INT argc)
   return 0;
 }
 
-int xdbsIsOpen(QLInterpreter* p_inter, int argc) 
+static int xdbsIsOpen(QLInterpreter* p_inter, int argc) 
 {
   argcount(p_inter,argc,0);
   p_inter->CheckType(1,DTYPE_DATABASE);
@@ -726,7 +726,7 @@ int xdbsIsOpen(QLInterpreter* p_inter, int argc)
   return 0;
 }
 
-int xdbsClose(QLInterpreter* p_inter, int argc) 
+static int xdbsClose(QLInterpreter* p_inter, int argc) 
 {
   argcount(p_inter,argc,0);
   p_inter->CheckType(1,DTYPE_DATABASE);
@@ -740,7 +740,7 @@ int xdbsClose(QLInterpreter* p_inter, int argc)
   return 0;
 }
 
-int xqryClose(QLInterpreter* p_inter, int argc) 
+static int xqryClose(QLInterpreter* p_inter, int argc) 
 {
   argcount(p_inter,argc,0);
   p_inter->CheckType(1,DTYPE_QUERY);
@@ -754,7 +754,7 @@ int xqryClose(QLInterpreter* p_inter, int argc)
   return 0;
 }
 
-int xqryDoSQL(QLInterpreter* p_inter,int argc)
+static int xqryDoSQL(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
   MemObject** sp = p_inter->GetStackPointer();
@@ -799,7 +799,7 @@ int xqryRecord(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-int xqryColumn(QLInterpreter* p_inter,int argc)
+static int xqryColumn(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
   p_inter->CheckType(0,DTYPE_INTEGER);
@@ -847,8 +847,142 @@ int xstrIndex(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
-int xstrFind(QLInterpreter* p_inter,int argc)
+// Perform a string.find(string) OR
+// Perform a string.find(ch)
+static int xstrFind(QLInterpreter* p_inter,int argc)
 {
+  // Expected position
+  int position = -1;
+  int starting = 0;
+  int argument = 0;
+  CString* string = nullptr;
+  CString* find   = nullptr;
+
+  MemObject** sp = p_inter->GetStackPointer();
+  if(argc == 2)
+  {
+    p_inter->CheckType(0,DTYPE_INTEGER);
+    p_inter->CheckType(1,DTYPE_STRING,DTYPE_INTEGER);
+    p_inter->CheckType(3,DTYPE_STRING);
+
+    // Where we search in
+    starting = sp[0]->m_value.v_integer;
+    string   = sp[3]->m_value.v_string;
+    argument = 1;
+  }
+  else if(argc == 1)
+  {
+    p_inter->CheckType(0,DTYPE_STRING,DTYPE_INTEGER);
+    p_inter->CheckType(2,DTYPE_STRING);
+
+    // Where we search in
+    starting = 0;
+    string   = sp[2]->m_value.v_string;
+    argument = 0;
+  }
+  else
+  {
+    p_inter->GetVirtualMachine()->Error("Wrong number of arguments");
+  }
+
+  // Finding either string or char
+  if(sp[argument]->m_type == DTYPE_STRING)
+  {
+    // We search for a string
+    CString* find = sp[argument]->m_value.v_string;
+    position = string->Find(*find,starting);
+  }
+  else
+  {
+    // it's a character we search
+    int ch = sp[argument]->m_value.v_integer;
+    position = string->Find(ch,starting);
+  }
+  p_inter->SetInteger(0,position);
+  return 0;
+}
+
+// Do the string.size() method 
+static int xstrSize(QLInterpreter* p_inter,int p_argc)
+{
+  argcount(p_inter,p_argc,0);
+  p_inter->CheckType(1,DTYPE_STRING);
+  int size = p_inter->GetStringArgument(1).GetLength();
+  p_inter->SetInteger(0,size);
+  return 0;
+}
+
+static int xstrLeft(QLInterpreter* p_inter,int p_argc)
+{
+  argcount(p_inter,p_argc,1);
+  p_inter->CheckType(0,DTYPE_INTEGER);
+  p_inter->CheckType(2,DTYPE_STRING);
+
+  MemObject** sp = p_inter->GetStackPointer();
+  int     length = sp[0]->m_value.v_integer;
+  CString*   str = sp[2]->m_value.v_string;
+  CString result = str->Left(length);
+
+  p_inter->SetString(0,0);
+  (*sp[0]->m_value.v_string) = result;
+
+  return 0;
+}
+
+static int xstrRight(QLInterpreter* p_inter,int p_argc)
+{
+  argcount(p_inter,p_argc,1);
+  p_inter->CheckType(0,DTYPE_INTEGER);
+  p_inter->CheckType(2,DTYPE_STRING);
+
+  MemObject** sp = p_inter->GetStackPointer();
+  int     length = sp[0]->m_value.v_integer;
+  CString*   str = sp[2]->m_value.v_string;
+  CString result = str->Right(length);
+
+  p_inter->SetString(0,0);
+  (*sp[0]->m_value.v_string) = result;
+  
+  return 0;
+}
+
+// Return a substring from a string
+static int xstrSubstring(QLInterpreter* p_inter,int p_argc)
+{
+  MemObject** sp = p_inter->GetStackPointer();
+  CString* string;
+  int start  = 0;
+  int length = 0;
+
+  if(p_argc == 1)
+  {
+    p_inter->CheckType(0,DTYPE_STRING,DTYPE_INTEGER);
+    p_inter->CheckType(2,DTYPE_STRING);
+
+    string = sp[2]->m_value.v_string;
+    start  = sp[0]->m_value.v_integer;
+    length = string->GetLength();
+
+  }
+  else if(p_argc == 2)
+  {
+    p_inter->CheckType(0,DTYPE_INTEGER);
+    p_inter->CheckType(1,DTYPE_INTEGER);
+    p_inter->CheckType(3,DTYPE_STRING);
+
+    string = sp[3]->m_value.v_string;
+    start  = sp[1]->m_value.v_integer;
+    length = sp[0]->m_value.v_integer;
+  }
+  else
+  {
+    p_inter->GetVirtualMachine()->Error("Wrong number of arguments");
+  }
+  CString result = string->Mid(start,length);
+
+  // Setting the result
+  p_inter->SetString(0,0);
+  *(sp[0]->m_value.v_string) = result;
   return 0;
 }
 
@@ -908,14 +1042,18 @@ void init_functions(QLVirtualMachine* p_vm)
   add_function("round",     xround,       p_vm);
 
   // Add all datatype methods
-  add_method(DTYPE_DATABASE, "IsOpen",        xdbsIsOpen, p_vm);
-  add_method(DTYPE_DATABASE, "Close",         xdbsClose,  p_vm);
-  add_method(DTYPE_QUERY,    "Close",         xqryClose,  p_vm);
-  add_method(DTYPE_QUERY,    "DoSQLStatement",xqryDoSQL,  p_vm);
-  add_method(DTYPE_QUERY,    "GetRecord",     xqryRecord, p_vm);
-  add_method(DTYPE_QUERY,    "GetColumn",     xqryColumn, p_vm);
-  add_method(DTYPE_STRING,   "index",         xstrIndex,  p_vm);
-  add_method(DTYPE_STRING,   "find",          xstrFind,   p_vm);
+  add_method(DTYPE_DATABASE, "IsOpen",        xdbsIsOpen,   p_vm);
+  add_method(DTYPE_DATABASE, "Close",         xdbsClose,    p_vm);
+  add_method(DTYPE_QUERY,    "Close",         xqryClose,    p_vm);
+  add_method(DTYPE_QUERY,    "DoSQLStatement",xqryDoSQL,    p_vm);
+  add_method(DTYPE_QUERY,    "GetRecord",     xqryRecord,   p_vm);
+  add_method(DTYPE_QUERY,    "GetColumn",     xqryColumn,   p_vm);
+  add_method(DTYPE_STRING,   "index",         xstrIndex,    p_vm);
+  add_method(DTYPE_STRING,   "find",          xstrFind,     p_vm);
+  add_method(DTYPE_STRING,   "size",          xstrSize,     p_vm);
+  add_method(DTYPE_STRING,   "substring",     xstrSubstring,p_vm);
+  add_method(DTYPE_STRING,   "left",          xstrLeft,     p_vm);
+  add_method(DTYPE_STRING,   "right",         xstrRight,    p_vm);
 
   // Seed the random-number generator with the current time so that
   // the numbers will be different every time we run.

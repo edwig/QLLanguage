@@ -339,6 +339,9 @@ int QLScanner::LiteralCharacter()
     {
       case 'n':  ch = '\n'; break;
       case 't':  ch = '\t'; break;
+      case 'r':  ch = '\r'; break;
+      case 'f':  ch = '\f'; break;
+      case '\\': ch = '\\'; break;
       case EOF:  ch = '\\'; m_save_char = EOF; break;
     }
   }

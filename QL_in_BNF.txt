@@ -176,13 +176,18 @@ STANDARD NEW OBJECT FUNCTIONS
 
 STANDARD METHODS
   string.index(<expression>)
+  string.find(<string-expression>[,startpos])
+  string.find(<char-expression>[,startpos])
+  string.size()
+  string.substring(<expression>[,<expression])
+  string.left(<expression>)
+  string.right(<expression>)
   // string methods to implement:
   string.reverseIndex(<expression>)
-  string.find(<expression>)
   string.reverseFind(<expression>)
-  string.substring(<expression>[,<expression])
-  string.size()
-  // array methods to implment
+  string.makeupper()
+  string.makelower()
+  // array methods to implement
   array.push_front(<expression>)
   array.push_back (<expression>)
   array.pop_front()
