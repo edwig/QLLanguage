@@ -13,23 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Definitions">
-      <UniqueIdentifier>{ec7a9ccc-3e8e-430d-b230-144c974dd8c2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scripts">
-      <UniqueIdentifier>{771644a0-398b-424e-a25a-4a2b7906dfcd}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="QL_in_BNF.txt">
-      <Filter>Definitions</Filter>
-    </Text>
-    <Text Include="QL_bytecode.txt">
-      <Filter>Definitions</Filter>
-    </Text>
-    <Text Include="QL_Objectformat.txt">
-      <Filter>Definitions</Filter>
-    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -111,67 +94,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="QL++Language2.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="test_float.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_locals.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_object.qob">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_switch.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_basic.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_for_loop.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_call.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_recurse.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_objects.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_object.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_array.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_stringarray.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_square.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="test_database.ql">
-      <Filter>Scripts</Filter>
-    </None>
     <None Include="readme.md">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Test\test_add.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="Test\test_delete.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="Test\test_globals.ql">
-      <Filter>Scripts</Filter>
-    </None>
-    <None Include="Test\test_string_index.ql">
-      <Filter>Scripts</Filter>
-    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="QL_Language.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

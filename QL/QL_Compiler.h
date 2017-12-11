@@ -132,7 +132,7 @@ private:
   MemObject* FindDataMember(CString p_name);
   Class*    get_class(CString p_name);
   int*      addbreak(int lbl);
-  int       rembreak(int* old,int* lbl);
+  int       rembreak(int* old,int lbl);
   int*      addcontinue(int lbl);
   void      remcontinue(int* old);
   void      rvalue(PVAL* pv);
@@ -177,8 +177,10 @@ private:
   BYTE*             cbuff;	        // code buffer
   int               cptr;		        // code pointer
   /* break/continue stacks */
-  int               bstack[SSIZE],*bsp;
-  int               cstack[SSIZE],*csp;
+  int               bstack[SSIZE];
+  int*              bsp;
+  int               cstack[SSIZE];
+  int*              csp;
   SWENTRY           sstack[SSIZE],*ssp,*ssbase;   // switch stack
   int               m_decode; 		  // flag for decoding functions
 };

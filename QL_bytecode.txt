@@ -51,6 +51,8 @@ OP_NE           // NOT EQUAL        (!=) for TOP TWO arugments (INTEGER / BCD)
 OP_GE           // GREATER OR EQUAL (>=) for TOP TWO arugments (INTEGER / BCD)
 OP_GT           // GREATER          ( >) for TOP TWO arugments (INTEGER / BCD)
 OP_DUP2         // DUPLICATE TOP 2 of stack and push on stack
+OP_DESTROY      // DESTROY by calling objects "destroy" method
+OP_DELETE       // DELETE an object on TOS
 OP_SWITCH <n>   // SWITCH TABLE <n> is the number of cases, TOS is switch variable
   <xx> <yy>     // switch case <xx> is the literal, <yy> is the branch offset
   <qq>          // the default case, <qq> is the branch offset

@@ -56,6 +56,9 @@ QLVirtualMachine::~QLVirtualMachine()
 void
 QLVirtualMachine::CheckInit()
 {
+  // Initialize the SQLComponents to the English language
+  InitSQLComponents();
+
   // See if the gc object chain has been initialized
   if(m_root_object == nullptr)
   {
@@ -269,7 +272,7 @@ QLVirtualMachine::AllocMemObject(MemObject* p_other)
   }
 
   // Create a new MemObject
-  MemObject* object = new MemObject;
+  MemObject* object = new MemObject();
 
   // Place object in the GC chain
   if(m_last_object)
@@ -289,9 +292,9 @@ QLVirtualMachine::AllocMemObject(MemObject* p_other)
                           break;
     case DTYPE_INTEGER:   object->m_value.v_integer   = p_other->m_value.v_integer;
                           break;
-    case DTYPE_STRING:    *object->m_value.v_string   = CString(*p_other->m_value.v_string);
+    case DTYPE_STRING:    object->m_value.v_string    = new CString(*p_other->m_value.v_string);
                           break;
-    case DTYPE_BCD:       *object->m_value.v_floating = bcd(*p_other->m_value.v_floating);
+    case DTYPE_BCD:       object->m_value.v_floating  = new bcd(*p_other->m_value.v_floating);
                           break;
     case DTYPE_FILE:      object->m_value.v_file      = p_other->m_value.v_file;
                           break;

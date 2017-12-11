@@ -1,11 +1,13 @@
 class foo // the base class
 {
-  a,b;
-  static last;
+  int a;
+  int b;
+  
+  static foo last;
   static get_last();
 }
 
-foo::foo(aa,bb)
+foo::foo(int aa,int bb)
 {
   a = aa; b = bb;
   return last = this;
@@ -16,13 +18,13 @@ foo::get_last()
   return last;
 }
 
-foo::set_a(aa)
+foo::set_a(int aa)
 {
   a = aa;
   return this;
 }
 
-foo::set_b(bb)
+foo::set_b(int bb)
 {
   b = bb;
   return this;
@@ -30,7 +32,7 @@ foo::set_b(bb)
 
 foo::count()
 {
-  local i;
+  int i;
   for (i = a; i <= b; ++i)
   {
     print(i,"\n");
@@ -50,12 +52,14 @@ foo::get_b()
 
 class bar : foo // a derived class
 {
-  c;
+  int c;
 }
 
-bar::bar(aa,bb,cc)
+bar::bar(int aa,int bb,int cc)
 {
-  foo(aa,bb);
+  a = aa;
+  b = bb;
+  // foo(aa,bb);
   c = cc;
   return this;
 }
@@ -65,7 +69,7 @@ bar::get_c()
   return c;
 }
  
-bar::set_c(cc)
+bar::set_c(int cc)
 {
     c = cc;
     return this;
@@ -73,11 +77,11 @@ bar::set_c(cc)
 
 main()
 {
-    local cr = "\n";
-    local foo1 = new foo(1,2);
-    local foo2 = new foo(11,22);
+    string cr = "\n";
+    foo foo1 = new foo(1,2);
+    foo foo2 = new foo(11,22);
     // static last value
-    last = 99;
+    int last = 99;
     
     print("foo1=",foo1,cr);
     print("foo2=",foo2,cr);
@@ -86,8 +90,8 @@ main()
     print("foo1->b=",foo1->get_b(),cr);
     print("foo2->b=",foo2->get_b(),cr);
     {
-      local bar1 = new bar(111,222,333);
-      local bar2 = new bar(1111,2222,3333);
+      bar bar1 = new bar(111,222,333);
+      bar bar2 = new bar(1111,2222,3333);
     
       print("bar1=",bar1,cr);
       print("bar2=",bar2,cr);

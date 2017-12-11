@@ -393,7 +393,7 @@ QLCompiler::do_code(Function* p_function)
   putcbyte(OP_RETURN);
 
   // Count the temporaries
-  tcnt = m_temporaries.size();
+  tcnt = (int)m_temporaries.size();
 
   // Fix the number of temporaries in TSPACE
   // We can only do this AFTER the function is compiled
@@ -494,7 +494,7 @@ QLCompiler::do_if()
 int* 
 QLCompiler::addbreak(int lbl)
 {
-  int *old=bsp;
+  int *old = bsp;
   if (++bsp < &bstack[SSIZE])
   {
     *bsp = lbl;
@@ -507,10 +507,10 @@ QLCompiler::addbreak(int lbl)
 }
 
 // Remove a break level from the stack
-int 
-QLCompiler::rembreak(int* old,int* lbl)
+int
+QLCompiler::rembreak(int* old,int lbl)
 {
-   return (bsp > old ? *bsp-- : (int)lbl);
+   return (bsp > old ? *bsp-- : lbl);
 }
 
 // Add a continue level to the stack
@@ -554,7 +554,7 @@ QLCompiler::do_while()
   ob = addbreak(end);
   oc = addcontinue(nxt);
   do_statement();
-  end = rembreak(ob,(int*)end);
+  end = rembreak(ob,end);
   remcontinue(oc);
 
   // branch back to the start of the loop
@@ -578,7 +578,7 @@ QLCompiler::do_dowhile()
   ob = addbreak(0);
   oc = addcontinue(nxt);
   do_statement();
-  end = rembreak(ob,(int*)end);
+  end = rembreak(ob,end);
   remcontinue(oc);
 
   // compile the test expression
@@ -644,7 +644,7 @@ QLCompiler::do_for()
   ob = addbreak(end);
   oc = addcontinue(update);
   do_statement();
-  end = rembreak(ob,(int*)end);
+  end = rembreak(ob,end);
   remcontinue(oc);
 
   // branch back to the update code
@@ -855,7 +855,7 @@ QLCompiler::do_default()
 int
 QLCompiler::CountOfTemporaries()
 {
-  return m_temporaries.size();
+  return (int)m_temporaries.size();
 }
 
 // compile the {} block expression
@@ -1661,7 +1661,7 @@ QLCompiler::AddLiteral(int p_type,MemObject** p_result,CString p_name/*=""*/,int
       }
       return n;
     }
-  }
+  } 
   if(p_type == DTYPE_INTEGER)
   {
     int n = m_literals->FindIntegerEntry(p_value);
@@ -1674,7 +1674,6 @@ QLCompiler::AddLiteral(int p_type,MemObject** p_result,CString p_name/*=""*/,int
       return n;
     }
   }
-
   int n = m_literals->GetSize();
   MemObject* lit = m_literals->AddEntryOfType(m_vm,p_type);
   *p_result = lit;

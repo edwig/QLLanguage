@@ -1,10 +1,10 @@
 // Primaire test BCD floating point
 //
-testfunc(a)
+testfunc(int a)
 {
-  local b = 0;
-  local c = newvector(a);
-  local f = 1.1;
+  int   b = 0;
+  array c = newarray(a);
+  bcd   f = 1.1;
   
   for(b = 0;b < a; ++b)
   {
@@ -14,6 +14,8 @@ testfunc(a)
   
   print("Total of ",a," floating point numbers\n");
   print("=====================================\n");
+  b = 1;
+  
   for(b = 0;b < a; ++b)
   {
     print("Getal = ", c[b], "\n");

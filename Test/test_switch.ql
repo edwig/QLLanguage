@@ -1,6 +1,6 @@
 // TEST CASES SWITCH
 
-show_choice(n)
+show_choice(int n)
 {
    switch(n)
    {

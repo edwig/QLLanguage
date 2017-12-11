@@ -212,7 +212,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
     if(m_trace) 
     {
       // Decode exactly one bytecode instruction
-      m_debugger->DecodeInstruction(runFunction,m_code,(m_pc - m_code));
+      m_debugger->DecodeInstruction(runFunction,m_code,(int) (m_pc - m_code));
     }
 
     // Execute program counter and increment it in the same action
@@ -246,13 +246,13 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                           TestFunctionArguments(calFunction,n);
 
                           CheckStack(STACKFRAME_SIZE);
-                          PushInteger(0);                               // No object
-                          PushFunction(runFunction);                    // Running function
-                          PushInteger(n);                               // NUMBER OF ARGUMENTS
-                          PushInteger(m_stack_top - m_frame_pointer);   // OFFSET SP FROM TOP (BEGINNING)
-                          PushInteger(m_pc - m_code);                   // OFFSET IN BYTECODE
-                          m_code = m_pc   = calFunction->GetBytecode(); // New bytecode program counter
-                          runFunction     = calFunction;                // Now running this function
+                          PushInteger(0);                                     // No object
+                          PushFunction(runFunction);                          // Running function
+                          PushInteger(n);                                     // NUMBER OF ARGUMENTS
+                          PushInteger((int)(m_stack_top - m_frame_pointer));  // OFFSET SP FROM TOP (BEGINNING)
+                          PushInteger((int)(m_pc - m_code));                  // OFFSET IN BYTECODE
+                          m_code = m_pc   = calFunction->GetBytecode();       // New bytecode program counter
+                          runFunction     = calFunction;                      // Now running this function
                           m_frame_pointer = m_stack_pointer;
                           runObject       = nullptr;
                           calFunction     = nullptr;
@@ -462,7 +462,20 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         ++m_stack_pointer;
                         break;
       case OP_LIT:      // LOAD A LITERAL FOR THE CURRENT FUNCTION
-                        m_stack_pointer[0] = runFunction ? runFunction->GetLiteral(*m_pc++) : m_vm->GetLiteral(*m_pc++);
+                        val = runFunction ? runFunction->GetLiteral(*m_pc++) 
+                                          : m_vm->GetLiteral(*m_pc++);
+                        if(val->m_type == DTYPE_INTEGER ||
+                           val->m_type == DTYPE_STRING)
+                        {
+                          // Get a duplicate (by-value) from a literal
+                          // See the QL_Compiler::add_literal function!
+                          m_stack_pointer[0] = m_vm->AllocMemObject(val);
+                        }
+                        else
+                        {
+                          // INTERNAL, ARRAY Etc are by-reference
+                          m_stack_pointer[0] = val;
+                        }
                         break;
       case OP_SEND:     // SEND REQUEST -> CALL A MEMBER OF AN OBJECT, INTERNAL METHOD
                         n = *m_pc++; // Get the stack offset
@@ -521,8 +534,8 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                             PushObject(runObject);
                             PushFunction(runFunction);
                             PushInteger(n);
-                            PushInteger(m_stack_top - m_frame_pointer);
-                            PushInteger(m_pc - m_code);
+                            PushInteger((int)(m_stack_top - m_frame_pointer));
+                            PushInteger((int)(m_pc - m_code));
                             m_code = m_pc   = calFunction->GetBytecode();
                             runFunction     = calFunction;
                             runObject       = calObject;
@@ -574,8 +587,8 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                           PushObject(runObject);
                           PushFunction(runFunction);
                           PushInteger(1); // No arguments
-                          PushInteger(m_stack_top - m_frame_pointer);
-                          PushInteger(m_pc - m_code);
+                          PushInteger((int)(m_stack_top - m_frame_pointer));
+                          PushInteger((int)(m_pc - m_code));
                           m_code = m_pc   = calFunction->GetBytecode();
                           runFunction     = calFunction;
                           runObject       = calObject;

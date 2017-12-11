@@ -2,13 +2,12 @@
 
 main()
 {
-  local chr = "A";
-  local cc  = 0;
-  local str = newstring(20);
-  local len = 0;
-  local ind = 0;
+  string chr = "A";
+  int    cc  = 0;
+  string str = "Dit is een test";
+  int    len = 0;
+  int    ind = 0;
 
-  str = "Dit is een test";
   len = sizeof(str);
 
   for(ind = 0;ind < len; ++ ind)

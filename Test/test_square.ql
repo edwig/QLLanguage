@@ -2,9 +2,9 @@
 
 main()
 {
-  local ind;
-  local val;
-  local sqr;
+  int ind;
+  int val;
+  int sqr;
 
   for(ind = 1.0; ind <= 500.0; ++ind)
   {

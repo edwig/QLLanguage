@@ -2,9 +2,9 @@
 
 main()
 {
-  local a = 12;
-  local t = "This is a text\n";
-  local i = 0;
+  int    a = 12;
+  string t = "This is a text\n";
+  int    i = 0;
 
   print(t);
   print("The value of a = ",a,"\n");

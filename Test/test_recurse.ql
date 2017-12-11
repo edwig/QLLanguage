@@ -1,16 +1,16 @@
-factorial(n)
+factorial(int n)
 {
     return n == 0 ? 1 : n * factorial(n-1);
 }
 
-do_factorial(n)
+do_factorial(int n)
 {
     print(n," factorial is ",factorial(n),"\n");
 }
 
 main()
 {
-  local i = 0;
+  int i = 0;
 
   for (i = 1; i < 14; ++i)
   {

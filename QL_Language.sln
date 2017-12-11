@@ -1,14 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2008
+VisualStudioVersion = 15.0.27130.2003
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QL++Language", "QL++Language2.vcxproj", "{69E3D6AD-D883-461B-979F-A7E15834DEDA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QL_Language", "QL\QL_Language.vcxproj", "{69E3D6AD-D883-461B-979F-A7E15834DEDA}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0E56E030-9CDD-47A7-B580-DCD4E103F968} = {0E56E030-9CDD-47A7-B580-DCD4E103F968}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SQLComponents", "SQLComponents\SQLComponenten.vcxproj", "{0E56E030-9CDD-47A7-B580-DCD4E103F968}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Definitions", "Definitions", "{4EE868AE-02CE-466C-BFF7-DD0F1D0D1F31}"
+	ProjectSection(SolutionItems) = preProject
+		QL_bytecode.txt = QL_bytecode.txt
+		QL_in_BNF.txt = QL_in_BNF.txt
+		QL_Objectformat.txt = QL_Objectformat.txt
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,10 +27,12 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{69E3D6AD-D883-461B-979F-A7E15834DEDA}.Debug|Win32.ActiveCfg = Debug|Win32
 		{69E3D6AD-D883-461B-979F-A7E15834DEDA}.Debug|Win32.Build.0 = Debug|Win32
-		{69E3D6AD-D883-461B-979F-A7E15834DEDA}.Debug|x64.ActiveCfg = Debug|Win32
+		{69E3D6AD-D883-461B-979F-A7E15834DEDA}.Debug|x64.ActiveCfg = Debug|x64
+		{69E3D6AD-D883-461B-979F-A7E15834DEDA}.Debug|x64.Build.0 = Debug|x64
 		{69E3D6AD-D883-461B-979F-A7E15834DEDA}.Release|Win32.ActiveCfg = Release|Win32
 		{69E3D6AD-D883-461B-979F-A7E15834DEDA}.Release|Win32.Build.0 = Release|Win32
-		{69E3D6AD-D883-461B-979F-A7E15834DEDA}.Release|x64.ActiveCfg = Release|Win32
+		{69E3D6AD-D883-461B-979F-A7E15834DEDA}.Release|x64.ActiveCfg = Release|x64
+		{69E3D6AD-D883-461B-979F-A7E15834DEDA}.Release|x64.Build.0 = Release|x64
 		{0E56E030-9CDD-47A7-B580-DCD4E103F968}.Debug|Win32.ActiveCfg = Debug|Win32
 		{0E56E030-9CDD-47A7-B580-DCD4E103F968}.Debug|Win32.Build.0 = Debug|Win32
 		{0E56E030-9CDD-47A7-B580-DCD4E103F968}.Debug|x64.ActiveCfg = Debug|x64

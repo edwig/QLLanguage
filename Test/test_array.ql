@@ -2,8 +2,8 @@
 
 main()
 {
-  local ind = 0;
-  local aa  = newvector(20);
+  int   ind = 0;
+  array aa  = newarray(20);
 
   print("Calculating...\n");
   for(ind = 1; ind <= 20; ++ind)

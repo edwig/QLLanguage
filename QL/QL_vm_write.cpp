@@ -427,7 +427,7 @@ QLVirtualMachine::WriteTypes(FILE* p_fp,bool p_trace,ArgTypes& p_types)
   for(int ind = 0;ind < num; ++ind)
   {
     WriteInteger(p_fp,p_trace,p_types[ind]);
-    TracingText(p_fp,"Datatype argument %d",ind);
+    TracingText(p_trace,"Datatype argument %d",ind);
   }
 }
 

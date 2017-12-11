@@ -329,7 +329,7 @@ Array::GetEntry(unsigned p_number)
 int
 Array::GetSize()
 {
-  return m_members.size();
+  return (int)m_members.size();
 }
 
 void

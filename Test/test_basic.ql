@@ -1,5 +1,5 @@
 main()
 {
-  local a = "test";
+  string a = "test";
   print("Variable a = ",a,"\n");
 }

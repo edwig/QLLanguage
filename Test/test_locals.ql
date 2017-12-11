@@ -1,13 +1,13 @@
-my_function(a,b)
+my_function(int a,int b)
 {
-  local c = 12 + a;
-  local d = a  + b;
+  int c = 12 + a;
+  int d = a  + b;
     
   print("Sum: ",d," Local: ",c,"\n");
   {
-    local e = 20;
-    local f = 15;
-    local g = e + f + d + c;
+    int  e = 20;
+    int  f = 15;
+    int  g = e + f + d + c;
     print("Som: ",g,"\n");
 
     return g;
@@ -16,11 +16,12 @@ my_function(a,b)
 
 do_strings()
 {
-	local str1 = "aap";
-	local str2 = "noot";
-	local str3 = "mies";
+	string str1 = "aap";
+	string str2 = "noot";
+	string str3 = "mies";
 	
-	local str4 = "aap" + " : " + "noot" + " : " + mies;
+	string str4 = "aap" + " : " + "noot" + " : " + mies;
+  
 	print(str4,"\n");
 }
     
