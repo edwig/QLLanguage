@@ -340,10 +340,24 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
       case OP_TLOAD: 		// REFERENCE A LOCAL VARIABLE
                         n = *m_pc++;
                         m_stack_pointer[0] = m_frame_pointer[-n-1];
+
+#ifdef _DEBUG
+                        {
+                          int stacklen = (int)(m_stack_top - m_frame_pointer);
+                          TRACE("Frame length: %d\n",stacklen);
+                        }
+#endif
                         break;
       case OP_TSTORE: 	// SET a value in a Temporary (local variable)
                         n = *m_pc++;
                         m_frame_pointer[-n-1] = m_stack_pointer[0];
+
+#ifdef _DEBUG
+                        {
+                          int stacklen = (int)(m_stack_top - m_frame_pointer);
+                          TRACE("Frame length: %d\n",stacklen);
+                        }
+#endif
                         break;
       case OP_TSPACE:		// Create space on the stack for local variables (temporaries)
                         ReserveSpace(*m_pc++);

@@ -30,7 +30,7 @@ OP_NIL          // TOS becomes NIL
 OP_PUSH         // PUSH an integer of value 0 to TOS
 OP_NOT          // LOGICAL NOT OF TOS (if integer)
 OP_NEG          // NEGATE TOS (if integer)
-OP_ADD			    // ADD		 TOP TWO (STRING's INTEGER's or BCD's) and increment sp
+OP_ADD			    // ADD		   TOP TWO (STRING's INTEGER's or BCD's) and increment sp
 OP_SUB			    // SUBTRACT  TOP TWO (STRING's INTEGER's or BCD's) and increment sp
 OP_MUL          // MULTIPLY  TOP TWO (STRING's INTEGER's or BCD's) and increment sp
 OP_DIV			    // DIVIDE    TOP TWO (STRING's INTEGER's or BCD's) and increment sp

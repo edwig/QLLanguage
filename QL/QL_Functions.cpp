@@ -986,6 +986,20 @@ static int xstrSubstring(QLInterpreter* p_inter,int p_argc)
   return 0;
 }
 
+// Do the string.size() method 
+static int xstrUpper(QLInterpreter* p_inter,int p_argc)
+{
+  argcount(p_inter,p_argc,0);
+  p_inter->CheckType(1,DTYPE_STRING);
+  CString string = p_inter->GetStringArgument(1);
+  string.MakeUpper();
+  p_inter->SetString(0,0);
+
+  MemObject** sp = p_inter->GetStackPointer();
+  (*sp[0]->m_value.v_string) = string;
+  return 0;
+}
+
 /////////////////////////////////////////////////////////////////////
 //
 // Now we can do the INIT of all functions
@@ -1054,6 +1068,7 @@ void init_functions(QLVirtualMachine* p_vm)
   add_method(DTYPE_STRING,   "substring",     xstrSubstring,p_vm);
   add_method(DTYPE_STRING,   "left",          xstrLeft,     p_vm);
   add_method(DTYPE_STRING,   "right",         xstrRight,    p_vm);
+  add_method(DTYPE_STRING,   "makeupper",     xstrUpper,    p_vm);
 
   // Seed the random-number generator with the current time so that
   // the numbers will be different every time we run.

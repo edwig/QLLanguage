@@ -79,7 +79,6 @@ class Array;
 class Class;
 class Object;
 class Function;
-class Variable;
 class QLVirtualMachine;
 class QLInterpreter;
 
@@ -133,7 +132,6 @@ public:
     Array*        v_array;          // DTYPE_ARRAY    value
     Object*       v_object;         // DTYPE_OBJECT   value
     Class*        v_class;          // DTYPE_CLASS    value
-    Variable*     v_variable;       // DTYPE_VARIABLE value
     Function*     v_script;	        // DTYPE_SCRIPT   Internal compiled script function
     Internal      v_internal;       // DTYPE_INTERNAL Internal C++ function
     CString*      v_sysname;        // DTYPE_EXTERNAL External PInvoke function
