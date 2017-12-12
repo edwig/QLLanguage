@@ -27,9 +27,9 @@ namespace UnitTests
       CString result;
       CString compileOption = "-c ";
 
-      CString sourceFile = m_basedir + p_filename; // +".ql";
+      CString sourceFile = m_basedir + p_filename + ".ql";
       CString objectFile = m_basedir + p_filename + ".qob";
-      CString outputFile = m_basedir + p_filename + ".OK";
+      CString outputFile = m_basedir + p_filename + ".ok";
       CString qlRuntime  = m_exedir  + "ql.exe";
 
       // Compile the test: result MUST be zero (0)

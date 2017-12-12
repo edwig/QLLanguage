@@ -169,6 +169,7 @@ QLVirtualMachine::CompileFile(const char* p_filename,bool p_trace)
 bool
 QLVirtualMachine::IsObjectFile(const char* p_filename)
 {
+  bool result = false;
   CString filename(p_filename);
 
   if(_access(p_filename,04) != 0)
@@ -183,14 +184,21 @@ QLVirtualMachine::IsObjectFile(const char* p_filename)
   fopen_s(&fp,filename,"r");
   if(fp != nullptr)
   {
-    if(ReadHeader(fp,false))
+    try
     {
-      fclose(fp);
-      return true;
+      if(ReadHeader(fp,false))
+      {
+        fclose(fp);
+        result = true;
+      }
+    }
+    catch(QLException&)
+    {
+      result = false;
     }
     fclose(fp);
   }
-  return false;
+  return result;
 }
 
 bool
