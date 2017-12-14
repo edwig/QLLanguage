@@ -271,7 +271,7 @@ QLVirtualMachine::AllocMemObject(int p_type,bool p_running /*=true*/)
 }
 
 MemObject*  
-QLVirtualMachine::AllocMemObject(MemObject* p_other)
+QLVirtualMachine::AllocMemObject(const MemObject* p_other)
 {
   // Call the garbage collector every now and then!
   if ((m_allocs % 1000) == 0)

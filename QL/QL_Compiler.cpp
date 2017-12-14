@@ -1650,30 +1650,30 @@ QLCompiler::AddLiteral(int p_type,MemObject** p_result,CString p_name/*=""*/,int
   {
     m_literals = new Array();
   }
-  if(p_type == DTYPE_STRING)
-  {
-    int n = m_literals->FindStringEntry(p_name);
-    if(n >= 0)
-    {
-      if(*p_result == nullptr)
-      {
-        *p_result = m_literals->GetEntry(n);
-      }
-      return n;
-    }
-  } 
-  if(p_type == DTYPE_INTEGER)
-  {
-    int n = m_literals->FindIntegerEntry(p_value);
-    if(n >= 0)
-    {
-      if(*p_result == nullptr)
-      {
-        *p_result = m_literals->GetEntry(n);
-      }
-      return n;
-    }
-  }
+//   if(p_type == DTYPE_STRING)
+//   {
+//     int n = m_literals->FindStringEntry(p_name);
+//     if(n >= 0)
+//     {
+//       if(*p_result == nullptr)
+//       {
+//         *p_result = m_literals->GetEntry(n);
+//       }
+//       return n;
+//     }
+//   } 
+//   if(p_type == DTYPE_INTEGER)
+//   {
+//     int n = m_literals->FindIntegerEntry(p_value);
+//     if(n >= 0)
+//     {
+//       if(*p_result == nullptr)
+//       {
+//         *p_result = m_literals->GetEntry(n);
+//       }
+//       return n;
+//     }
+//   }
   int n = m_literals->GetSize();
   MemObject* lit = m_literals->AddEntryOfType(m_vm,p_type);
   *p_result = lit;

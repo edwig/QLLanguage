@@ -50,7 +50,7 @@ public:
 
   // MEMORY API AND GC
   MemObject*  AllocMemObject(int type,bool p_running = true);
-  MemObject*  AllocMemObject(MemObject* p_other);
+  MemObject*  AllocMemObject(const MemObject* p_other);
   void        FreeMemObject(MemObject* p_object,bool p_running = true);
   void        MemObjectSetType(MemObject* p_object, int p_type);
   void        MarkObject(MemObject* p_object);

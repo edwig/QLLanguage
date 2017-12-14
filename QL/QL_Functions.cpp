@@ -612,7 +612,6 @@ static int xround(QLInterpreter* p_inter,int argc)
   int rnd    =  sp[0]->m_value.v_integer;
 
   number.Round(rnd);
-  p_inter->IncrementStackPointer(1);
   p_inter->SetBcd(0,number);
 
   return 0;
@@ -708,8 +707,7 @@ static int xnewquery(QLInterpreter* p_inter,INT argc)
   object->m_value.v_query->Init(sp[0]->m_value.v_database);
 
   // Put query on stack
-  sp[1] = object;
-  p_inter->IncrementStackPointer();
+  sp[0] = object;
 
   return 0;
 }
@@ -772,7 +770,6 @@ static int xqryDoSQL(QLInterpreter* p_inter,int argc)
   {
     vm->Info("SQL error: %s",s);
   }
-  p_inter->IncrementStackPointer();
   p_inter->SetInteger(0,result);
   return 0;
 }
@@ -818,8 +815,7 @@ static int xqryColumn(QLInterpreter* p_inter,int argc)
     result->m_type  = DTYPE_VARIANT;
     result->m_flags = FLAG_DEALLOC;
   }
-  p_inter->IncrementStackPointer();
-  sp[1] = result;
+  sp[0] = result;
   return 0;
 }
 

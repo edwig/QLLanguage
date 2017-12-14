@@ -642,6 +642,13 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
     {
       // Complete the trace by printing the object (optionally)
       m_debugger->PrintObject(m_stack_pointer[0]);
+      // TIJDELIJK
+      osputs("TMP: ");
+      m_vm->Print(stderr,TRUE,m_frame_pointer[-3]);
+      osputs("\n");
+
+      int stacklen = (int)(m_stack_top - m_frame_pointer);
+      TRACE("Frame length: %d\n",stacklen);
     }
     if(pop)
     {
@@ -694,7 +701,7 @@ QLInterpreter::Inter_increment()
                           *m_stack_pointer[0]->m_value.v_variant + one;
                         }
                         break;
-    default:            BadType(0,type);
+    default:            BadType(0,DTYPE_INTEGER);
                         break;
   }
 }
@@ -714,7 +721,7 @@ QLInterpreter::Inter_decrement()
                           *m_stack_pointer[0]->m_value.v_variant - one;
                         }
                         break;
-    default:            BadType(0,type);
+    default:            BadType(0,DTYPE_INTEGER);
                         break;
   }
 }
@@ -1840,10 +1847,10 @@ QLInterpreter::GetTypename(int type)
 
 // Report a bad operand type 
 int
-QLInterpreter::BadType(int off,int type)
+QLInterpreter::BadType(int off,int expected_type)
 {
   CString type1 = GetTypename(m_stack_pointer[off]->m_type);
-  CString type2 = GetTypename(type);
+  CString type2 = GetTypename(expected_type);
   m_vm->Info("PC: %04x, Offset %d, Type %s, Expected %s",(int)(m_pc - m_code),off,type1,type2);
   m_vm->Error("Bad argument type");
   return 0;
