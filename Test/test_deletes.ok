@@ -1,0 +1,22 @@
+Created first
+Created second: 0
+OBJECT = 0
+Created second: 1
+OBJECT = 1
+Created second: 2
+OBJECT = 2
+Created second: 3
+OBJECT = 3
+Created second: 4
+OBJECT = 4
+I am number: 0
+I am number: 1
+I am number: 2
+I am number: 3
+I am number: 4
+Destroyed second class: 0
+Destroyed second class: 1
+Destroyed second class: 2
+Destroyed second class: 3
+Destroyed second class: 4
+All done

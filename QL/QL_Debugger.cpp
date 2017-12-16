@@ -235,14 +235,17 @@ QLDebugger::PrintReturn(Function* p_function)
 
 // Print an object as an explanation of the printed bytecode
 void
-QLDebugger::PrintObject(MemObject* p_stack)
+QLDebugger::PrintObject(MemObject* p_stack,bool p_newline /*=true*/)
 {
   if(m_printObject >= 0 && p_stack)
   {
     osputs("   ; ");
     m_vm->Print(stderr, TRUE, &p_stack[m_printObject]);
   }
-  osputs("\n");
+  if(p_newline)
+  {
+    osputs("\n");
+  }
   // Reset the print
   m_printObject = -1;
 }

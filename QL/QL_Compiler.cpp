@@ -213,9 +213,12 @@ QLCompiler::do_class()
   // handle each variable declaration 
   while ((tkn = m_scanner->GetToken()) != '}') 
   {
+    int storage = 0;
+
     // check for static members 
     if ((type = tkn) == T_STATIC)
     {
+      storage = type;
       tkn = m_scanner->GetToken();
     }
     // get the first identifier
@@ -231,7 +234,7 @@ QLCompiler::do_class()
     {
       GetArgumentList(nullptr);
       FetchRequireToken(')');
-      theClass->AddFunctionMember(m_vm,member,type == T_STATIC ? ST_SFUNCTION : ST_FUNCTION);
+      theClass->AddFunctionMember(m_vm,member,storage == T_STATIC ? ST_SFUNCTION : ST_FUNCTION);
     }
     else 
     {
@@ -248,7 +251,10 @@ QLCompiler::do_class()
           m_scanner->ParseError("Class data member must be an identifier");
         }
         member = m_scanner->GetTokenAsString();
-        theClass->AddDataMember(m_vm,member,type == T_STATIC ? ST_SDATA : ST_DATA);
+        if(!theClass->AddDataMember(m_vm,member,storage == T_STATIC ? ST_SDATA : ST_DATA))
+        {
+          m_scanner->ParseError("Global variable of this name already exists!");
+        }
 
         // Getting next token
         tkn = m_scanner->GetToken();

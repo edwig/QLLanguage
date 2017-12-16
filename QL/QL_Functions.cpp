@@ -89,7 +89,7 @@ static int xtypeof(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
   int type = p_inter->GetStackPointer()[0]->m_type;
-  p_inter->PushInteger(type);
+  p_inter->SetInteger(0,type);
   return 0;
 }
 
@@ -126,24 +126,24 @@ static int xsizeof(QLInterpreter* p_inter,int argc)
   MemObject* object = *p_inter->GetStackPointer();
   switch (object->m_type) 
   {
-    case DTYPE_ARRAY:   p_inter->SetInteger(1,object->m_value.v_array->GetSize());
+    case DTYPE_ARRAY:   p_inter->SetInteger(0,object->m_value.v_array->GetSize());
                         break;
-    case DTYPE_STRING:  p_inter->SetInteger(1,object->m_value.v_string->GetLength());
+    case DTYPE_STRING:  p_inter->SetInteger(0,object->m_value.v_string->GetLength());
                         break;
-    case DTYPE_BCD:     p_inter->SetInteger(1,sizeof(bcd));
+    case DTYPE_BCD:     p_inter->SetInteger(0,sizeof(bcd));
                         break;
-    case DTYPE_INTEGER: p_inter->SetInteger(1,sizeof(int));
+    case DTYPE_INTEGER: p_inter->SetInteger(0,sizeof(int));
                         break;
-    case DTYPE_DATABASE:p_inter->SetInteger(1,sizeof(SQLDatabase));
+    case DTYPE_DATABASE:p_inter->SetInteger(0,sizeof(SQLDatabase));
                         break;
-    case DTYPE_QUERY:   p_inter->SetInteger(1,sizeof(SQLQuery));
+    case DTYPE_QUERY:   p_inter->SetInteger(0,sizeof(SQLQuery));
                         break;
-    case DTYPE_VARIANT: p_inter->SetInteger(1,sizeof(SQLVariant));
+    case DTYPE_VARIANT: p_inter->SetInteger(0,sizeof(SQLVariant));
                         break;
-    default:            p_inter->SetInteger(1,0);
+    default:            // Cannot take the size of this object. Fail silently as 'zero'
+                        p_inter->SetInteger(0,0);
                         break;
   }
-  p_inter->IncrementStackPointer();
   return 0;
 }
 
@@ -249,8 +249,6 @@ static int xprint(QLInterpreter* p_inter,int argc)
   {
     len += vm->Print(stdout,FALSE,sp[n]);
   }
-  // sp += argc;
-  p_inter->IncrementStackPointer(argc);
   // total chars printed
   p_inter->SetInteger(0,len);
 
@@ -268,13 +266,11 @@ static int xfprint(QLInterpreter* p_inter,int argc)
   p_inter->CheckType(argc,DTYPE_FILE);
   FILE* file = sp[argc]->m_value.v_file;
 
-  for (int n = argc; --n >= 1; )
+  for (int n = argc - 1; n >= 0; --n)
   {
     len += vm->Print(file,FALSE,sp[n]);
   }
-  p_inter->IncrementStackPointer(argc);
   p_inter->SetInteger(0,len);
-
   return 0;
 }
 
@@ -454,7 +450,6 @@ static int xpow(QLInterpreter* p_inter,int argc)
   argcount(p_inter,argc,2);
   bcd val = p_inter->GetBcdArgument(0);
   bcd pow = p_inter->GetBcdArgument(1);
-  p_inter->IncrementStackPointer();
   p_inter->SetBcd(0, val.Power(pow));
   return 0;
 }
@@ -466,10 +461,7 @@ static int xrand(QLInterpreter* p_inter,int argc)
   int rr = rand();
   bcd val = bcd(rr) / bcd((long)RAND_MAX);
   QLVirtualMachine* vm = p_inter->GetVirtualMachine();
-  MemObject** sp = p_inter->PushInteger(0);
-  sp[0]->m_type = DTYPE_INTEGER;
-  sp[0]->m_value.v_floating = new bcd(val);
-  sp[0]->m_flags |= FLAG_DEALLOC;
+  p_inter->SetBcd(0,val);
   return 0;
 }
 
@@ -682,13 +674,7 @@ static int xnewdbs(QLInterpreter* p_inter,int argc)
   {
     vm->Info("To open a ODBC database, you must at least supply a database name!");
   }
-  // Increment the stack pointer
-  if(argc > 0)
-  {
-    p_inter->IncrementStackPointer(argc - 1);
-    sp = p_inter->GetStackPointer();
-  }
-  // Return SQLDatabase on stack
+  // Return SQLDatabase on the stack
   sp[0] = object;
 
   // ready
@@ -982,13 +968,27 @@ static int xstrSubstring(QLInterpreter* p_inter,int p_argc)
   return 0;
 }
 
-// Do the string.size() method 
+// Do the string.makeupper() method 
 static int xstrUpper(QLInterpreter* p_inter,int p_argc)
 {
   argcount(p_inter,p_argc,0);
   p_inter->CheckType(1,DTYPE_STRING);
   CString string = p_inter->GetStringArgument(1);
   string.MakeUpper();
+  p_inter->SetString(0,0);
+
+  MemObject** sp = p_inter->GetStackPointer();
+  (*sp[0]->m_value.v_string) = string;
+  return 0;
+}
+
+// Do the string.makelower() method 
+static int xstrLower(QLInterpreter* p_inter,int p_argc)
+{
+  argcount(p_inter,p_argc,0);
+  p_inter->CheckType(1,DTYPE_STRING);
+  CString string = p_inter->GetStringArgument(1);
+  string.MakeLower();
   p_inter->SetString(0,0);
 
   MemObject** sp = p_inter->GetStackPointer();
@@ -1065,6 +1065,7 @@ void init_functions(QLVirtualMachine* p_vm)
   add_method(DTYPE_STRING,   "left",          xstrLeft,     p_vm);
   add_method(DTYPE_STRING,   "right",         xstrRight,    p_vm);
   add_method(DTYPE_STRING,   "makeupper",     xstrUpper,    p_vm);
+  add_method(DTYPE_STRING,   "makelower",     xstrLower,    p_vm);
 
   // Seed the random-number generator with the current time so that
   // the numbers will be different every time we run.

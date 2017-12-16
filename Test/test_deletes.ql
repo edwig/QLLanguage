@@ -27,19 +27,17 @@ secondclass::secondclass(int num)
 {
   number = num;
   print("Created second: ",number,"\n");
-  print("OBJECT = ",this,"\n");
+  print("OBJECT = ",num,"\n");
 }
   
 secondclass::identity()
 {
   print("I am number: ",number,"\n");
-  print("OBJECT = ",this,"\n");
 }  
   
 secondclass::destroy()
 {
   print("Destroyed second class: ",number,"\n");
-  print("OBJECT = ",this,"\n");
 }
 
 // MAIN PROGRAM

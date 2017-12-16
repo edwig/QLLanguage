@@ -26,5 +26,5 @@ main()
 	print("The second 'the' sits at position: ",position,"\n");  // 79
 	
 	size = all.size();
-	print("The size of the string is: ",size,"\n");
+	print("The size of the string is: ",size,"\n"); // 92
 }

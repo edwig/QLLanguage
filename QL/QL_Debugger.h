@@ -41,7 +41,7 @@ public:
   // Print return into function
   void   PrintReturn(Function* p_function);
   // Print an object as an explanation of the printed bytecode
-  void   PrintObject(MemObject* p_object);
+  void   PrintObject(MemObject* p_object,bool p_newline = true);
   // Print an indexed object "array/string [index] " with option value
   void   PrintIndexedObject(MemObject* p_vector,MemObject* p_index,MemObject* p_value);
 

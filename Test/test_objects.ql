@@ -1,3 +1,7 @@
+// TEST two objects super/sub classing
+
+global int last2 = 99;
+
 class foo // the base class
 {
   int a;
@@ -9,8 +13,9 @@ class foo // the base class
 
 foo::foo(int aa,int bb)
 {
-  a = aa; b = bb;
-  return last = this;
+  a = aa;
+  b = bb;
+  last = this;
 }
 
 foo::get_last()
@@ -27,7 +32,6 @@ foo::set_a(int aa)
 foo::set_b(int bb)
 {
   b = bb;
-  return this;
 }
 
 foo::count()
@@ -37,7 +41,6 @@ foo::count()
   {
     print(i,"\n");
   }
-  return this;
 }
 
 foo::get_a()
@@ -71,8 +74,7 @@ bar::get_c()
  
 bar::set_c(int cc)
 {
-    c = cc;
-    return this;
+  c = cc;
 }
 
 main()
@@ -80,21 +82,15 @@ main()
     string cr = "\n";
     foo foo1 = new foo(1,2);
     foo foo2 = new foo(11,22);
-    // static last value
-    int last = 99;
     
-    print("foo1=",foo1,cr);
-    print("foo2=",foo2,cr);
     print("foo1->a=",foo1->get_a(),cr);
     print("foo2->a=",foo2->get_a(),cr);
     print("foo1->b=",foo1->get_b(),cr);
     print("foo2->b=",foo2->get_b(),cr);
     {
-      bar bar1 = new bar(111,222,333);
+      bar bar1 = new bar(111, 222, 333);
       bar bar2 = new bar(1111,2222,3333);
     
-      print("bar1=",bar1,cr);
-      print("bar2=",bar2,cr);
       print("bar1->a=",bar1->get_a(),cr);
       print("bar1->b=",bar1->get_b(),cr);
       print("bar1->c=",bar1->get_c(),cr);
@@ -105,9 +101,9 @@ main()
       foo1->count();
       print("Foo2 counting\n");
       foo2->count();
-      print("last=",last,cr);
-      print("foo::last=",foo::get_last(),cr);
-      print("bar::last=",bar::get_last(),cr);
+      print("global last = ",last2,cr);
+      print("foo::last   = ",foo::get_last()->get_a(),cr);
+      print("bar::last   = ",bar::get_last()->get_a(),cr);
   }
   gc();
 }

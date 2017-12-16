@@ -1,3 +1,5 @@
+// Test calling of a function
+
 print1number(int a)
 {
   print("The number is: ",a,"\n");
@@ -28,9 +30,11 @@ main()
   my_function(2,4,8); // Prints: "Sum: 6, Local: 14"
   my_function(3,5,7); // Prints: "Sum: 8, Local: 15"
   
+  print("====\n");
+  
   for(num = 0;num < 20; ++num)
   {
-     print1number(num);
+     print1number(num + 1);
   }
 
   AllOK();

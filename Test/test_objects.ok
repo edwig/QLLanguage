@@ -1,0 +1,29 @@
+foo1->a=1
+foo2->a=11
+foo1->b=2
+foo2->b=22
+bar1->a=111
+bar1->b=222
+bar1->c=333
+bar2->a=1111
+bar2->b=2222
+bar2->c=3333
+Foo1 counting
+1
+2
+Foo2 counting
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+global last = 99
+foo::last   = 23
+bar::last   = 23

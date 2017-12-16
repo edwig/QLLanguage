@@ -382,6 +382,15 @@ Class::~Class()
 MemObject*
 Class::AddDataMember(QLvm* p_vm,CString p_name,int p_storage)
 {
+  if(p_storage == ST_SDATA)
+  {
+    // Check that global does not already exists
+    if(p_vm->FindGlobal(p_name) >= 0)
+    {
+      return nullptr;
+    }
+  }
+
   MemObject* member = m_attributes.AddEntry(p_vm,p_name);
   member->m_storage = p_storage;
   // One more data member in this class

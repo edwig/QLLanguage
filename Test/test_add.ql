@@ -16,6 +16,6 @@ main()
    print(str3,"\n");
    print("Result: ",num3,"\n");
    
-   str3 = str1 + num2;
+   str3 = str2 + num2;
    print("Mixed : ",str3,"\n");
 }

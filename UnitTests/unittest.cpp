@@ -16,6 +16,121 @@ namespace UnitTests
       DoTheTest("test_add");
 		}
 
+    TEST_METHOD(test_array)
+    {
+      DoTheTest("test_array");
+    }
+
+    TEST_METHOD(test_basic)
+    {
+      DoTheTest("test_basic");
+    }
+
+    TEST_METHOD(test_call)
+    {
+      DoTheTest("test_call");
+    }
+
+    TEST_METHOD(test_constructor_2)
+    {
+      DoTheTest("test_constructor_2");
+    }
+
+    TEST_METHOD(test_deletes)
+    {
+      DoTheTest("test_deletes");
+    }
+
+    TEST_METHOD(test_falsetrue)
+    {
+      DoTheTest("test_falsetrue");
+    }
+
+    TEST_METHOD(test_float)
+    {
+      DoTheTest("test_float");
+    }
+
+    TEST_METHOD(test_for_loop)
+    {
+      DoTheTest("test_for_loop");
+    }
+
+    TEST_METHOD(test_globals)
+    {
+      DoTheTest("test_globals");
+    }
+
+    TEST_METHOD(test_locals)
+    {
+      DoTheTest("test_locals");
+    }
+
+    TEST_METHOD(test_object)
+    {
+      DoTheTest("test_object");
+    }
+
+    TEST_METHOD(test_objects)
+    {
+      DoTheTest("test_objects");
+    }
+
+    TEST_METHOD(test_recurse)
+    {
+      DoTheTest("test_recurse");
+    }
+
+    TEST_METHOD(test_reference)
+    {
+      DoTheTest("test_reference");
+    }
+
+    TEST_METHOD(test_sizeof)
+    {
+      DoTheTest("test_sizeof");
+    }
+
+    TEST_METHOD(test_square)
+    {
+      DoTheTest("test_square");
+    }
+
+    TEST_METHOD(test_string_find)
+    {
+      DoTheTest("test_string_find");
+    }
+
+    TEST_METHOD(test_string_index)
+    {
+      DoTheTest("test_string_index");
+    }
+
+    TEST_METHOD(test_string_leftright)
+    {
+      DoTheTest("test_string_leftright");
+    }
+
+    TEST_METHOD(test_string_substring)
+    {
+      DoTheTest("test_string_substring");
+    }
+
+    TEST_METHOD(test_string_upperlower)
+    {
+      DoTheTest("test_string_upperlower");
+    }
+
+    TEST_METHOD(test_stringarray)
+    {
+      DoTheTest("test_stringarray");
+    }
+
+    TEST_METHOD(test_switch)
+    {
+      DoTheTest("test_switch");
+    }
+
     void DoTheTest(CString p_filename)
     {
       CString message("Running: ");

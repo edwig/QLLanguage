@@ -47,10 +47,6 @@ public:
   // Stack handling for QL_Functions
   MemObject**       GetStackPointer();
   QLVirtualMachine* GetVirtualMachine();
-  void              IncrementStackPointer();
-  void              IncrementStackPointer(int p_len);
-  MemObject**       PushInteger(int p_num);
-  void              PopStack(int p_num);
   int               GetIntegerArgument(int p_num);
   CString           GetStringArgument(int p_num);
   bcd               GetBcdArgument(int p_num);
@@ -85,7 +81,9 @@ private:
   void        AllocateStack();
   void        DestroyStack();
   void        CheckStack(int p_size);
+  void        PopStack(int p_num);
   void        StackOverflow();
+  MemObject** PushInteger(int p_num);
   MemObject** PushFunction(Function* p_func);
   MemObject** PushObject (Object* p_object);
 
@@ -153,18 +151,6 @@ inline QLVirtualMachine*
 QLInterpreter::GetVirtualMachine()
 {
   return m_vm;
-}
-
-inline void
-QLInterpreter::IncrementStackPointer()
-{
-  ++m_stack_pointer;
-}
-
-inline void
-QLInterpreter::IncrementStackPointer(int p_len)
-{
-  m_stack_pointer += p_len;
 }
 
 inline void

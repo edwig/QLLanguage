@@ -1,0 +1,15 @@
+Argument a = 10
+Argument a = 1000
+After call a = 10
+Argument a = 20
+Argument a = 2000
+After call a = 20
+Argument b = The test
+Argument b = something other
+After call b = The test
+Array index 0: 10
+Array index 1: 11
+Array index 2: 12
+After call c[0] : 666
+After call c[1] : 777
+After call c[2] : 888

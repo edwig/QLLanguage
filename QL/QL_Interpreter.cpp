@@ -188,8 +188,9 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
   Function*     calFunction = nullptr;
   MemObject**   topframe;
   MemObject*    val;
-  int           number;
-  int           pop = 0;
+  int           number  = 0;
+  int           pop     = 0;
+  bool          newline = true;
   bcd           floating;
   CString       selector;
   Class*        vClass;
@@ -213,6 +214,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
     {
       // Decode exactly one bytecode instruction
       m_debugger->DecodeInstruction(runFunction,m_code,(int) (m_pc - m_code));
+      newline = true;
     }
 
     // Execute program counter and increment it in the same action
@@ -224,10 +226,12 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         {
                           // Finish tracing if active. Show what we will be calling
                           m_debugger->PrintObject(m_stack_pointer[n]);
+                          newline = false;
                         }
                         switch (m_stack_pointer[n]->m_type) 
                         {
                           case DTYPE_INTERNAL:(*m_stack_pointer[n]->m_value.v_internal)(this,n);
+                                              pop = n; // Number of arguments to pop again
                                               break;
                           case DTYPE_STRING:  calFunction = m_vm->FindScript(*m_stack_pointer[n]->m_value.v_string);
                                               if(calFunction == nullptr)
@@ -242,20 +246,20 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         }
                         if(calFunction)
                         {
-                          // Test number of arguments and data types
-                          TestFunctionArguments(calFunction,n);
+                           // Test number of arguments and data types
+                           TestFunctionArguments(calFunction,n);
 
-                          CheckStack(STACKFRAME_SIZE);
-                          PushInteger(0);                                     // No object
-                          PushFunction(runFunction);                          // Running function
-                          PushInteger(n);                                     // NUMBER OF ARGUMENTS
-                          PushInteger((int)(m_stack_top - m_frame_pointer));  // OFFSET SP FROM TOP (BEGINNING)
-                          PushInteger((int)(m_pc - m_code));                  // OFFSET IN BYTECODE
-                          m_code = m_pc   = calFunction->GetBytecode();       // New bytecode program counter
-                          runFunction     = calFunction;                      // Now running this function
-                          m_frame_pointer = m_stack_pointer;
-                          runObject       = nullptr;
-                          calFunction     = nullptr;
+                           CheckStack(STACKFRAME_SIZE);
+                           PushInteger(0);                                     // No object
+                           PushFunction(runFunction);                          // Running function
+                           PushInteger(n);                                     // NUMBER OF ARGUMENTS
+                           PushInteger((int)(m_stack_top - m_frame_pointer));  // OFFSET SP FROM TOP (BEGINNING)
+                           PushInteger((int)(m_pc - m_code));                  // OFFSET IN BYTECODE
+                           m_code = m_pc   = calFunction->GetBytecode();       // New bytecode program counter
+                           runFunction     = calFunction;                      // Now running this function
+                           m_frame_pointer = m_stack_pointer;
+                           runObject       = nullptr;
+                           calFunction     = nullptr;
                         }
                         break;
       case OP_RETURN:		// RETURN FROM A SCRIPT FUNCTION
@@ -306,7 +310,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                           default:	         BadType(1,DTYPE_ARRAY); break;
                         }
                         // Implicit "POP 1"
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_VSTORE:		// STORE AN ELEMENT BACK IN A VECTOR/ARRAY
                         CheckType(1,DTYPE_INTEGER);
@@ -316,8 +320,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                           case DTYPE_STRING: StringSet(); break;
                           default:	         BadType(1,DTYPE_ARRAY); break;
                         }
-                        // Implicit "POP 2"
-                        m_stack_pointer += 2;
+                        pop = 2;
                         break;
       case OP_MLOAD:		// LOAD AN OBJECT MEMBER ON THE STACK
                         m_stack_pointer[0] = runObject->GetAttribute(*m_pc++);
@@ -341,23 +344,23 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         n = *m_pc++;
                         m_stack_pointer[0] = m_frame_pointer[-n-1];
 
-#ifdef _DEBUG
-                        {
-                          int stacklen = (int)(m_stack_top - m_frame_pointer);
-                          TRACE("Frame length: %d\n",stacklen);
-                        }
-#endif
+// #ifdef _DEBUG
+//                         {
+//                           int stacklen = (int)(m_stack_top - m_frame_pointer);
+//                           TRACE("Frame length: %d\n",stacklen);
+//                         }
+// #endif
                         break;
       case OP_TSTORE: 	// SET a value in a Temporary (local variable)
                         n = *m_pc++;
                         m_frame_pointer[-n-1] = m_stack_pointer[0];
 
-#ifdef _DEBUG
-                        {
-                          int stacklen = (int)(m_stack_top - m_frame_pointer);
-                          TRACE("Frame length: %d\n",stacklen);
-                        }
-#endif
+// #ifdef _DEBUG
+//                         {
+//                           int stacklen = (int)(m_stack_top - m_frame_pointer);
+//                           TRACE("Frame length: %d\n",stacklen);
+//                         }
+// #endif
                         break;
       case OP_TSPACE:		// Create space on the stack for local variables (temporaries)
                         ReserveSpace(*m_pc++);
@@ -387,23 +390,23 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         break;
       case OP_ADD:		  // PERFORM OPERATOR ADD on INTEGER, STRING, BCD or VARIANT
                         inter_operator(OP_ADD);
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_SUB:		  // PERFORM OPERATOR SUBTRACT on INTEGER, STRING, BCD or VARIANT
                         inter_operator(OP_SUB);
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_MUL:		  // PERFORM OPERATOR MULTIPLY on INTEGER, STRING, BCD or VARIANT
                         inter_operator(OP_MUL);
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_DIV:  		// PERFORM OPERATOR DIVIDE on INTEGER, STRING, BCD or VARIANT
                         inter_operator(OP_DIV);
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_REM: 		  // PERFORM OPERATOR REMAINDER on INTEGER, STRING, BCD or VARIANT
                         inter_operator(OP_REM);
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_INC:  	  // INCREMENT TOS (INTEGER, BCD or VARIANT)
                         Inter_increment();
@@ -415,19 +418,19 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         CheckType(0,DTYPE_INTEGER);
                         CheckType(1,DTYPE_INTEGER);
                         m_stack_pointer[1]->m_value.v_integer &= m_stack_pointer[0]->m_value.v_integer;
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_BOR:  	  // OPERATOR BINARY-OR on an INTEGER	
                         CheckType(0,DTYPE_INTEGER);
                         CheckType(1,DTYPE_INTEGER);
                         m_stack_pointer[1]->m_value.v_integer |= m_stack_pointer[0]->m_value.v_integer;
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_XOR: 		  // OPERATOR BINARY-EXCLUSIVE OR on an INTEGER
                         CheckType(0,DTYPE_INTEGER);
                         CheckType(1,DTYPE_INTEGER);
                         m_stack_pointer[1]->m_value.v_integer ^= m_stack_pointer[0]->m_value.v_integer;
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_BNOT: 		// OPERATOR BINARY-NOT on an INTEGER
                         CheckType(0,DTYPE_INTEGER);
@@ -443,37 +446,37 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                                               break;
                           default:            break;
                         }
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_SHR:  		// OPERATOR BINARY SHIFT RIGHT
                         CheckType(0,DTYPE_INTEGER);
                         CheckType(1,DTYPE_INTEGER);
                         m_stack_pointer[1]->m_value.v_integer >>= m_stack_pointer[0]->m_value.v_integer;
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_LT:       // OPERATOR LESS THAN (<)
                         inter_operator(OP_LT);
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_LE:       // OPERATOR LESS THAN OR EQUAL TO (<=)
                         inter_operator(OP_LE);
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_EQ: 		  // OPERATOR EQUAL (==)
                         inter_operator(OP_EQ);
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_NE:       // OPERATOR NOT EQUAL (!=)
                         inter_operator(OP_NE);
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_GE:       // OPERATOR GREATER THAN OR EQUAL TO (>=)
                         inter_operator(OP_GE);
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_GT:       // OPERATOR GREATER THAN (<)
                         inter_operator(OP_GT);
-                        ++m_stack_pointer;
+                        pop = 1;
                         break;
       case OP_LIT:      // LOAD A LITERAL FOR THE CURRENT FUNCTION
                         val = runFunction ? runFunction->GetLiteral(*m_pc++) 
@@ -501,6 +504,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         {
                           // Finish tracing if active. Show what we will be calling
                           m_debugger->PrintObject(m_stack_pointer[n]);
+                          newline = false;
                         }
 
                         // See if it is an immediate scripted object
@@ -523,6 +527,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                           switch(val->m_type)
                           {
                             case DTYPE_INTERNAL:	(*val->m_value.v_internal)(this,n);
+                                                  pop = n;
                                                   break;
                             case DTYPE_STRING:    val = calObject->GetClass()->FindFuncMember(selector);
                                                   if(val)
@@ -563,7 +568,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                           // SEND REQUEST TO INTERNAL OBJECT
                           DoSendInternal(n);
                           // POP two of the stack
-                          pop = 2;
+                          pop = n;
                         }
                         break;
       case OP_DUP2:     // Duplicate top two stack entries
@@ -593,22 +598,22 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         val = calObject->GetClass()->RecursiveFindFuncMember("destroy");
                         if(val && val->m_value.v_script)
                         {
-                          // Use destroy function: no arguments allowed
-                          calFunction = val->m_value.v_script;
-                          TestFunctionArguments(calFunction,0);
-                          // Same as a OP_SEND method
-                          CheckStack(STACKFRAME_SIZE);
-                          PushObject(runObject);
-                          PushFunction(runFunction);
-                          PushInteger(1); // No arguments
-                          PushInteger((int)(m_stack_top - m_frame_pointer));
-                          PushInteger((int)(m_pc - m_code));
-                          m_code = m_pc   = calFunction->GetBytecode();
-                          runFunction     = calFunction;
-                          runObject       = calObject;
-                          m_frame_pointer = m_stack_pointer;
-                          calFunction     = nullptr;
-                          calObject       = nullptr;
+                           // Use destroy function: no arguments allowed
+                           calFunction = val->m_value.v_script;
+                           TestFunctionArguments(calFunction,0);
+                           // Same as a OP_SEND method
+                           CheckStack(STACKFRAME_SIZE);
+                           PushObject(runObject);
+                           PushFunction(runFunction);
+                           PushInteger(1); // No arguments
+                           PushInteger((int)(m_stack_top - m_frame_pointer));
+                           PushInteger((int)(m_pc - m_code));
+                           m_code = m_pc   = calFunction->GetBytecode();
+                           runFunction     = calFunction;
+                           runObject       = calObject;
+                           m_frame_pointer = m_stack_pointer;
+                           calFunction     = nullptr;
+                           calObject       = nullptr;
                         }
                         break;
       case OP_DELETE:   // At the end of the "Destroy" DTOR method
@@ -641,14 +646,12 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
     if(m_trace)
     {
       // Complete the trace by printing the object (optionally)
-      m_debugger->PrintObject(m_stack_pointer[0]);
-      // TIJDELIJK
-      osputs("TMP: ");
-      m_vm->Print(stderr,TRUE,m_frame_pointer[-3]);
-      osputs("\n");
+      m_debugger->PrintObject(m_stack_pointer[0],newline);
 
-      int stacklen = (int)(m_stack_top - m_frame_pointer);
-      TRACE("Frame length: %d\n",stacklen);
+//       // TIJDELIJK
+//       osputs("TMP: ");
+//       m_vm->Print(stderr,TRUE,m_frame_pointer[-3]);
+//       osputs("\n");
     }
     if(pop)
     {
@@ -658,6 +661,9 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
 // #ifdef _DEBUG
 //     int stacklen = m_stack_top - m_stack_pointer;
 //     TRACE("Stack length: %d\n",stacklen);
+// 
+//     int framelen = (int)(m_stack_top - m_frame_pointer);
+//     TRACE("Frame length: %d\n",framelen);
 // #endif
   }
 }
@@ -782,13 +788,13 @@ QLInterpreter::inter_intint_operator(BYTE p_operator)
   switch(p_operator)
   {
     case OP_ADD:  number = left + right;
-                  SetInteger(1,number);
+                  SetInteger(0,number);
                   break;
     case OP_SUB:  number = left - right;
-                  SetInteger(1,number);
+                  SetInteger(0,number);
                   break;
     case OP_MUL:  number = left * right;
-                  SetInteger(1,number);
+                  SetInteger(0,number);
                   break;
     case OP_DIV:  if(right == 0)
                   {
@@ -798,7 +804,7 @@ QLInterpreter::inter_intint_operator(BYTE p_operator)
                   {
                     number = left / right;
                   }
-                  SetInteger(1,number);
+                  SetInteger(0,number);
                   break;
     case OP_REM:  if(right == 0)
                   {
@@ -808,25 +814,25 @@ QLInterpreter::inter_intint_operator(BYTE p_operator)
                   {
                     number = left % right;
                   }
-                  SetInteger(1, number);
+                  SetInteger(0, number);
                   break;
     case OP_LT:   yesno = left < right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GT:   yesno = left > right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_LE:   yesno = left <= right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_GE:   yesno = left >= right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_EQ:   yesno = left == right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_NE:   yesno = left != right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
   }
 }
@@ -843,13 +849,13 @@ QLInterpreter::inter_bcdbcd_operator(BYTE p_operator)
   switch(p_operator)
   {
     case OP_ADD:  fl = *left + *right;
-                  SetBcd(1,fl);
+                  SetBcd(0,fl);
                   break;
     case OP_SUB:  fl = *left - *right;
-                  SetBcd(1,fl);
+                  SetBcd(0,fl);
                   break;
     case OP_MUL:  fl = *left * *right;
-                  SetBcd(1, fl);
+                  SetBcd(0, fl);
                   break;
     case OP_DIV:  if(right->IsNull())
                   {
@@ -860,7 +866,7 @@ QLInterpreter::inter_bcdbcd_operator(BYTE p_operator)
                   {
                     fl = *left / *right;
                   }
-                  SetBcd(1, fl);
+                  SetBcd(0, fl);
                   break;
     case OP_REM:  if(right->IsNull())
                   {
@@ -871,25 +877,25 @@ QLInterpreter::inter_bcdbcd_operator(BYTE p_operator)
                   {
                     fl = *left % *right;
                   }
-                  SetBcd(1,fl);
+                  SetBcd(0,fl);
                   break;
     case OP_LT:   yesno = *left < *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GT:   yesno = *left > *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_LE:   yesno = *left <= *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GE:   yesno = *left >= *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_EQ:   yesno = *left == *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_NE:   yesno = *left != *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
   }
 }
@@ -906,13 +912,13 @@ QLInterpreter::inter_intbcd_operator(BYTE p_operator)
   switch(p_operator)
   {
     case OP_ADD:  fl = *left + right;
-                  SetBcd(1,fl);
+                  SetBcd(0,fl);
                   break;
     case OP_SUB:  fl = *left - right;
-                  SetBcd(1,fl);
+                  SetBcd(0,fl);
                   break;
     case OP_MUL:  fl = *left * right;
-                  SetBcd(1, fl);
+                  SetBcd(0, fl);
                   break;
     case OP_DIV:  if(m_stack_pointer[0]->m_value.v_integer == 0)
                   {
@@ -923,7 +929,7 @@ QLInterpreter::inter_intbcd_operator(BYTE p_operator)
                   {
                     fl = *left / right;
                   }
-                  SetBcd(1, fl);
+                  SetBcd(0, fl);
                   break;
     case OP_REM:  if(m_stack_pointer[0]->m_value.v_integer == 0)
                   {
@@ -934,25 +940,25 @@ QLInterpreter::inter_intbcd_operator(BYTE p_operator)
                   {
                     fl = *left % right;
                   }
-                  SetBcd(1, fl);
+                  SetBcd(0, fl);
                   break;
     case OP_LT:   yesno = *left < right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GT:   yesno = *left > right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_LE:   yesno = *left <= right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GE:   yesno = *left >= right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_EQ:   yesno = *left == right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_NE:   yesno = *left != right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
   }
 }
@@ -969,13 +975,13 @@ QLInterpreter::inter_intvar_operator(BYTE p_operator)
   switch(p_operator)
   {
     case OP_ADD:  result = left + right;
-                  SetInteger(1,result);
+                  SetInteger(0,result);
                   break;
     case OP_SUB:  result = left - right;
-                  SetInteger(1,result);
+                  SetInteger(0,result);
                   break;
     case OP_MUL:  result = left * right;
-                  SetInteger(1,result);
+                  SetInteger(0,result);
                   break;
     case OP_DIV:  if(right == 0)
                   {
@@ -985,7 +991,7 @@ QLInterpreter::inter_intvar_operator(BYTE p_operator)
                   {
                     result = left / right;
                   }
-                  SetInteger(1,result);
+                  SetInteger(0,result);
                   break;
     case OP_REM:  if(right == 0)
                   {
@@ -995,25 +1001,25 @@ QLInterpreter::inter_intvar_operator(BYTE p_operator)
                   {
                     result = left % right;
                   }
-                  SetInteger(1,result);
+                  SetInteger(0,result);
                   break;
     case OP_LT:   yesno = left < right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GT:   yesno = left > right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_LE:   yesno = left <= right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GE:   yesno = left >= right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_EQ:   yesno = left == right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_NE:   yesno = left != right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
   }
 }
@@ -1030,13 +1036,13 @@ QLInterpreter::inter_bcdint_operator(BYTE p_operator)
   switch(p_operator)
   {
     case OP_ADD:  result = *left + right;
-                  SetBcd(1,result);
+                  SetBcd(0,result);
                   break;
     case OP_SUB:  result = *left - right;
-                  SetBcd(1,result);
+                  SetBcd(0,result);
                   break;
     case OP_MUL:  result = *left * right;
-                  SetBcd(1,result);
+                  SetBcd(0,result);
                   break;
     case OP_DIV:  if(m_stack_pointer[0]->m_value.v_integer == 0)
                   {
@@ -1046,7 +1052,7 @@ QLInterpreter::inter_bcdint_operator(BYTE p_operator)
                   {
                     result = *left / right;
                   }
-                  SetBcd(1,result);
+                  SetBcd(0,result);
                   break;
     case OP_REM:  if(m_stack_pointer[0]->m_value.v_integer == 0)
                   {
@@ -1056,25 +1062,25 @@ QLInterpreter::inter_bcdint_operator(BYTE p_operator)
                   {
                     result = *left % right;
                   }
-                  SetBcd(1,result);
+                  SetBcd(0,result);
                   break;
     case OP_LT:   yesno = *left < right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GT:   yesno = *left > right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_LE:   yesno = *left <= right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GE:   yesno = *left >= right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_EQ:   yesno = *left == right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_NE:   yesno = *left != right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
   }
 }
@@ -1089,25 +1095,29 @@ QLInterpreter::inter_strstr_operator(BYTE p_operator)
 
   switch(p_operator)
   {
-    case OP_ADD: *m_stack_pointer[1]->m_value.v_string += *m_stack_pointer[0]->m_value.v_string;
+    case OP_ADD: {  CString left  = *m_stack_pointer[1]->m_value.v_string;
+                    CString right = *m_stack_pointer[0]->m_value.v_string;
+                    SetString(0,0);
+                    *m_stack_pointer[0]->m_value.v_string = left + right;
+                 }
                  break;
     case OP_LT:  yesno = *m_stack_pointer[1]->m_value.v_string < *m_stack_pointer[0]->m_value.v_string;
-                 SetInteger(1,yesno);
+                 SetInteger(0,yesno);
                  break;
     case OP_GT:  yesno = *m_stack_pointer[1]->m_value.v_string > *m_stack_pointer[0]->m_value.v_string;
-                 SetInteger(1, yesno);
+                 SetInteger(0, yesno);
                  break;
     case OP_LE:  yesno = *m_stack_pointer[1]->m_value.v_string <= *m_stack_pointer[0]->m_value.v_string;
-                 SetInteger(1, yesno);
+                 SetInteger(0, yesno);
                  break;
     case OP_GE:  yesno = *m_stack_pointer[1]->m_value.v_string >= *m_stack_pointer[0]->m_value.v_string;
-                 SetInteger(1, yesno);
+                 SetInteger(0, yesno);
                  break;
     case OP_EQ:  yesno = m_stack_pointer[1]->m_value.v_string->Compare(*m_stack_pointer[0]->m_value.v_string) == 0;
-                 SetInteger(1, yesno);
+                 SetInteger(0, yesno);
                  break;
     case OP_NE:  yesno = m_stack_pointer[1]->m_value.v_string->Compare(*m_stack_pointer[0]->m_value.v_string) != 0;
-                 SetInteger(1, yesno);
+                 SetInteger(0, yesno);
                  break;
     default:     BadOperator(p_operator);
                  break;
@@ -1129,26 +1139,26 @@ QLInterpreter::inter_intstr_operator(BYTE p_operator)
                   {
                     result += *str;
                   }
-                  SetString(1,0);
+                  SetString(0,0);
                   *m_stack_pointer[1]->m_value.v_string = result;
                   break;
     case OP_LT:   number = atoi(*str) < number;
-                  SetInteger(1,number);
+                  SetInteger(0,number);
                   break;
     case OP_GT:   number = atoi(*str) > number;
-                  SetInteger(1, number);
+                  SetInteger(0, number);
                   break;
     case OP_LE:   number = atoi(*str) <= number;
-                  SetInteger(1, number);
+                  SetInteger(0, number);
                   break;
     case OP_GE:   number = atoi(*str) >= number;
-                  SetInteger(1, number);
+                  SetInteger(0, number);
                   break;
     case OP_EQ:   number = atoi(*str) == number;
-                  SetInteger(1, number);
+                  SetInteger(0, number);
                   break;
     case OP_NE:   number = atoi(*str) != number;
-                  SetInteger(1, number);
+                  SetInteger(0, number);
                   break;
     default:      BadOperator(p_operator);
                   break;
@@ -1167,13 +1177,13 @@ QLInterpreter::inter_bcdvar_operator(BYTE p_operator)
   switch(p_operator)
   {
     case OP_ADD:  result = *left + right;
-                  SetBcd(1,result);
+                  SetBcd(0,result);
                   break;
     case OP_SUB:  result = *left - right;
-                  SetBcd(1,result);
+                  SetBcd(0,result);
                   break;
     case OP_MUL:  result = *left * right;
-                  SetBcd(1,result);
+                  SetBcd(0,result);
                   break;
     case OP_DIV:  if(right.IsNull())
                   {
@@ -1183,7 +1193,7 @@ QLInterpreter::inter_bcdvar_operator(BYTE p_operator)
                   {
                     result = *left / right;
                   }
-                  SetBcd(1,result);
+                  SetBcd(0,result);
                   break;
     case OP_REM:  if(right.IsNull() == 0)
                   {
@@ -1193,25 +1203,25 @@ QLInterpreter::inter_bcdvar_operator(BYTE p_operator)
                   {
                     result = *left % right;
                   }
-                  SetBcd(1,result);
+                  SetBcd(0,result);
                   break;
     case OP_LT:   yesno = *left < right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GT:   yesno = *left > right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_LE:   yesno = *left <= right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GE:   yesno = *left >= right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_EQ:   yesno = *left == right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_NE:   yesno = *left != right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
   }
 }
@@ -1227,32 +1237,35 @@ QLInterpreter::inter_strint_operator(BYTE p_operator)
 
   switch(p_operator)
   {
-    case OP_ADD:  m_stack_pointer[1]->m_value.v_string->AppendFormat("%d",right);
+    case OP_ADD:  str = *m_stack_pointer[1]->m_value.v_string;
+                  str.AppendFormat("%d",right);
+                  SetString(0,0);
+                  *m_stack_pointer[0]->m_value.v_string = str;
                   break;
     case OP_MUL:  for(int ind = 0;ind < right; ++ind)
                   {
                     str += *m_stack_pointer[1]->m_value.v_string;
                   }
-                  SetString(1,0);
+                  SetString(0,0);
                   *m_stack_pointer[1]->m_value.v_string = str;
                   break;
     case OP_LT:   yesno = left < right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GT:   yesno = left > right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_LE:   yesno = left <= right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GE:   yesno = left >= right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_EQ:   yesno = left == right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_NE:   yesno = left != right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     default:      BadOperator(p_operator);
   }
@@ -1275,26 +1288,26 @@ QLInterpreter::inter_bcdstr_operator(BYTE p_operator)
                   {
                     str += *m_stack_pointer[0]->m_value.v_string;
                   }
-                  SetString(1,0);
+                  SetString(0,0);
                   *m_stack_pointer[1]->m_value.v_string = str;
                   break;
     case OP_LT:   yesno = *left < right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GT:   yesno = *left > right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_LE:   yesno = *left <= right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_GE:   yesno = *left >= right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_EQ:   yesno = *left == right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_NE:   yesno = *left != right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     default:      BadOperator(p_operator);
   }
@@ -1311,22 +1324,22 @@ QLInterpreter::inter_strbcd_operator(BYTE p_operator)
   switch(p_operator)
   {
     case OP_LT: yesno = left < *right;
-                SetInteger(1,yesno);
+                SetInteger(0,yesno);
                 break;
     case OP_GT: yesno = left > *right;
-                SetInteger(1,yesno);
+                SetInteger(0,yesno);
                 break;
     case OP_LE: yesno = left <= *right;
-                SetInteger(1,yesno);
+                SetInteger(0,yesno);
                 break;
     case OP_GE: yesno = left >= *right;
-                SetInteger(1,yesno);
+                SetInteger(0,yesno);
                 break;
     case OP_EQ: yesno = left == *right;
-                SetInteger(1,yesno);
+                SetInteger(0,yesno);
                 break;
     case OP_NE: yesno = left != *right;
-                SetInteger(1,yesno);
+                SetInteger(0,yesno);
                 break;
     default:    BadOperator(p_operator);
   }
@@ -1337,33 +1350,34 @@ void
 QLInterpreter::inter_strvar_operator(BYTE p_operator)
 {
   bool yesno = false;
-  CString* left = m_stack_pointer[1]->m_value.v_string;
+  CString left = *m_stack_pointer[1]->m_value.v_string;
   CString  right( m_stack_pointer[0]->m_value.v_variant->GetAsChar());
 
   switch(p_operator)
   {
-    case OP_ADD:  *m_stack_pointer[1]->m_value.v_string += right;
+    case OP_ADD:  SetString(0,0);
+                  (*m_stack_pointer[0]->m_value.v_string) = left + right;
                   break;
-    case OP_LT:   yesno = *left < right;
-                  SetInteger(1,yesno);
+    case OP_LT:   yesno = left < right;
+                  SetInteger(0,yesno);
                   break;
-    case OP_GT:   yesno = *left > right;
-                  SetInteger(1, yesno);
+    case OP_GT:   yesno = left > right;
+                  SetInteger(0, yesno);
                   break;
-    case OP_LE:   yesno = *left <= right;
-                  SetInteger(1, yesno);
+    case OP_LE:   yesno = left <= right;
+                  SetInteger(0, yesno);
                   break;
-    case OP_GE:   yesno = *left >= right;
-                  SetInteger(1, yesno);
+    case OP_GE:   yesno = left >= right;
+                  SetInteger(0, yesno);
                   break;
-    case OP_EQ:   yesno = *left == right;
-                  SetInteger(1, yesno);
+    case OP_EQ:   yesno = left == right;
+                  SetInteger(0, yesno);
                   break;
-    case OP_NE:   yesno = *left != right;
-                  SetInteger(1, yesno);
+    case OP_NE:   yesno = left != right;
+                  SetInteger(0, yesno);
                   break;
     default:      BadOperator(p_operator);
-
+                  break;
   }
 }
 
@@ -1379,13 +1393,13 @@ QLInterpreter::inter_varint_operator(BYTE p_operator)
   switch(p_operator)
   {
     case OP_ADD:  number = left + right;
-                  SetInteger(1,number);
+                  SetInteger(0,number);
                   break;
     case OP_SUB:  number = left - right;
-                  SetInteger(1,number);
+                  SetInteger(0,number);
                   break;
     case OP_MUL:  number = left * right;
-                  SetInteger(1,number);
+                  SetInteger(0,number);
                   break;
     case OP_DIV:  if(right == 0)
                   {
@@ -1395,7 +1409,7 @@ QLInterpreter::inter_varint_operator(BYTE p_operator)
                   {
                     number = left / right;
                   }
-                  SetInteger(1,number);
+                  SetInteger(0,number);
                   break;
     case OP_REM:  if(right == 0)
                   {
@@ -1405,25 +1419,25 @@ QLInterpreter::inter_varint_operator(BYTE p_operator)
                   {
                     number = left % right;
                   }
-                  SetInteger(1, number);
+                  SetInteger(0, number);
                   break;
     case OP_LT:   yesno = left < right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GT:   yesno = left > right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_LE:   yesno = left <= right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_GE:   yesno = left >= right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_EQ:   yesno = left == right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_NE:   yesno = left != right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
   }
 }
@@ -1440,13 +1454,13 @@ QLInterpreter::inter_varbcd_operator(BYTE p_operator)
   switch(p_operator)
   {
     case OP_ADD:  number = left + *right;
-                  SetBcd(1,number);
+                  SetBcd(0,number);
                   break;
     case OP_SUB:  number = left - *right;
-                  SetBcd(1,number);
+                  SetBcd(0,number);
                   break;
     case OP_MUL:  number = left * *right;
-                  SetBcd(1,number);
+                  SetBcd(0,number);
                   break;
     case OP_DIV:  if(right->IsNull())
                   {
@@ -1456,7 +1470,7 @@ QLInterpreter::inter_varbcd_operator(BYTE p_operator)
                   {
                     number = left / *right;
                   }
-                  SetBcd(1,number);
+                  SetBcd(0,number);
                   break;
     case OP_REM:  if(right->IsNull())
                   {
@@ -1466,25 +1480,25 @@ QLInterpreter::inter_varbcd_operator(BYTE p_operator)
                   {
                     number = left % *right;
                   }
-                  SetBcd(1,number);
+                  SetBcd(0,number);
                   break;
     case OP_LT:   yesno = left < *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GT:   yesno = left > *right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_LE:   yesno = left <= *right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_GE:   yesno = left >= *right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_EQ:   yesno = left == *right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_NE:   yesno = left != *right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
   }
 }
@@ -1501,13 +1515,13 @@ QLInterpreter::inter_varstr_operator(BYTE p_operator)
   switch(p_operator)
   {
     case OP_ADD:  result = *left + right;
-                  SetVariant(1,result);
+                  SetVariant(0,result);
                   break;
     case OP_SUB:  result = *left - right;
-                  SetVariant(1,result);
+                  SetVariant(0,result);
                   break;
     case OP_MUL:  result = *left * right;
-                  SetVariant(1,result);
+                  SetVariant(0,result);
                   break;
     case OP_DIV:  if(right.IsNULL() || right.IsEmpty())
                   {
@@ -1517,7 +1531,7 @@ QLInterpreter::inter_varstr_operator(BYTE p_operator)
                   {
                     result = *left / right;
                   }
-                  SetVariant(1,result);
+                  SetVariant(0,result);
                   break;
     case OP_REM:  if(right.IsNULL() || right.IsEmpty())
                   {
@@ -1527,25 +1541,25 @@ QLInterpreter::inter_varstr_operator(BYTE p_operator)
                   {
                     result = *left % right;
                   }
-                  SetVariant(1,result);
+                  SetVariant(0,result);
                   break;
     case OP_LT:   yesno = *left < right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GT:   yesno = *left > right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_LE:   yesno = *left <= right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_GE:   yesno = *left >= right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_EQ:   yesno = *left == right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
     case OP_NE:   yesno = *left != right;
-                  SetInteger(1, yesno);
+                  SetInteger(0, yesno);
                   break;
   }
 }
@@ -1562,13 +1576,13 @@ QLInterpreter::inter_varvar_operator(BYTE p_operator)
   switch(p_operator)
   {
     case OP_ADD:  number = *left + *right;
-                  SetVariant(1,number);
+                  SetVariant(0,number);
                   break;
     case OP_SUB:  number = *left - *right;
-                  SetVariant(1,number);
+                  SetVariant(0,number);
                   break;
     case OP_MUL:  number = *left * *right;
-                  SetVariant(1,number);
+                  SetVariant(0,number);
                   break;
     case OP_DIV:  if(right->IsNULL() || right->IsEmpty())
                   {
@@ -1578,7 +1592,7 @@ QLInterpreter::inter_varvar_operator(BYTE p_operator)
                   {
                     number = *left / *right;
                   }
-                  SetVariant(1,number);
+                  SetVariant(0,number);
                   break;
     case OP_REM:  if(right->IsNULL() || right->IsEmpty())
                   {
@@ -1588,25 +1602,25 @@ QLInterpreter::inter_varvar_operator(BYTE p_operator)
                   {
                     number = *left % *right;
                   }
-                  SetVariant(1,number);
+                  SetVariant(0,number);
                   break;
     case OP_LT:   yesno = *left < *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GT:   yesno = *left > *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_LE:   yesno = *left <= *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_GE:   yesno = *left >= *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_EQ:   yesno = *left == *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
     case OP_NE:   yesno = *left != *right;
-                  SetInteger(1,yesno);
+                  SetInteger(0,yesno);
                   break;
   }
 }
@@ -1711,7 +1725,7 @@ QLInterpreter::VectorRef()
   {
     m_vm->Error("Array subscript out of bounds: %d",index);
   }
-  m_stack_pointer[1] = array->GetEntry(index);
+  m_stack_pointer[0] = array->GetEntry(index);
 }
 
 // Load a string element as in "string[index]"
@@ -1733,7 +1747,7 @@ QLInterpreter::StringRef()
   {
     cc = string->GetAt(index);
   }
-  SetInteger(1,cc);
+  SetInteger(0,cc);
 }
 
 // VectorSet as in "array[index] = value"
@@ -1756,7 +1770,6 @@ QLInterpreter::VectorSet()
   {
     m_vm->Error("Array subscript out of bounds: %d",index);
   }
-  m_stack_pointer[2] = m_stack_pointer[0];
   array->SetEntry(index,m_stack_pointer[0]);
 }
 
@@ -1777,7 +1790,7 @@ QLInterpreter::StringSet()
     m_vm->Error("String subscript out of bounds: %d",index);
   }
   string->SetAt(index,cc);
-  SetInteger(2,cc);
+  SetInteger(0,cc);
 }
 
 // Get data word from program counter

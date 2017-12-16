@@ -14,13 +14,13 @@ firstclass::firstclass(int a,int b)
 {
   x = a;
   y = b;
-  print("Created object first",this,"\n");
+  print("Created object: ",a,b,"\n");
 }
 
 firstclass::identity()
 {
   print("X = ",x," Y = ",y,"\n");
-  print("OBJECT = ",this,"\n");
+  // print("OBJECT = ",this,"\n");
 }  
   
 firstclass::plus()
