@@ -182,24 +182,10 @@ STANDARD METHODS
   string.substring(<expression>[,<expression])
   string.left(<expression>)
   string.right(<expression>)
-  // string methods to implement:
-  string.reverseIndex(<expression>)
-  string.reverseFind(<expression>)
   string.makeupper()
   string.makelower()
   // array methods to implement
-  array.push_front(<expression>)
-  array.push_back (<expression>)
-  array.pop_front()
-  array.pop_back()
-  array.front()
-  array.back()
-  array.size()
   array.find(<expression>)
-  array.get(n)
-  array.next()
-  array.prev()
-  array.clear()
 
   // Stil to implement:
   bcd.*     (all bcd         members)

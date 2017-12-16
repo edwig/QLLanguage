@@ -343,24 +343,10 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
       case OP_TLOAD: 		// REFERENCE A LOCAL VARIABLE
                         n = *m_pc++;
                         m_stack_pointer[0] = m_frame_pointer[-n-1];
-
-// #ifdef _DEBUG
-//                         {
-//                           int stacklen = (int)(m_stack_top - m_frame_pointer);
-//                           TRACE("Frame length: %d\n",stacklen);
-//                         }
-// #endif
                         break;
       case OP_TSTORE: 	// SET a value in a Temporary (local variable)
                         n = *m_pc++;
                         m_frame_pointer[-n-1] = m_stack_pointer[0];
-
-// #ifdef _DEBUG
-//                         {
-//                           int stacklen = (int)(m_stack_top - m_frame_pointer);
-//                           TRACE("Frame length: %d\n",stacklen);
-//                         }
-// #endif
                         break;
       case OP_TSPACE:		// Create space on the stack for local variables (temporaries)
                         ReserveSpace(*m_pc++);
@@ -415,26 +401,19 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         Inter_decrement();
                         break;
       case OP_BAND: 		// OPERATOR BINARY-AND on an INTEGER
-                        CheckType(0,DTYPE_INTEGER);
-                        CheckType(1,DTYPE_INTEGER);
-                        m_stack_pointer[1]->m_value.v_integer &= m_stack_pointer[0]->m_value.v_integer;
+                        Inter_binary(OP_BAND);
                         pop = 1;
                         break;
       case OP_BOR:  	  // OPERATOR BINARY-OR on an INTEGER	
-                        CheckType(0,DTYPE_INTEGER);
-                        CheckType(1,DTYPE_INTEGER);
-                        m_stack_pointer[1]->m_value.v_integer |= m_stack_pointer[0]->m_value.v_integer;
+                        Inter_binary(OP_BOR);
                         pop = 1;
                         break;
       case OP_XOR: 		  // OPERATOR BINARY-EXCLUSIVE OR on an INTEGER
-                        CheckType(0,DTYPE_INTEGER);
-                        CheckType(1,DTYPE_INTEGER);
-                        m_stack_pointer[1]->m_value.v_integer ^= m_stack_pointer[0]->m_value.v_integer;
+                        Inter_binary(OP_XOR);
                         pop = 1;
                         break;
       case OP_BNOT: 		// OPERATOR BINARY-NOT on an INTEGER
-                        CheckType(0,DTYPE_INTEGER);
-                        m_stack_pointer[0]->m_value.v_integer = ~m_stack_pointer[0]->m_value.v_integer;
+                        Inter_binary(OP_BNOT);
                         break;
       case OP_SHL:  		// OPERATOR BINARY SHIFTLEFT or PRINT TO STREAM
                         switch(m_stack_pointer[1]->m_type) 
@@ -1654,6 +1633,36 @@ QLInterpreter::Equal(MemObject* p_left,MemObject* p_right)
   }
   m_vm->Error("Cannot be used as selector for a case statement in a switch. Type: %d\n",p_right->m_type);
   return false;
+}
+
+// Binary operators '|' '&' and '~'
+void
+QLInterpreter::Inter_binary(BYTE p_operator)
+{
+  // TOS must be integer
+  CheckType(0,DTYPE_INTEGER);
+
+  switch(p_operator)
+  {
+    case OP_BAND: // OPERATOR BINARY-AND on an INTEGER
+                  CheckType(1,DTYPE_INTEGER);
+                  m_stack_pointer[0]->m_value.v_integer =
+                  m_stack_pointer[1]->m_value.v_integer & m_stack_pointer[0]->m_value.v_integer;
+                  break;
+    case OP_BOR:  // OPERATOR BINARY-OR on an INTEGER	
+                  CheckType(1,DTYPE_INTEGER);
+                  m_stack_pointer[0]->m_value.v_integer =
+                  m_stack_pointer[1]->m_value.v_integer | m_stack_pointer[0]->m_value.v_integer;
+                  break;
+    case OP_XOR: 	// OPERATOR BINARY-EXCLUSIVE OR on an INTEGER
+                  CheckType(1,DTYPE_INTEGER);
+                  m_stack_pointer[0]->m_value.v_integer = 
+                  m_stack_pointer[1]->m_value.v_integer ^ m_stack_pointer[0]->m_value.v_integer;
+                  break;
+    case OP_BNOT: // OPERATOR BINARY-NOT on an INTEGER
+                  m_stack_pointer[0]->m_value.v_integer = !m_stack_pointer[0]->m_value.v_integer;
+                  break;
+  }
 }
 
 // Stack offset of an argument reference (this-pointer, member arguments)

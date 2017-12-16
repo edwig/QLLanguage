@@ -26,7 +26,6 @@ static char THIS_FILE[] = __FILE__;
 #define MAX_PATH     260
 #define BUFFER_SIZE (32 * 1024)
 
-
 // Add a built-in function
 static void
 add_function(char* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_vm)
@@ -313,13 +312,7 @@ static int xexit(QLInterpreter* p_inter,int argc)
 static int xgc(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,0);
-#ifdef _DEBUG
-  TRACE("GARBAGE COLLECTION\n");
-#endif
   p_inter->GetVirtualMachine()->GC();
-#ifdef _DEBUG
-  TRACE("GARBAGE COLLECTION DONE\n");
-#endif
   p_inter->SetNil(0);
   return 0;
 }

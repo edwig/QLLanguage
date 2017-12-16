@@ -113,6 +113,8 @@ private:
   void        inter_varvar_operator(BYTE p_operator);
   // Equal comparison for the SWITCH statement
   bool        Equal(MemObject* p_left,MemObject* p_right);
+  // Binary operators '|' '&' and '~'
+  void        Inter_binary(BYTE p_operator);
 
   // typename - get the name of a type
   CString     GetTypename(int type);
