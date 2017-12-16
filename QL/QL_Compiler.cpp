@@ -986,7 +986,8 @@ QLCompiler::do_expr1(PVAL* pv)
   while ((tkn = m_scanner->GetToken()) == ',') 
   {
     rvalue(pv);
-    do_expr1(pv); rvalue(pv);
+    do_expr1(pv); 
+    rvalue(pv);
   }
   m_scanner->SaveToken(tkn);
 }
@@ -1037,7 +1038,8 @@ QLCompiler::do_assignment(PVAL* pv,int op)
   emit_code(pv->m_pval_type,DUP,0);
   emit_code(pv->m_pval_type,LOAD,pv->m_value);
   putcbyte(OP_PUSH);
-  do_expr1(&rhs); rvalue(&rhs);
+  do_expr1(&rhs); 
+  rvalue(&rhs);
   putcbyte(op);
   emit_code(pv->m_pval_type,STORE,pv->m_value);
 }
@@ -1053,12 +1055,14 @@ QLCompiler::do_expr3(PVAL* pv)
     rvalue(pv);
     putcbyte(OP_BRF);
     nxt = putcword(0);
-    do_expr1(pv); rvalue(pv);
+    do_expr1(pv); 
+    rvalue(pv);
     FetchRequireToken(':');
     putcbyte(OP_BR);
     end = putcword(0);
     Fixup(nxt,cptr);
-    do_expr1(pv); rvalue(pv);
+    do_expr1(pv); 
+    rvalue(pv);
     Fixup(end,cptr);
   }
   m_scanner->SaveToken(tkn);
@@ -1075,7 +1079,8 @@ QLCompiler::do_expr4(PVAL* pv)
     rvalue(pv);
     putcbyte(OP_BRT);
     end = putcword(end);
-    do_expr5(pv); rvalue(pv);
+    do_expr5(pv); 
+    rvalue(pv);
   }
   Fixup(end,cptr);
   m_scanner->SaveToken(tkn);
@@ -1092,7 +1097,8 @@ QLCompiler::do_expr5(PVAL* pv)
     rvalue(pv);
     putcbyte(OP_BRF);
     end = putcword(end);
-    do_expr6(pv); rvalue(pv);
+    do_expr6(pv); 
+    rvalue(pv);
   }
   Fixup(end,cptr);
   m_scanner->SaveToken(tkn);
@@ -1108,7 +1114,8 @@ QLCompiler::do_expr6(PVAL* pv)
   {
     rvalue(pv);
     putcbyte(OP_PUSH);
-    do_expr7(pv); rvalue(pv);
+    do_expr7(pv); 
+    rvalue(pv);
     putcbyte(OP_BOR);
   }
   m_scanner->SaveToken(tkn);
@@ -1124,7 +1131,8 @@ QLCompiler::do_expr7(PVAL * pv)
   {
     rvalue(pv);
     putcbyte(OP_PUSH);
-    do_expr8(pv); rvalue(pv);
+    do_expr8(pv); 
+    rvalue(pv);
     putcbyte(OP_XOR);
   }
   m_scanner->SaveToken(tkn);
@@ -1140,7 +1148,8 @@ QLCompiler::do_expr8(PVAL* pv)
   {
     rvalue(pv);
     putcbyte(OP_PUSH);
-    do_expr9(pv); rvalue(pv);
+    do_expr9(pv); 
+    rvalue(pv);
     putcbyte(OP_BAND);
   }
   m_scanner->SaveToken(tkn);
@@ -1161,7 +1170,8 @@ QLCompiler::do_expr9(PVAL* pv)
     }
     rvalue(pv);
     putcbyte(OP_PUSH);
-    do_expr10(pv); rvalue(pv);
+    do_expr10(pv); 
+    rvalue(pv);
     putcbyte(op);
   }
   m_scanner->SaveToken(tkn);
@@ -1184,7 +1194,8 @@ QLCompiler::do_expr10(PVAL* pv)
     }
     rvalue(pv);
     putcbyte(OP_PUSH);
-    do_expr11(pv); rvalue(pv);
+    do_expr11(pv); 
+    rvalue(pv);
     putcbyte(op);
   }
   m_scanner->SaveToken(tkn);
@@ -1205,7 +1216,8 @@ QLCompiler::do_expr11(PVAL* pv)
     }
     rvalue(pv);
     putcbyte(OP_PUSH);
-    do_expr12(pv); rvalue(pv);
+    do_expr12(pv); 
+    rvalue(pv);
     putcbyte(op);
   }
   m_scanner->SaveToken(tkn);
@@ -1226,7 +1238,8 @@ QLCompiler::do_expr12(PVAL* pv)
     }
     rvalue(pv);
     putcbyte(OP_PUSH);
-    do_expr13(pv); rvalue(pv);
+    do_expr13(pv); 
+    rvalue(pv);
     putcbyte(op);
   }
   m_scanner->SaveToken(tkn);
@@ -1248,7 +1261,8 @@ QLCompiler::do_expr13(PVAL* pv)
     }
     rvalue(pv);
     putcbyte(OP_PUSH);
-    do_expr14(pv); rvalue(pv);
+    do_expr14(pv);
+    rvalue(pv);
     putcbyte(op);
   }
   m_scanner->SaveToken(tkn);
@@ -1656,30 +1670,32 @@ QLCompiler::AddLiteral(int p_type,MemObject** p_result,CString p_name/*=""*/,int
   {
     m_literals = new Array();
   }
-//   if(p_type == DTYPE_STRING)
-//   {
-//     int n = m_literals->FindStringEntry(p_name);
-//     if(n >= 0)
-//     {
-//       if(*p_result == nullptr)
-//       {
-//         *p_result = m_literals->GetEntry(n);
-//       }
-//       return n;
-//     }
-//   } 
-//   if(p_type == DTYPE_INTEGER)
-//   {
-//     int n = m_literals->FindIntegerEntry(p_value);
-//     if(n >= 0)
-//     {
-//       if(*p_result == nullptr)
-//       {
-//         *p_result = m_literals->GetEntry(n);
-//       }
-//       return n;
-//     }
-//   }
+  // Optimize string literals
+  if(p_type == DTYPE_STRING)
+  {
+    int n = m_literals->FindStringEntry(p_name);
+    if(n >= 0)
+    {
+      if(*p_result == nullptr)
+      {
+        *p_result = m_literals->GetEntry(n);
+      }
+      return n;
+    }
+  } 
+  // Optimize integer literals
+  if(p_type == DTYPE_INTEGER)
+  {
+    int n = m_literals->FindIntegerEntry(p_value);
+    if(n >= 0)
+    {
+      if(*p_result == nullptr)
+      {
+        *p_result = m_literals->GetEntry(n);
+      }
+      return n;
+    }
+  }
   int n = m_literals->GetSize();
   MemObject* lit = m_literals->AddEntryOfType(m_vm,p_type);
   *p_result = lit;

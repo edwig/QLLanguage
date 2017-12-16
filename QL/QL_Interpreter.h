@@ -51,12 +51,14 @@ public:
   CString           GetStringArgument(int p_num);
   bcd               GetBcdArgument(int p_num);
   SQLVariant*       GetSQLVariantArgument(int p_num);
+
+  // Setting TOS with a value/object
   void              SetNil    (int p_offset);
-  void              SetInteger(int p_offset,int p_value);
-  void              SetString (int p_offset,int p_len);
-  void              SetFile   (int p_offset,FILE* p_fp);
-  void              SetBcd    (int p_offset,bcd p_float);
-  void              SetVariant(int p_offset,SQLVariant p_variant);
+  void              SetInteger(int p_value);
+  void              SetString (CString p_string);
+  void              SetFile   (FILE* p_fp);
+  void              SetBcd    (bcd p_float);
+  void              SetVariant(SQLVariant p_variant);
   void              CheckType (int p_offset,int p_type1,int p_type2 = 0);
 
 private:

@@ -89,7 +89,7 @@ static int xtypeof(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
   int type = p_inter->GetStackPointer()[0]->m_type;
-  p_inter->SetInteger(0,type);
+  p_inter->SetInteger(type);
   return 0;
 }
 
@@ -113,9 +113,8 @@ static int xnewarray(QLInterpreter* p_inter,int argc)
 // Allocate a new string
 static int xnewstring(QLInterpreter* p_inter,int argc)
 {
-  argcount(p_inter,argc,1);
-  int size = p_inter->GetIntegerArgument(0);
-  p_inter->SetString(0,size);
+  argcount(p_inter,argc,0);
+  p_inter->SetString("");
   return 0;
 }
 
@@ -126,22 +125,22 @@ static int xsizeof(QLInterpreter* p_inter,int argc)
   MemObject* object = *p_inter->GetStackPointer();
   switch (object->m_type) 
   {
-    case DTYPE_ARRAY:   p_inter->SetInteger(0,object->m_value.v_array->GetSize());
+    case DTYPE_ARRAY:   p_inter->SetInteger(object->m_value.v_array->GetSize());
                         break;
-    case DTYPE_STRING:  p_inter->SetInteger(0,object->m_value.v_string->GetLength());
+    case DTYPE_STRING:  p_inter->SetInteger(object->m_value.v_string->GetLength());
                         break;
-    case DTYPE_BCD:     p_inter->SetInteger(0,sizeof(bcd));
+    case DTYPE_BCD:     p_inter->SetInteger(sizeof(bcd));
                         break;
-    case DTYPE_INTEGER: p_inter->SetInteger(0,sizeof(int));
+    case DTYPE_INTEGER: p_inter->SetInteger(sizeof(int));
                         break;
-    case DTYPE_DATABASE:p_inter->SetInteger(0,sizeof(SQLDatabase));
+    case DTYPE_DATABASE:p_inter->SetInteger(sizeof(SQLDatabase));
                         break;
-    case DTYPE_QUERY:   p_inter->SetInteger(0,sizeof(SQLQuery));
+    case DTYPE_QUERY:   p_inter->SetInteger(sizeof(SQLQuery));
                         break;
-    case DTYPE_VARIANT: p_inter->SetInteger(0,sizeof(SQLVariant));
+    case DTYPE_VARIANT: p_inter->SetInteger(sizeof(SQLVariant));
                         break;
     default:            // Cannot take the size of this object. Fail silently as 'zero'
-                        p_inter->SetInteger(0,0);
+                        p_inter->SetInteger(0);
                         break;
   }
   return 0;
@@ -173,7 +172,7 @@ static int xfopen(QLInterpreter* p_inter,int argc)
   }
   else
   {
-    p_inter->SetFile(0,fp);
+    p_inter->SetFile(fp);
   }
   return 0;
 }
@@ -183,7 +182,7 @@ static int xfclose(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
   FILE* fp = p_inter->GetStackPointer()[0]->m_value.v_file;
-  p_inter->SetInteger(0,fclose(fp));
+  p_inter->SetInteger(fclose(fp));
   return 0;
 }
 
@@ -193,7 +192,7 @@ static int  xgetc(QLInterpreter* p_inter,int argc)
   argcount(p_inter,argc,1);
   p_inter->CheckType(0,DTYPE_FILE);
   FILE* fp = p_inter->GetStackPointer()[0]->m_value.v_file;
-  p_inter->SetInteger(0,getc(fp));
+  p_inter->SetInteger(getc(fp));
   return 0;
 }
 
@@ -205,7 +204,7 @@ static int xputc(QLInterpreter* p_inter,int argc)
   argcount(p_inter,argc,2);
   FILE* fp = sp[0]->m_value.v_file;
   int   cc = p_inter->GetIntegerArgument(1);
-  p_inter->SetInteger(0,putc(cc,fp));
+  p_inter->SetInteger(putc(cc,fp));
   return 0;
 }
 
@@ -222,8 +221,7 @@ static int xgets(QLInterpreter* p_inter,int argc)
   {
     s.Append((const char*) &cc);
   }
-  p_inter->SetString(0,0);
-  *(sp[0]->m_value.v_string) = s;
+  p_inter->SetString(s);
   return 0;
 }
 
@@ -234,7 +232,7 @@ static int xputs(QLInterpreter* p_inter,int argc)
   argcount(p_inter,argc,2);
   FILE* fp = sp[0]->m_value.v_file;
   CString* str = sp[1]->m_value.v_string;
-  p_inter->SetInteger(0,fputs(*str,fp));
+  p_inter->SetInteger(fputs(*str,fp));
   return 0;
 }
 
@@ -250,7 +248,7 @@ static int xprint(QLInterpreter* p_inter,int argc)
     len += vm->Print(stdout,FALSE,sp[n]);
   }
   // total chars printed
-  p_inter->SetInteger(0,len);
+  p_inter->SetInteger(len);
 
   return 0;
 }
@@ -270,7 +268,7 @@ static int xfprint(QLInterpreter* p_inter,int argc)
   {
     len += vm->Print(file,FALSE,sp[n]);
   }
-  p_inter->SetInteger(0,len);
+  p_inter->SetInteger(len);
   return 0;
 }
 
@@ -284,8 +282,7 @@ static int xgetarg(QLInterpreter* p_inter,int argc)
 
   if (index >= 0 && index < qlargc)
   {
-    p_inter->SetString(0,0);
-    *(sp[0]->m_value.v_string) = CString(qlargv[index]);
+    p_inter->SetString(qlargv[index]);
   }
   else
   {
@@ -299,7 +296,7 @@ static int xsystem(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
   CString command = p_inter->GetStringArgument(0);
-  p_inter->SetInteger(0,system(command));
+  p_inter->SetInteger(system(command));
   return 0;
 }
 
@@ -332,7 +329,7 @@ static int xsin(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0,val.Sine());
+  p_inter->SetBcd(val.Sine());
   return 0;
 }
 
@@ -341,7 +338,7 @@ static int xcos(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.Cosine());
+  p_inter->SetBcd( val.Cosine());
   return 0;
 }
 
@@ -350,7 +347,7 @@ static int xtan(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.Tangent());
+  p_inter->SetBcd( val.Tangent());
   return 0;
 }
 
@@ -359,7 +356,7 @@ static int xasin(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.ArcSine());
+  p_inter->SetBcd( val.ArcSine());
   return 0;
 }
 
@@ -368,7 +365,7 @@ static int xacos(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.ArcCosine());
+  p_inter->SetBcd( val.ArcCosine());
   return 0;
 }
 
@@ -377,7 +374,7 @@ static int xatan(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.ArcTangent());
+  p_inter->SetBcd( val.ArcTangent());
   return 0;
 }
 
@@ -386,7 +383,7 @@ static int xsqrt(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.SquareRoot());
+  p_inter->SetBcd( val.SquareRoot());
   return 0;
 }
 
@@ -395,7 +392,7 @@ static int xceil(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.Ceiling());
+  p_inter->SetBcd( val.Ceiling());
   return 0;
 }
 
@@ -404,7 +401,7 @@ static int xfloor(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.Floor());
+  p_inter->SetBcd( val.Floor());
   return 0;
 }
 
@@ -413,7 +410,7 @@ static int xexp(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.Exp());
+  p_inter->SetBcd( val.Exp());
   return 0;
 }
 
@@ -422,7 +419,7 @@ static int xlog(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.Log10());
+  p_inter->SetBcd( val.Log10());
   return 0;
 }
 
@@ -431,7 +428,7 @@ static int xlogn(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.Log());
+  p_inter->SetBcd( val.Log());
   return 0;
 }
 
@@ -440,7 +437,7 @@ static int xlog10(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter, argc, 1);
   bcd val = p_inter->GetBcdArgument(0);
-  p_inter->SetBcd(0, val.Log10());
+  p_inter->SetBcd( val.Log10());
   return 0;
 }
 
@@ -450,7 +447,7 @@ static int xpow(QLInterpreter* p_inter,int argc)
   argcount(p_inter,argc,2);
   bcd val = p_inter->GetBcdArgument(0);
   bcd pow = p_inter->GetBcdArgument(1);
-  p_inter->SetBcd(0, val.Power(pow));
+  p_inter->SetBcd( val.Power(pow));
   return 0;
 }
 
@@ -461,7 +458,7 @@ static int xrand(QLInterpreter* p_inter,int argc)
   int rr = rand();
   bcd val = bcd(rr) / bcd((long)RAND_MAX);
   QLVirtualMachine* vm = p_inter->GetVirtualMachine();
-  p_inter->SetBcd(0,val);
+  p_inter->SetBcd(val);
   return 0;
 }
 
@@ -475,18 +472,18 @@ static int xtobcd(QLInterpreter* p_inter,int argc)
   {
     int n = p_inter->GetIntegerArgument(0);
     bcd val(n);
-    p_inter->SetBcd(0,val);
+    p_inter->SetBcd(val);
   }
   else if(object->m_type == DTYPE_STRING)
   {
     CString str = p_inter->GetStringArgument(0);
     bcd val(str);
-    p_inter->SetBcd(0,val);
+    p_inter->SetBcd(val);
   }
   else if(object->m_type == DTYPE_VARIANT)
   {
     bcd val = p_inter->GetSQLVariantArgument(0)->GetAsBCD();
-    p_inter->SetBcd(0,val);
+    p_inter->SetBcd(val);
   }
   else if(object->m_type == DTYPE_BCD)
   {
@@ -508,17 +505,17 @@ static int xtoint(QLInterpreter* p_inter,int argc)
   if(object->m_type == DTYPE_BCD)
   {
     bcd val = p_inter->GetBcdArgument(0);
-    p_inter->SetInteger(0,val.AsLong());
+    p_inter->SetInteger(val.AsLong());
   }
   else if(object->m_type == DTYPE_STRING)
   {
     CString str = p_inter->GetStringArgument(0);
-    p_inter->SetInteger(0,atoi(str));
+    p_inter->SetInteger(atoi(str));
   }
   else if(object->m_type == DTYPE_VARIANT)
   {
     int val = p_inter->GetSQLVariantArgument(0)->GetAsSLong();
-    p_inter->SetInteger(0,val);
+    p_inter->SetInteger(val);
   }
   else if(object->m_type == DTYPE_INTEGER)
   {
@@ -542,21 +539,18 @@ static int xtostr(QLInterpreter* p_inter,int argc)
     int n = p_inter->GetIntegerArgument(0);
     CString str;
     str.Format("%d",n);
-    p_inter->SetString(0,0);
-    *(object->m_value.v_string) = str;
+    p_inter->SetString(str);
   }
   else if(object->m_type == DTYPE_BCD)
   {
     bcd n = p_inter->GetBcdArgument(0);
     CString val = n.AsString();
-    p_inter->SetString(0,0);
-    *(object->m_value.v_string) = val;
+    p_inter->SetString(val);
   }
   else if(object->m_type == DTYPE_VARIANT)
   {
     CString str(p_inter->GetSQLVariantArgument(0)->GetAsChar());
-    p_inter->SetString(0,0);
-    *(object->m_value.v_string) = str;
+    p_inter->SetString(str);
   }
   else if(object->m_type == DTYPE_STRING)
   {
@@ -578,12 +572,12 @@ static int xabs(QLInterpreter* p_inter,int argc)
   if(object->m_type == DTYPE_INTEGER)
   {
     int n = p_inter->GetIntegerArgument(0);
-    p_inter->SetInteger(0,n < 0 ? -n : n);
+    p_inter->SetInteger(n < 0 ? -n : n);
   }
   if(object->m_type == DTYPE_BCD)
   {
     bcd n = p_inter->GetBcdArgument(0);
-    p_inter->SetBcd(0,n.AbsoluteValue());
+    p_inter->SetBcd(n.AbsoluteValue());
   }
   else
   {
@@ -604,7 +598,7 @@ static int xround(QLInterpreter* p_inter,int argc)
   int rnd    =  sp[0]->m_value.v_integer;
 
   number.Round(rnd);
-  p_inter->SetBcd(0,number);
+  p_inter->SetBcd(number);
 
   return 0;
 }
@@ -705,7 +699,7 @@ static int xdbsIsOpen(QLInterpreter* p_inter, int argc)
   MemObject** sp = p_inter->GetStackPointer();
   SQLDatabase* dbs = sp[1]->m_value.v_database;
   int isopen = dbs->IsOpen();
-  p_inter->SetInteger(0,isopen);
+  p_inter->SetInteger(isopen);
 
   return 0;
 }
@@ -720,7 +714,7 @@ static int xdbsClose(QLInterpreter* p_inter, int argc)
   SQLDatabase* dbs = sp[1]->m_value.v_database;
   dbs->Close();
   // Always successful
-  p_inter->SetInteger(0,1);
+  p_inter->SetInteger(1);
   return 0;
 }
 
@@ -734,7 +728,7 @@ static int xqryClose(QLInterpreter* p_inter, int argc)
   SQLQuery* qry = sp[1]->m_value.v_query;
   qry->Close();
   // Always successful
-  p_inter->SetInteger(0,1);
+  p_inter->SetInteger(1);
   return 0;
 }
 
@@ -756,7 +750,7 @@ static int xqryDoSQL(QLInterpreter* p_inter,int argc)
   {
     vm->Info("SQL error: %s",s);
   }
-  p_inter->SetInteger(0,result);
+  p_inter->SetInteger(result);
   return 0;
 }
 
@@ -778,7 +772,7 @@ int xqryRecord(QLInterpreter* p_inter,int argc)
   {
     vm->Info("SQL error: %s",s);
   }
-  p_inter->SetInteger(0,result);
+  p_inter->SetInteger(result);
   return 0;
 }
 
@@ -825,7 +819,7 @@ int xstrIndex(QLInterpreter* p_inter,int argc)
   {
     result = string->GetAt(string->GetLength() + index);
   }
-  p_inter->SetInteger(0,result);
+  p_inter->SetInteger(result);
   return 0;
 }
 
@@ -880,7 +874,7 @@ static int xstrFind(QLInterpreter* p_inter,int argc)
     int ch = sp[argument]->m_value.v_integer;
     position = string->Find(ch,starting);
   }
-  p_inter->SetInteger(0,position);
+  p_inter->SetInteger(position);
   return 0;
 }
 
@@ -890,7 +884,7 @@ static int xstrSize(QLInterpreter* p_inter,int p_argc)
   argcount(p_inter,p_argc,0);
   p_inter->CheckType(1,DTYPE_STRING);
   int size = p_inter->GetStringArgument(1).GetLength();
-  p_inter->SetInteger(0,size);
+  p_inter->SetInteger(size);
   return 0;
 }
 
@@ -905,9 +899,7 @@ static int xstrLeft(QLInterpreter* p_inter,int p_argc)
   CString*   str = sp[2]->m_value.v_string;
   CString result = str->Left(length);
 
-  p_inter->SetString(0,0);
-  (*sp[0]->m_value.v_string) = result;
-
+  p_inter->SetString(result);
   return 0;
 }
 
@@ -922,9 +914,7 @@ static int xstrRight(QLInterpreter* p_inter,int p_argc)
   CString*   str = sp[2]->m_value.v_string;
   CString result = str->Right(length);
 
-  p_inter->SetString(0,0);
-  (*sp[0]->m_value.v_string) = result;
-  
+  p_inter->SetString(result);
   return 0;
 }
 
@@ -963,8 +953,7 @@ static int xstrSubstring(QLInterpreter* p_inter,int p_argc)
   CString result = string->Mid(start,length);
 
   // Setting the result
-  p_inter->SetString(0,0);
-  *(sp[0]->m_value.v_string) = result;
+  p_inter->SetString(result);
   return 0;
 }
 
@@ -975,10 +964,7 @@ static int xstrUpper(QLInterpreter* p_inter,int p_argc)
   p_inter->CheckType(1,DTYPE_STRING);
   CString string = p_inter->GetStringArgument(1);
   string.MakeUpper();
-  p_inter->SetString(0,0);
-
-  MemObject** sp = p_inter->GetStackPointer();
-  (*sp[0]->m_value.v_string) = string;
+  p_inter->SetString(string);
   return 0;
 }
 
@@ -989,10 +975,7 @@ static int xstrLower(QLInterpreter* p_inter,int p_argc)
   p_inter->CheckType(1,DTYPE_STRING);
   CString string = p_inter->GetStringArgument(1);
   string.MakeLower();
-  p_inter->SetString(0,0);
-
-  MemObject** sp = p_inter->GetStackPointer();
-  (*sp[0]->m_value.v_string) = string;
+  p_inter->SetString(string);
   return 0;
 }
 
