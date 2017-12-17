@@ -59,7 +59,10 @@ public:
   void              SetFile   (FILE* p_fp);
   void              SetBcd    (bcd p_float);
   void              SetVariant(SQLVariant p_variant);
+
+  // Datatypes check and reporting
   void              CheckType (int p_offset,int p_type1,int p_type2 = 0);
+  int               BadType   (int p_offset,int p_type);
 
 private:
   // x = vector[a], getting x from element [a]
@@ -118,8 +121,6 @@ private:
 
   // typename - get the name of a type
   CString     GetTypename(int type);
-  // Report a bad operand type
-  int         BadType(int p_offset,int p_type);
   // Report a failure to find a method for a selector
   void        NoMethod(CString selector);
   // Get the name of an operator

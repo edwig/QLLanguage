@@ -92,6 +92,10 @@ public:
   bool        IsObjectFile(const char* p_filename);
   bool        IsSourceFile(const char* p_filename);
 
+  // SQLTransaction
+  int             SetSQLTransaction(SQLTransaction* p_trans);
+  SQLTransaction* GetSQLTransaction();
+
 private:
   // Garbage collector sub-functions
   void        MarkClasses();
@@ -180,6 +184,9 @@ private:
 
   // The current interpreter
   QLInterpreter* m_interpreter;
+
+  // The one-and-only SQL Transaction
+  SQLTransaction* m_transaction;
 
   CRITICAL_SECTION m_lock;
 };

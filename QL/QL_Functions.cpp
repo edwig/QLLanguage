@@ -556,6 +556,31 @@ static int xtostr(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+// Conversion to VARIANT
+static int xtovariant(QLInterpreter* p_inter,int argc)
+{
+  argcount(p_inter,argc,1);
+  MemObject* object = *p_inter->GetStackPointer();
+
+  if(object->m_type == DTYPE_INTEGER)
+  {
+    p_inter->SetVariant(SQLVariant((long)object->m_value.v_integer));
+  }
+  else if(object->m_type == DTYPE_STRING)
+  {
+    p_inter->SetVariant(SQLVariant(object->m_value.v_string));
+  }
+  else if(object->m_type == DTYPE_BCD)
+  {
+    p_inter->SetVariant(SQLVariant(object->m_value.v_floating));
+  }
+  else
+  {
+    p_inter->BadType(0,object->m_type);
+  }
+  return 0;
+}
+
 // Mathematical absolute value
 static int xabs(QLInterpreter* p_inter,int argc)
 {
@@ -689,7 +714,7 @@ static int xdbsIsOpen(QLInterpreter* p_inter, int argc)
 {
   argcount(p_inter,argc,0);
   p_inter->CheckType(1,DTYPE_DATABASE);
-  MemObject** sp = p_inter->GetStackPointer();
+  MemObject**  sp  = p_inter->GetStackPointer();
   SQLDatabase* dbs = sp[1]->m_value.v_database;
   int isopen = dbs->IsOpen();
   p_inter->SetInteger(isopen);
@@ -701,13 +726,60 @@ static int xdbsClose(QLInterpreter* p_inter, int argc)
 {
   argcount(p_inter,argc,0);
   p_inter->CheckType(1,DTYPE_DATABASE);
-  MemObject** sp = p_inter->GetStackPointer();
-  QLVirtualMachine* vm = p_inter->GetVirtualMachine();
 
+  MemObject**  sp  = p_inter->GetStackPointer();
   SQLDatabase* dbs = sp[1]->m_value.v_database;
   dbs->Close();
   // Always successful
   p_inter->SetInteger(1);
+  return 0;
+}
+
+static int xdbsTrans(QLInterpreter* p_inter,int argc)
+{
+  int result = 0;
+  argcount(p_inter,argc,0);
+  p_inter->CheckType(1,DTYPE_DATABASE);
+
+  MemObject**  sp  = p_inter->GetStackPointer();
+  SQLDatabase* dbs = sp[1]->m_value.v_database;
+
+  SQLTransaction* trans = new SQLTransaction(dbs,"QL");
+  if(trans)
+  {
+    QLVirtualMachine* vm = p_inter->GetVirtualMachine();
+    result = vm->SetSQLTransaction(trans);
+  }
+  p_inter->SetInteger(result);
+  return 0;
+}
+
+static int xdbsCommit(QLInterpreter* p_inter,int argc)
+{
+  int result = 0;
+  argcount(p_inter,argc,0);
+  p_inter->CheckType(1,DTYPE_DATABASE);
+
+  MemObject**  sp  = p_inter->GetStackPointer();
+  SQLDatabase* dbs = sp[1]->m_value.v_database;
+
+  QLVirtualMachine* vm = p_inter->GetVirtualMachine();
+  SQLTransaction* trans = vm->GetSQLTransaction();
+  if(trans)
+  {
+    try
+    {
+      dbs->CommitTransaction(trans);
+      vm->SetSQLTransaction(nullptr);
+      result = 1;
+    }
+    catch(CString& error)
+    {
+      vm->Info("Transaction error: %s",error);
+    }
+  }
+  // Result of the commit
+  p_inter->SetInteger(result);
   return 0;
 }
 
@@ -732,8 +804,8 @@ static int xqryDoSQL(QLInterpreter* p_inter,int argc)
   QLVirtualMachine* vm = p_inter->GetVirtualMachine();
 
   int    result = 0;
-  SQLQuery* qry = sp[argc + 1]->m_value.v_query;
-  CString text  = *sp[0]->m_value.v_string;
+  SQLQuery* qry =  sp[argc + 1]->m_value.v_query;
+  CString text  = *sp[argc - 1]->m_value.v_string;
   try
   {
     qry->DoSQLStatement(text);
@@ -742,8 +814,25 @@ static int xqryDoSQL(QLInterpreter* p_inter,int argc)
   catch(CString& s)
   {
     vm->Info("SQL error: %s",s);
+    return 0;
   }
   p_inter->SetInteger(result);
+  return 1;
+}
+
+static int xqryScalar(QLInterpreter* p_inter,int argc)
+{
+  if(xqryDoSQL(p_inter,argc))
+  {
+    MemObject** sp = p_inter->GetStackPointer();
+    SQLQuery* qry = sp[argc + 1]->m_value.v_query;
+    if(qry->GetRecord())
+    {
+      SQLVariant* var = qry->GetColumn(1);
+      p_inter->SetVariant(var);
+      return 1;
+    }
+  }
   return 0;
 }
 
@@ -792,8 +881,213 @@ static int xqryColumn(QLInterpreter* p_inter,int argc)
   return 0;
 }
 
+static int xqryColType(QLInterpreter* p_inter,int argc)
+{
+  int type = 0;
+  argcount(p_inter,argc,1);
+  p_inter->CheckType(0,DTYPE_INTEGER);
+  p_inter->CheckType(2,DTYPE_QUERY);
+  MemObject** sp = p_inter->GetStackPointer();
 
-int xstrIndex(QLInterpreter* p_inter,int argc)
+  SQLQuery* qry = sp[2]->m_value.v_query;
+  int    column = sp[0]->m_value.v_integer;
+
+  if(column >= 0 && column < qry->GetNumberOfColumns())
+  {
+    type = qry->GetColumnType(column);
+  }
+  else
+  {
+    p_inter->GetVirtualMachine()->Error("GetColumnType: Wrong column number: %d",column);
+  }
+  p_inter->SetInteger(type);
+  return 0;
+}
+
+static int xqryColNumber(QLInterpreter* p_inter,int argc)
+{
+  int type = 0;
+  argcount(p_inter,argc,1);
+  p_inter->CheckType(0,DTYPE_STRING);
+  p_inter->CheckType(2,DTYPE_QUERY);
+  MemObject** sp = p_inter->GetStackPointer();
+
+  SQLQuery* qry = sp[2]->m_value.v_query;
+  CString name = *sp[0]->m_value.v_string;
+
+  int number = qry->GetColumnNumber(name);
+  p_inter->SetInteger(number);
+  return 0;
+}
+
+static int xqryColName(QLInterpreter* p_inter,int argc)
+{
+  CString name;
+  argcount(p_inter,argc,1);
+  p_inter->CheckType(0,DTYPE_INTEGER);
+  p_inter->CheckType(2,DTYPE_QUERY);
+  MemObject** sp = p_inter->GetStackPointer();
+
+  SQLQuery* qry = sp[2]->m_value.v_query;
+  int    column = sp[0]->m_value.v_integer;
+
+  if(column >= 0 && column < qry->GetNumberOfColumns())
+  {
+    qry->GetColumnName(column,name);
+  }
+  else
+  {
+    p_inter->GetVirtualMachine()->Error("GetColumnName: Wrong column number: %d",column);
+  }
+  p_inter->SetString(name);
+  return 0;
+}
+
+static int xqryColLength(QLInterpreter* p_inter,int argc)
+{
+  int length = 0;
+  argcount(p_inter,argc,1);
+  p_inter->CheckType(0,DTYPE_INTEGER);
+  p_inter->CheckType(2,DTYPE_QUERY);
+  MemObject** sp = p_inter->GetStackPointer();
+
+  SQLQuery* qry = sp[2]->m_value.v_query;
+  int    column = sp[0]->m_value.v_integer;
+
+  if(column >= 0 && column < qry->GetNumberOfColumns())
+  {
+    length = qry->GetColumnLength(column);
+  }
+  else
+  {
+    p_inter->GetVirtualMachine()->Error("GetColumnLength: Wrong column number: %d",column);
+  }
+  p_inter->SetInteger(length);
+  return 0;
+}
+
+static int xqryColDLen(QLInterpreter* p_inter,int argc)
+{
+  int length = 0;
+  argcount(p_inter,argc,1);
+  p_inter->CheckType(0,DTYPE_INTEGER);
+  p_inter->CheckType(2,DTYPE_QUERY);
+  MemObject** sp = p_inter->GetStackPointer();
+
+  SQLQuery* qry = sp[2]->m_value.v_query;
+  int    column = sp[0]->m_value.v_integer;
+
+  if(column >= 0 && column < qry->GetNumberOfColumns())
+  {
+    length = qry->GetColumnDisplaySize(column);
+  }
+  else
+  {
+    p_inter->GetVirtualMachine()->Error("GetColumnDisplaySize: Wrong column number: %d",column);
+  }
+  p_inter->SetInteger(length);
+  return 0;
+}
+
+static int xqryError(QLInterpreter* p_inter,int argc)
+{
+  argcount(p_inter,argc,0);
+  p_inter->CheckType(1,DTYPE_QUERY);
+
+  MemObject** sp = p_inter->GetStackPointer();
+  SQLQuery*  qry = sp[1]->m_value.v_query;
+  CString  error = qry->GetError();
+
+  p_inter->SetString(error);
+  return 0;
+}
+
+static int xqryNumCols(QLInterpreter* p_inter,int argc)
+{
+  argcount(p_inter,argc,0);
+  p_inter->CheckType(1,DTYPE_QUERY);
+
+  MemObject** sp = p_inter->GetStackPointer();
+  SQLQuery*  qry = sp[1]->m_value.v_query;
+  int columns = qry->GetNumberOfColumns();
+
+  p_inter->SetInteger(columns);
+  return 0;
+}
+
+// SQLQuery.SetMaxRows
+static int xqryMaxRows(QLInterpreter* p_inter,int argc)
+{
+  argcount(p_inter,argc,1);
+  p_inter->CheckType(0,DTYPE_INTEGER);
+  p_inter->CheckType(2,DTYPE_QUERY);
+
+  MemObject** sp = p_inter->GetStackPointer();
+  SQLQuery*  qry = sp[2]->m_value.v_query;
+  int    maxrows = sp[0]->m_value.v_integer;
+
+  qry->SetMaxRows(maxrows);
+  p_inter->SetInteger(1);
+  return 0;
+}
+
+// SQLQuery.SetParameter(param,value)
+static int xqrySetParam(QLInterpreter* p_inter,int argc)
+{
+  argcount(p_inter,argc,2);
+  p_inter->CheckType(1,DTYPE_INTEGER);
+  p_inter->CheckType(3,DTYPE_QUERY);
+
+  MemObject** sp = p_inter->GetStackPointer();
+  SQLQuery*  qry = sp[3]->m_value.v_query;
+  int     number = sp[1]->m_value.v_integer;
+
+  switch(sp[0]->m_type)
+  {
+    case DTYPE_INTEGER: qry->SetParameter(number, sp[0]->m_value.v_integer);
+                        break;
+    case DTYPE_STRING:  qry->SetParameter(number,*sp[0]->m_value.v_string);
+                        break;
+    case DTYPE_BCD:     qry->SetParameter(number,*sp[0]->m_value.v_floating);
+                        break;
+    case DTYPE_VARIANT: qry->SetParameter(number, sp[0]->m_value.v_variant);
+                        break;
+    default:            p_inter->BadType(0,sp[0]->m_type);
+                        break;
+  }
+  p_inter->SetInteger(1);
+  return 0;
+}
+
+static int xqryIsNull(QLInterpreter* p_inter,int argc)
+{
+  argcount(p_inter,argc,1);
+  p_inter->CheckType(0,DTYPE_INTEGER);
+  p_inter->CheckType(2,DTYPE_QUERY);
+
+  MemObject** sp = p_inter->GetStackPointer();
+  SQLQuery*  qry = sp[2]->m_value.v_query;
+  int     number = sp[0]->m_value.v_integer;
+
+  p_inter->SetInteger(qry->IsNull(number));
+  return 0;
+}
+
+static int xqryIsEmpty(QLInterpreter* p_inter,int argc)
+{
+  argcount(p_inter,argc,1);
+  p_inter->CheckType(1,DTYPE_INTEGER);
+  p_inter->CheckType(2,DTYPE_QUERY);
+
+  MemObject** sp = p_inter->GetStackPointer();
+  SQLQuery*  qry = sp[2]->m_value.v_query;
+  int     number = sp[0]->m_value.v_integer;
+
+  p_inter->SetInteger(qry->IsEmpty(number));
+  return 0;
+}
+
+static int xstrIndex(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
   p_inter->CheckType(0,DTYPE_INTEGER);
@@ -1024,24 +1318,42 @@ void init_functions(QLVirtualMachine* p_vm)
   add_function("tobcd",     xtobcd,       p_vm);
   add_function("toint",     xtoint,       p_vm);
   add_function("tostring",  xtostr,       p_vm);
+  add_function("tovariant", xtovariant,   p_vm);
   add_function("abs",       xabs,         p_vm);
   add_function("round",     xround,       p_vm);
 
-  // Add all datatype methods
-  add_method(DTYPE_DATABASE, "IsOpen",        xdbsIsOpen,   p_vm);
-  add_method(DTYPE_DATABASE, "Close",         xdbsClose,    p_vm);
-  add_method(DTYPE_QUERY,    "Close",         xqryClose,    p_vm);
-  add_method(DTYPE_QUERY,    "DoSQLStatement",xqryDoSQL,    p_vm);
-  add_method(DTYPE_QUERY,    "GetRecord",     xqryRecord,   p_vm);
-  add_method(DTYPE_QUERY,    "GetColumn",     xqryColumn,   p_vm);
-  add_method(DTYPE_STRING,   "index",         xstrIndex,    p_vm);
-  add_method(DTYPE_STRING,   "find",          xstrFind,     p_vm);
-  add_method(DTYPE_STRING,   "size",          xstrSize,     p_vm);
-  add_method(DTYPE_STRING,   "substring",     xstrSubstring,p_vm);
-  add_method(DTYPE_STRING,   "left",          xstrLeft,     p_vm);
-  add_method(DTYPE_STRING,   "right",         xstrRight,    p_vm);
-  add_method(DTYPE_STRING,   "makeupper",     xstrUpper,    p_vm);
-  add_method(DTYPE_STRING,   "makelower",     xstrLower,    p_vm);
+  // Add all object methods
+  add_method(DTYPE_DATABASE, "IsOpen",                xdbsIsOpen,   p_vm);
+  add_method(DTYPE_DATABASE, "Close",                 xdbsClose,    p_vm);
+  add_method(DTYPE_DATABASE, "StartTransaction",      xdbsTrans,    p_vm);
+  add_method(DTYPE_DATABASE, "Commit",                xdbsCommit,   p_vm);
+  add_method(DTYPE_QUERY,    "Close",                 xqryClose,    p_vm);
+  add_method(DTYPE_QUERY,    "DoSQLStatement",        xqryDoSQL,    p_vm);
+  add_method(DTYPE_QUERY,    "DoSQLScalar",           xqryScalar,   p_vm);
+  add_method(DTYPE_QUERY,    "GetRecord",             xqryRecord,   p_vm);
+  add_method(DTYPE_QUERY,    "GetColumn",             xqryColumn,   p_vm);
+  add_method(DTYPE_QUERY,    "GetColumnType",         xqryColType,  p_vm);
+  add_method(DTYPE_QUERY,    "GetColumnNumber",       xqryColNumber,p_vm);
+  add_method(DTYPE_QUERY,    "GetColumnName",         xqryColName,  p_vm);
+  add_method(DTYPE_QUERY,    "GetColumnLength",       xqryColLength,p_vm);
+  add_method(DTYPE_QUERY,    "GetColumnDisplayLength",xqryColDLen,  p_vm);
+  add_method(DTYPE_QUERY,    "GetError",              xqryError,    p_vm);
+  add_method(DTYPE_QUERY,    "GetNumberOfColumns",    xqryNumCols,  p_vm);
+  add_method(DTYPE_QUERY,    "SetMaxRows",            xqryMaxRows,  p_vm);
+  add_method(DTYPE_QUERY,    "SetParameter",          xqrySetParam, p_vm);
+  add_method(DTYPE_QUERY,    "IsNull",                xqryIsNull,   p_vm);
+  add_method(DTYPE_QUERY,    "IsEmpty",               xqryIsEmpty,  p_vm);
+  add_method(DTYPE_STRING,   "index",                 xstrIndex,    p_vm);
+  add_method(DTYPE_STRING,   "find",                  xstrFind,     p_vm);
+  add_method(DTYPE_STRING,   "size",                  xstrSize,     p_vm);
+  add_method(DTYPE_STRING,   "substring",             xstrSubstring,p_vm);
+  add_method(DTYPE_STRING,   "left",                  xstrLeft,     p_vm);
+  add_method(DTYPE_STRING,   "right",                 xstrRight,    p_vm);
+  add_method(DTYPE_STRING,   "makeupper",             xstrUpper,    p_vm);
+  add_method(DTYPE_STRING,   "makelower",             xstrLower,    p_vm);
+
+  // SQLQuery methods to implement:
+  // 
 
   // Seed the random-number generator with the current time so that
   // the numbers will be different every time we run.

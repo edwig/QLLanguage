@@ -163,9 +163,10 @@ STANDARD INTERNAL FUNCTIONS
   <string>  = getarg(int)
   <int>     = system(string)
   <nil>     = gc();
-  <bcd>     = tobcd(int | string | bcd)
-  <int>     = toint(bcd | string | int)
-  <string>  = tostring(bcd | int | string)
+  <bcd>     = tobcd    (int | string | bcd)
+  <int>     = toint    (int | string | bcd)
+  <string>  = tostring (int | string | bcd)
+  <variant> = tovariant(int | string | bcd)
   <int>     = typeof(var)
 
 STANDARD NEW OBJECT FUNCTIONS
@@ -184,21 +185,36 @@ STANDARD METHODS
   string.right(<expression>)
   string.makeupper()
   string.makelower()
+
+  dbase.IsOpen()
+  dbase.Close()
+  dbase.StartTransaction()
+  dbase.Commit()
+  
+  query.Close()
+  query.DoSQLStatement(text)
+  query.DoSQLScalar(text)
+  query.GetColumn(n)
+  query.GetColumnType(n)
+  query.GetColumnNumber(text)
+  query.GetColumnName(n)
+  query.GetColumnLength(n)
+  query.GetColumnDisplaySize(n)
+  query.GetError()
+  query.GetNumberOfColumns()
+  query.GetRecord()
+  query.IsNull(n)
+  query.IsEmpty(n)
+  query.SetMaxRows(n)
+  query.SetParameter(n,<expression>)
+
   // array methods to implement
   array.find(<expression>)
 
   // Stil to implement:
-  bcd.*     (all bcd         members)
-  sqlvar.*  (all SQLVariant  members)
-  query.*   (all SQLQuery    members)
-  dbase.*   (all SQLDatabase members)
+  bcd.*     (all bcd members)
+  sqlvar.*  (all SQLVariant members)
 
-  dbase.IsOpen()
-  dbase.Close();
-  query.DoSQLStatement(text)
-  query.GetRecord()
-  query.GetColumn(n)
-  query.Close
 
 DLL IMPORT FUNCTIONS FOR LIBRARIES
   <int> = import("<dll library path>")

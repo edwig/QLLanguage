@@ -32,6 +32,7 @@ QLVirtualMachine::QLVirtualMachine()
   m_globals       = nullptr;
   m_literals      = nullptr;
   m_initcode      = nullptr;
+  m_transaction   = nullptr;
   m_threshold     = THRESHOLD_DEFAULT;
   m_dumpchain     = false;
   m_allocs        = 0;
@@ -682,7 +683,6 @@ QLVirtualMachine::AddBytecode(BYTE* p_bytecode,unsigned p_size)
 //
 //////////////////////////////////////////////////////////////////////////
 
-
 // print1 - print one value 
 int
 QLVirtualMachine::Print(FILE* p_fp,int p_quoteFlag,MemObject* p_value)
@@ -745,6 +745,30 @@ QLVirtualMachine::Print(FILE* p_fp,int p_quoteFlag,MemObject* p_value)
   }
   return len;
 } 
+
+//////////////////////////////////////////////////////////////////////////
+// 
+// TRANSACTIONS
+//
+//////////////////////////////////////////////////////////////////////////
+
+int
+QLVirtualMachine::SetSQLTransaction(SQLTransaction* p_trans)
+{
+  // Already a transaction, and trying to set a new one?
+  if(m_transaction && p_trans)
+  {
+    return 0;
+  }
+  m_transaction = p_trans;
+  return 1;
+}
+
+SQLTransaction* 
+QLVirtualMachine::GetSQLTransaction()
+{
+  return m_transaction;
+}
 
 //////////////////////////////////////////////////////////////////////////
 //
