@@ -4,77 +4,78 @@ QL BYTECODE DEFINITIONS
 <n>	  = 1 byte argument
 <nn>  = 2 byte argument
 
-OPCODE DEF      // DESCRIPTION
---------------  ------------------------------------------------------------------------------
-OP_CALL <n>     // CALL A FUNCTION (SCRIPT, INTERNAL, EXTERNAL)
-				        // <n> is the position on the stack (before arguments) with the call definition
-OP_RETURN		    // RETURN FROM A SCRIPT
-OP_LIT <n>      // LOAD LITERAL <n> ON TOS
-OP_NEW          // TOS must be literal to class -> Convert to new object of this class
-OP_SEND  <n>    // SEND event to an object (TOS[n] = object, TOS[n-1] = method-as-a-string)
-OP_LOAD  <n>	  // REFERENCE A GLOBAL VARIABLE <n> is position for the variable, load on TOS
-OP_STORE <n>	  // SET GLOBAL VARIABLE VALUE   <n> is position for the variable, TOS is stored there
-OP_VLOAD        // REFERENCE ARRAY OR STRING (TOS = index , TOS[1] = Array or string)
-OP_VSTORE       // SET ARRAY OR STRING REF   (TOS = value,  TOS[1] = index, TOS[2] = string or array)
-OP_MLOAD  <n>   // MEMBER REFERENCE   nth member is set on TOS
-OP_MSTORE <n>   // SET MEMBER         nth member is filled from TOS
-OP_ALOAD  <n>   // ARGUMENT REFERENCE nth argument is set on TOS
-OP_ASTORE <n>   // SET ARGUMENT       nth argument is filled with TOS
-OP_TSPACE <n>   // RESERVE SPACE FOR TEMPORARY VARIBLES <n> variables space on stack
-OP_TLOAD  <n>   // REFERENCE A TEMPORARY VARIABLE <n> is position for the variable, load on TOS
-OP_TSTORE <n>   // SET A TEMPORARY VARIABLE       <n> is position for the variable, TOS is stored there
-OP_BRT <nn>     // BRANCH IF TRUE  if TOS value is not zero, branch <nn> places in bytecode
-OP_BRF <nn>     // BRANCH IF FALSE if TOS value is     zero, branch <nn> places in bytecode
-OP_BR <nn>      // BRANCH UNCONDITIONALLY <nn> places in bytecode
-OP_NIL          // TOS becomes NIL
-OP_PUSH         // PUSH an integer of value 0 to TOS
-OP_NOT          // LOGICAL NOT OF TOS (if integer)
-OP_NEG          // NEGATE TOS (if integer)
-OP_ADD			    // ADD		   TOP TWO (STRING's INTEGER's or BCD's) and increment sp
-OP_SUB			    // SUBTRACT  TOP TWO (STRING's INTEGER's or BCD's) and increment sp
-OP_MUL          // MULTIPLY  TOP TWO (STRING's INTEGER's or BCD's) and increment sp
-OP_DIV			    // DIVIDE    TOP TWO (STRING's INTEGER's or BCD's) and increment sp
-OP_REM          // REMAINDER TOP TWO (STRING's INTEGER's or BCD's) and increment sp
-OP_INC          // INCREMENT TOS (if integer or BCD)
-OP_DEC          // DECREMENT TOS (if integer or BCD)
-OP_BAND         // BITWISE AND TOP TWO integers on stack and increment sp
-OP_BOR          // BITWISE OR  TOP TWO integers on stack and increment sp
-OP_XOR          // BITWISE XOR TOP TWO integers on stack and increment sp
-OP_BNOT         // BITWISE NOT OF TOS integer
-OP_SHL			    // SHIFT LEFT TOS places of TOS[1] integer
-                // Print to file TOS[1] of the value on TOS
-OP_SHR			    // SHIFT RIGHT TOS places of TOS[1] integer
-OP_LT           // LESSER           ( <) for TOP TWO arugments (INTEGER / BCD)
-OP_LE           // LESSER OR EQUAL  (<=) for TOP TWO arugments (INTEGER / BCD)
-OP_EQ           // EQUAL            (==) for TOP TWO arugments (INTEGER / BCD)
-OP_NE           // NOT EQUAL        (!=) for TOP TWO arugments (INTEGER / BCD)
-OP_GE           // GREATER OR EQUAL (>=) for TOP TWO arugments (INTEGER / BCD)
-OP_GT           // GREATER          ( >) for TOP TWO arugments (INTEGER / BCD)
-OP_DUP2         // DUPLICATE TOP 2 of stack and push on stack
-OP_DESTROY      // DESTROY by calling objects "destroy" method
-OP_DELETE       // DELETE an object on TOS
-OP_SWITCH <n>   // SWITCH TABLE <n> is the number of cases, TOS is switch variable
-  <xx> <yy>     // switch case <xx> is the literal, <yy> is the branch offset
-  <qq>          // the default case, <qq> is the branch offset
+OPCODE arg   DESCRIPTION
+------------ ------------------------------------------------------------------------------
+CALL   n     CALL A FUNCTION (SCRIPT, INTERNAL, EXTERNAL)
+				     <n> is the position on the stack (before arguments) with the call definition
+RETURN		   RETURN FROM A SCRIPT
+LIT    n     LOAD LITERAL <n> ON TOS
+NEW          TOS must be literal to class -> Convert to new object of this class
+SEND   n     SEND event to an object (TOS[n] = object, TOS[n-1] = method-as-a-string)
+LOAD   n	   REFERENCE A GLOBAL VARIABLE <n> is position for the variable, load on TOS
+STORE  n	   SET GLOBAL VARIABLE VALUE   <n> is position for the variable, TOS is stored there
+VLOAD        REFERENCE ARRAY OR STRING (TOS = index , TOS[1] = Array or string)
+VSTORE       SET ARRAY OR STRING REF   (TOS = value,  TOS[1] = index, TOS[2] = string or array)
+MLOAD  n     MEMBER REFERENCE   nth member is set on TOS
+MSTORE n     SET MEMBER         nth member is filled from TOS
+ALOAD  n     ARGUMENT REFERENCE nth argument is set on TOS
+ASTORE n     SET ARGUMENT       nth argument is filled with TOS
+TSPACE n     RESERVE SPACE FOR TEMPORARY VARIBLES <n> variables space on stack
+TLOAD  n     REFERENCE A TEMPORARY VARIABLE <n> is position for the variable, load on TOS
+TSTORE n     SET A TEMPORARY VARIABLE       <n> is position for the variable, TOS is stored there
+BRT    nn    BRANCH IF TRUE  if TOS value is not zero, branch <nn> places in bytecode
+BRF    nn    BRANCH IF FALSE if TOS value is     zero, branch <nn> places in bytecode
+BR     nn    BRANCH UNCONDITIONALLY <nn> places in bytecode
+NIL          TOS becomes NIL
+PUSH         PUSH an integer of value 0 to TOS
+NOT          LOGICAL NOT OF TOS (if integer)
+NEG          NEGATE TOS (if integer)
+ADD			     ADD		   TOP TWO (STRING's INTEGER's or BCD's)
+SUB			     SUBTRACT  TOP TWO (STRING's INTEGER's or BCD's)
+MUL          MULTIPLY  TOP TWO (STRING's INTEGER's or BCD's)
+DIV			     DIVIDE    TOP TWO (STRING's INTEGER's or BCD's)
+REM          REMAINDER TOP TWO (STRING's INTEGER's or BCD's)
+INC          INCREMENT TOS (if integer or BCD)
+DEC          DECREMENT TOS (if integer or BCD)
+BAND         BITWISE AND TOP TWO integers on stack
+BOR          BITWISE OR  TOP TWO integers on stack
+XOR          BITWISE XOR TOP TWO integers on stack
+BNOT         BITWISE NOT OF TOS integer
+SHL			     SHIFT LEFT TOS places of TOS[1] integer
+             Print to file TOS[1] of the value on TOS
+SHR          SHIFT RIGHT TOS places of TOS[1] integer
+LT           LESSER           ( <) for TOP TWO arugments (INTEGER / BCD)
+LE           LESSER OR EQUAL  (<=) for TOP TWO arugments (INTEGER / BCD)
+EQ           EQUAL            (==) for TOP TWO arugments (INTEGER / BCD)
+NE           NOT EQUAL        (!=) for TOP TWO arugments (INTEGER / BCD)
+GE           GREATER OR EQUAL (>=) for TOP TWO arugments (INTEGER / BCD)
+GT           GREATER          ( >) for TOP TWO arugments (INTEGER / BCD)
+DUP2         DUPLICATE TOP 2 of stack and push on stack
+DESTROY      DESTROY by calling objects "destroy" method
+DELETE       DELETE an object on TOS
+SWITCH n     SWITCH TABLE <n> is the number of cases, TOS is switch variable
+ <xx> <yy>   switch case <xx> is the literal, <yy> is the branch offset
+ <xx> <yy>
+ <..> <..>
+ <qq>        the default case, <qq> is the branch offset
+
+The working of a "POP n"
+========================
+Pop instructions are not generated and emitted by the compiler
+Instead the interpeter inserts 'virtual' POP instructions where neccessary
+E.g. after a function or object member call, or after calling an internal.
+Also after various mathematical and logical functions, where two arguments are used.
 
 Internal workings of the QL Bytecode
 ====================================
 
 The bytecode format
 ------------------------------------
-OP_CODE <n>         Here is <n> the offset on the stack
-                    Where the call object resides
-                    it is also the number of arguments (256 possible)
-OP_CODE <nn>        Here <nn> is the bytecode jump offset
-                    Offsets can be conditional, depending on opcode
-
-Making a call
-------------------------------------
-stack_pointer[n]->m_type     -> Type of the call
-DTYPE_INTERNAL               -> Make a C++ function call
-DTYPE_SCRIPT                 -> Make a bytecode script call
-DTYPE_EXTERNAL               -> Make a p/invoke call to a DLL
-
+CODE n         Here is <n> the offset on the stack
+               Where the call object resides
+               it is also the number of arguments (256 possible)
+CODE nn        Here <nn> is the bytecode jump offset
+               Offsets can be conditional, depending on opcode
 
 The frame pointer
 ---------------------------------------------------------------------------
