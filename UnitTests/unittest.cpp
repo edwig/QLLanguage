@@ -131,6 +131,11 @@ namespace UnitTests
       DoTheTest("test_switch");
     }
 
+    TEST_METHOD(test_database)
+    {
+      DoTheTest("test_database");
+    }
+
     TEST_METHOD(test_database_detail)
     {
       DoTheTest("test_database_detail");

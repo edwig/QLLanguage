@@ -1623,11 +1623,11 @@ SQLQuery::GetColumnLength(int p_column)
   UCHAR	      characters[1] = "";
   SQLSMALLINT inputSize = 1;
   SQLSMALLINT outputSize;
-  SQLINTEGER  integerValue = 0;
+  SQLLEN      integerValue = 0;
 
   if(p_column <= m_numColumns)
   {
-    m_retCode = SqlColAttribute(m_hstmt
+    m_retCode = SQLColAttribute(m_hstmt
                                ,(SQLUSMALLINT) p_column
                                ,(SQLUSMALLINT) SQL_DESC_LENGTH
                                ,(SQLPOINTER)   characters

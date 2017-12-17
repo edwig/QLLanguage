@@ -1,0 +1,69 @@
+RECORD
+ID         : 1
+Master ID  : 1
+Line number: 1
+Description: First line of first invoice
+Amount     : 100
+
+RECORD
+ID         : 2
+Master ID  : 1
+Line number: 2
+Description: Second line of first invoice
+Amount     : 500
+
+RECORD
+ID         : 3
+Master ID  : 1
+Line number: 3
+Description: Third line of first invoice
+Amount     : 150
+
+RECORD
+ID         : 4
+Master ID  : 2
+Line number: 1
+Description: First line of second invoice
+Amount     : 50
+
+RECORD
+ID         : 5
+Master ID  : 2
+Line number: 2
+Description: Second line of second invoice
+Amount     : 50
+
+RECORD
+ID         : 6
+Master ID  : 2
+Line number: 3
+Description: Third line of second invoice
+Amount     : 50
+
+RECORD
+ID         : 7
+Master ID  : 2
+Line number: 4
+Description: Fourth line of second invoice
+Amount     : 50
+
+RECORD
+ID         : 8
+Master ID  : 2
+Line number: 5
+Description: Fifth line of second invoice
+Amount     : 300
+
+RECORD
+ID         : 9
+Master ID  : 2
+Line number: 6
+Description: VAT for the second invoice
+Amount     : 100
+
+Total records: 9
+Columns total: 5
+Name col 4   : description
+Max name len : 250
+
+Ready

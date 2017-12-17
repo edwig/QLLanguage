@@ -1,31 +1,50 @@
-// Database test
+// Database baseic test
 
 main()
 {
-  database dbs = newdbs("owoc09","k2b","k2b");
-  query    qry = newquery(dbs);
+  dbase dbs = newdbase("testing","sysdba","altijd");
+  query qry = newquery(dbs);
+  string cr = "\n";
   int  counter = 0;
-  variant name;
-  variant id;
+  int  columns = 0;
+  int  collen  = 0;
+  string name;
 
   if(dbs.IsOpen())
   {
-    if(qry.DoSQLStatement("SELECT usr_name,usr_id FROM k2b_aut_gebruiker"))
+    if(qry.DoSQLStatement("SELECT * FROM detail"))
     {
       while(qry.GetRecord())
       {
-        name = qry.GetColumn(1);
-        id   = qry.GetColumn(2);
+        variant id          = qry->GetColumn(1);
+        variant master_id   = qry.GetColumn(2);
+		variant line        = qry.GetColumn(3);
+		variant description = qry.GetColumn(4);
+		variant amount      = qry.GetColumn(5);
 
-        print("User name: ",name,"\n");
-        print("User ID  : ",id,  "\n\n");
+		print("RECORD\n");
+		print("ID         : ",id,cr);
+		print("Master ID  : ",master_id,cr);
+		print("Line number: ",line,cr);
+		print("Description: ",description,cr);
+		print("Amount     : ",amount,cr);
+		print(cr);
 
-        ++counter;
-      }
+		++counter;
+	  }
+	  columns = qry.GetNumberOfColumns();
+	  name    = qry.GetColumnName(4);
+	  collen  = qry.GetColumnLength(4);
+	  
       qry.Close();
       dbs.Close();
 
-      print("Total users: ", counter, "\n");
+      print("Total records: ", counter,cr);
+	  print("Columns total: ", columns,cr);
+	  print("Name col 4   : ", name,cr);
+	  print("Max name len : ", collen,cr);
+	  print(cr);
+	  print("Ready\n");
     }
     else
     {
