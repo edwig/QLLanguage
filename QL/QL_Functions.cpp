@@ -623,7 +623,7 @@ static int xround(QLInterpreter* p_inter,int argc)
 
 // newdbs([database[,user[,password]])
 //
-static int xnewdbs(QLInterpreter* p_inter,int argc)
+static int xnewdbase(QLInterpreter* p_inter,int argc)
 {
   MemObject** sp = p_inter->GetStackPointer();
   QLVirtualMachine* vm = p_inter->GetVirtualMachine();
@@ -1284,7 +1284,7 @@ void init_functions(QLVirtualMachine* p_vm)
   add_function("typeof",    xtypeof,      p_vm);
   add_function("newarray",  xnewarray,    p_vm);
   add_function("newstring", xnewstring,   p_vm);
-  add_function("newdbs",    xnewdbs,      p_vm);
+  add_function("newdbase",  xnewdbase,    p_vm);
   add_function("newquery",  xnewquery,    p_vm);
   add_function("sizeof",    xsizeof,      p_vm);
   add_function("trace",     xtrace,       p_vm);

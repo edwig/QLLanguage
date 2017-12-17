@@ -1574,7 +1574,7 @@ const char* internal_datatypes[]
   ,"string"
   ,"bcd"
   ,"file"
-  ,"database"
+  ,"dbase"
   ,"query"
   ,"variant"
   ,"array"

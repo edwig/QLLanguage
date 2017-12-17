@@ -30,13 +30,7 @@ LOCAL-DECLARATION
   <local-declaration> , ...;
 
 DATATYPE
-  int
-  string
-  bcd
-  file
-  database
-  query
-  variant
+  <built-in-datatype>
   <class-name>
 
 STATEMENT
@@ -170,7 +164,7 @@ STANDARD INTERNAL FUNCTIONS
   <int>     = typeof(var)
 
 STANDARD NEW OBJECT FUNCTIONS
-  <dbase>  = newdbs([database[,user[,password]]])
+  <dbase>  = newdbase([database[,user[,password]]])
   <query>  = newquery(dbase)
   <string> = newstring()
   <array>  = newarray(size)
@@ -237,10 +231,3 @@ The following are valid options
 -o        show contents of object file
 -x        check for memory leaks on exit
 -s        Print stack on error exit
-
-
-QLLinker program
-================
-QLLinker -o <outputfile[.qob]> <inputfile[.qob]> ...
-
-(links all but first header, wich rewrites)
