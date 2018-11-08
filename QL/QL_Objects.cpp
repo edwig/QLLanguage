@@ -1,11 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // VARIOUS OBJECT FOR THE Q++ Scripting language
-// ir W.E. Huisman (c) 2017
+// ir W.E. Huisman (c) 2018
 //
 //////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include "QL_Language.h"
+#include "QL_MemObject.h"
 #include "QL_Objects.h"
 #include "QL_vm.h"
 

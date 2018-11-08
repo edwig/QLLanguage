@@ -2,7 +2,7 @@
 //
 // Q++ Language header
 //
-// 2014 (c) ir. W.E. Huisman
+// 2014-2018 (c) ir. W.E. Huisman
 //
 //////////////////////////////////////////////////////////////////////////
 
@@ -20,7 +20,7 @@
 // USED IN *.qob FILES
 #define QL_VERSION        200 // 2.00
 
-#define QUANTUM_PROMPT    "Quantum Language (c) 2014-2017 ir. W.E. Huisman"
+#define QUANTUM_PROMPT    "Quantum Language (c) 2014-2018 ir. W.E. Huisman"
 #define QUANTUM_VERSION   "2.0"
 
 // Tracing macro
@@ -79,6 +79,7 @@ class Array;
 class Class;
 class Object;
 class Function;
+class MemObject;
 class QLVirtualMachine;
 class QLInterpreter;
 
@@ -98,61 +99,6 @@ typedef struct _method
 }
 Method;
 
-// General memory object for use in all modules
-// This class structure is publicly available
-
-class MemObject
-{
-public:
-  MemObject();
-  MemObject(MemObject* p_orig);
- ~MemObject();
-  
-  // Assignment operator
-  MemObject& operator=(const MemObject& p_other);
-  
-  // Put a type in the object or clear it again
-  void  AllocateType(int p_type);
-  void  DeAllocate();
-  bool  IsMarked();
-
-  // DATA STRUCTUUR
-
-  shortint        m_type;           // Datatype of the object (DTYPE_XXX)
-  shortint        m_generation;     // Garbage collector generation marks (GC_XXX)
-  shortint        m_flags;          // Type and optimization flags (FLAG_XXX)
-  shortint        m_storage;        // Class storage type (static/local data/function)
-  union _value
-  {
-    UINT_PTR      v_all;            // Used if accessed as a memobject, instead of a type
-    int			      v_integer;        // DTYPE_INTEGER  value
-    CString*      v_string;         // DTYPE_STRING   value
-    bcd*          v_floating;       // DTYPE_BCD      value
-    FILE*         v_file;           // DTYPE_FILE     value
-    Array*        v_array;          // DTYPE_ARRAY    value
-    Object*       v_object;         // DTYPE_OBJECT   value
-    Class*        v_class;          // DTYPE_CLASS    value
-    Function*     v_script;	        // DTYPE_SCRIPT   Internal compiled script function
-    Internal      v_internal;       // DTYPE_INTERNAL Internal C++ function
-    CString*      v_sysname;        // DTYPE_EXTERNAL External PInvoke function
-    SQLDatabase*  v_database;       // DTYPE_DATABASE 
-    SQLQuery*     v_query;          // DTYPE_QUERY
-    SQLVariant*   v_variant;        // DTYPE_VARIANT
-  }
-  m_value;
-
-private:
-  // For use with the GC Garbage Collector
-  MemObject*      m_next;		        // Link to next object
-  MemObject*      m_prev;           // Link to prev object
-  friend          QLVirtualMachine;
-};
-
-inline bool
-MemObject::IsMarked()
-{
-  return (m_generation & GC_MARKED) != 0;
-}
 
 // Name mapping for global objects in the virtual machine
 typedef std::map<CString, MemObject*>     NameMap;

@@ -6,6 +6,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include "QL_Language.h"
+#include "QL_MemObject.h"
 #include "QL_vm.h"
 #include "QL_Exception.h"
 #include "QL_Objects.h"
@@ -466,7 +468,7 @@ QLVirtualMachine::FindScript(CString p_name)
   return nullptr;
 }
 
-// addentry - add an entry to a dictionary 
+// Add an entry to a dictionary 
 MemObject*
 QLVirtualMachine::AddEntry(NameMap& dict,CString p_key,int p_storage)
 {

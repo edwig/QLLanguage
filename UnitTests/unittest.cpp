@@ -180,32 +180,44 @@ namespace UnitTests
       CFile   file;
       CString output;
       CFileException exp;
-      if(file.Open(p_filename,CFile::modeRead | CFile::shareDenyNone,&exp))
-      {
-        char buffer[1024 + 1];
-        int size = 0;
-        
-        while((size = file.Read(buffer,1024)) > 0)
-        {
-          buffer[size] = 0;
-          output += buffer;
-        }
-        file.Close();
-      }
-      else
-      {
-        char buffer[1024];
-        CString message("Failed reading file: ");
-        message += p_filename + " : ";
-        exp.GetErrorMessage(buffer,1024);
-        message += buffer;
 
-        Logger::WriteMessage(message);
-        Assert::Fail();
+      try
+      {
+        if(file.Open(p_filename,CFile::modeRead | CFile::shareDenyNone,&exp))
+        {
+          char buffer[1024 + 1];
+          int size = 0;
+        
+          while((size = file.Read(buffer,1024)) > 0)
+          {
+            buffer[size] = 0;
+            output += buffer;
+          }
+          file.Close();
+        }
+        else
+        {
+          PrintFileError(exp,p_filename);
+        }
+      }
+      catch(CFileException& exp)
+      {
+        PrintFileError(exp,p_filename);
       }
       return output;
     }
 
+    void PrintFileError(CFileException& exp,CString& p_filename)
+    {
+      char buffer[1024];
+      CString message("Failed reading file: ");
+      message += p_filename + " : ";
+      exp.GetErrorMessage(buffer, 1024);
+      message += buffer;
+
+      Logger::WriteMessage(message);
+      Assert::Fail();
+    }
 
   private:
     CString m_basedir { "C:\\Develop\\QLLanguage\\Test\\" };

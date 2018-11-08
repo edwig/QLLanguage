@@ -11,16 +11,18 @@ The lifetime of a script is described as follows:
 
 The script language data types have been designed to encompass:
 
-| Type      |  Description                            |
-|---------  |----------------                         |
-| integer   | you guessed it: 32 bits signed integer  |
-| string    | as in a string of characters            |
-| bcd       | binary decimal floating point up to 40 decimal places |
-| database  | A pointer to a database object          |
-| query     | A pointer to a query object             |
++-----------------------------------------------------------------------------+
+| Type      |  Description                                                    |
+|-----------|-----------------------------------------------------------------|
+| integer   | you guessed it: 32 bits signed integer                          |
+| string    | as in a string of characters                                    |
+| bcd       | binary decimal floating point up to 40 decimal places           |
+| database  | A pointer to a database object                                  |
+| query     | A pointer to a query object                                     |
 | variant   | A result from a database query (can hold any database datatype) |
-| file      | A file pointer                          |
-| array     | An array of elementary datatypes (integer, string, bcd) |
+| file      | A file pointer                                                  |
+| array     | An array of elementary datatypes (integer, string, bcd)         |
++-----------------------------------------------------------------------------+
 
 See also de definition file: QL_in_BNF.txt
 for a definition of the language

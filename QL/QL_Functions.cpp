@@ -1,12 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // QL Language functions
-// ir. W.E. Huisman (c) 2017
+// ir. W.E. Huisman (c) 2018
 //
 //////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "QL_Language.h"
+#include "QL_MemObject.h"
 #include "QL_Functions.h"
 #include "QL_vm.h"
 #include "QL_Interpreter.h"
@@ -1327,6 +1328,7 @@ void init_functions(QLVirtualMachine* p_vm)
   add_method(DTYPE_DATABASE, "Close",                 xdbsClose,    p_vm);
   add_method(DTYPE_DATABASE, "StartTransaction",      xdbsTrans,    p_vm);
   add_method(DTYPE_DATABASE, "Commit",                xdbsCommit,   p_vm);
+  // QUERY methods
   add_method(DTYPE_QUERY,    "Close",                 xqryClose,    p_vm);
   add_method(DTYPE_QUERY,    "DoSQLStatement",        xqryDoSQL,    p_vm);
   add_method(DTYPE_QUERY,    "DoSQLScalar",           xqryScalar,   p_vm);
@@ -1343,6 +1345,7 @@ void init_functions(QLVirtualMachine* p_vm)
   add_method(DTYPE_QUERY,    "SetParameter",          xqrySetParam, p_vm);
   add_method(DTYPE_QUERY,    "IsNull",                xqryIsNull,   p_vm);
   add_method(DTYPE_QUERY,    "IsEmpty",               xqryIsEmpty,  p_vm);
+  // STRING METHODS
   add_method(DTYPE_STRING,   "index",                 xstrIndex,    p_vm);
   add_method(DTYPE_STRING,   "find",                  xstrFind,     p_vm);
   add_method(DTYPE_STRING,   "size",                  xstrSize,     p_vm);

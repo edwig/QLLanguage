@@ -54,6 +54,9 @@
     <ClInclude Include="QL_Functions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="QL_MemObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

@@ -8,6 +8,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include "QL_Language.h"
+#include "QL_MemObject.h"
 #include "QL_vm.h"
 #include "QL_Exception.h"
 #include "QL_Objects.h"

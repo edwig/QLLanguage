@@ -1,12 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // QL Language compiler
-// ir. W.E. Huisman (c) 2017
+// ir. W.E. Huisman (c) 2018
 //
 //////////////////////////////////////////////////////////////////////////
 
 #include "Stdafx.h"
 #include "QL_Language.h"
+#include "QL_MemObject.h"
 #include "QL_Compiler.h"
 #include "QL_Debugger.h"
 #include "QL_Objects.h"
