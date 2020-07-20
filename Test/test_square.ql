@@ -10,7 +10,7 @@ main()
   {
     val = ind * ind;
     sqr = sqrt(val);
-    sqr = round(sqr,6);
+    sqr = round(sqr,4);
 
     print ("Val: ",ind," Square: ",val," Root: ", sqr, "\n");
   }

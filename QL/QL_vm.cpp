@@ -717,7 +717,7 @@ QLVirtualMachine::Print(FILE* p_fp,int p_quoteFlag,MemObject* p_value)
                           len += 2;
                         }
                         break;
-    case DTYPE_BCD:     len = fprintf(p_fp, p_value->m_value.v_floating->AsDisplayString());
+    case DTYPE_BCD:     len = fprintf(p_fp, p_value->m_value.v_floating->AsString());
                         break;
     case DTYPE_FILE:   	len = fprintf(p_fp,"<File: %s>",FindSymbolName(p_value).GetString());
                         break;

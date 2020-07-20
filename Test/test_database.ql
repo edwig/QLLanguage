@@ -1,4 +1,4 @@
-// Database baseic test
+// Database basic test
 
 main()
 {
@@ -18,33 +18,33 @@ main()
       {
         variant id          = qry->GetColumn(1);
         variant master_id   = qry.GetColumn(2);
-		variant line        = qry.GetColumn(3);
-		variant description = qry.GetColumn(4);
-		variant amount      = qry.GetColumn(5);
+		    variant line        = qry.GetColumn(3);
+		    variant description = qry.GetColumn(4);
+		    variant amount      = qry.GetColumn(5);
 
-		print("RECORD\n");
-		print("ID         : ",id,cr);
-		print("Master ID  : ",master_id,cr);
-		print("Line number: ",line,cr);
-		print("Description: ",description,cr);
-		print("Amount     : ",amount,cr);
-		print(cr);
+		    print("RECORD\n");
+		    print("ID         : ",id,cr);
+		    print("Master ID  : ",master_id,cr);
+		    print("Line number: ",line,cr);
+		    print("Description: ",description,cr);
+		    print("Amount     : ",amount,cr);
+		    print(cr);
 
-		++counter;
-	  }
-	  columns = qry.GetNumberOfColumns();
-	  name    = qry.GetColumnName(4);
-	  collen  = qry.GetColumnLength(4);
+		    ++counter;
+	    }
+	    columns = qry.GetNumberOfColumns();
+	    name    = qry.GetColumnName(4);
+	    collen  = qry.GetColumnLength(4);
 	  
       qry.Close();
       dbs.Close();
 
       print("Total records: ", counter,cr);
-	  print("Columns total: ", columns,cr);
-	  print("Name col 4   : ", name,cr);
-	  print("Max name len : ", collen,cr);
-	  print(cr);
-	  print("Ready\n");
+	    print("Columns total: ", columns,cr);
+	    print("Name col 4   : ", name,cr);
+	    print("Max name len : ", collen,cr);
+	    print(cr);
+	    print("Ready\n");
     }
     else
     {
