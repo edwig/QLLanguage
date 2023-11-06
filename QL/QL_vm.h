@@ -29,6 +29,8 @@ public:
   void        CheckInit();
   // Compile a QL source code file into this VM
   bool        CompileFile(const char* p_filename,bool p_trace);
+  bool        CompileBuffer(const char* p_buffer,bool p_trace);
+
   // SetInterpreter
   void        SetInterpreter(QLInterpreter* p_inter);
   // Setting the alloc threshold for the GC

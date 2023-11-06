@@ -233,7 +233,7 @@ int main(int argc,char* argv[],char* envp[])
               vm.SetDumping(dumpmem);
 
               QLInterpreter inter(&vm, inttrace);
-              inter.Execute(entrypoint);
+              nRetCode = inter.Execute(entrypoint);
             }
             catch(int &error)
             {
@@ -241,7 +241,7 @@ int main(int argc,char* argv[],char* envp[])
             }
             catch(QLException& exp)
             {
-              nRetCode = exp.GetCode();
+              nRetCode = -1;
               fprintf(stderr,"%s\n",exp.GetErrorMessage().GetString());
             }
           }

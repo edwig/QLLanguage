@@ -147,7 +147,7 @@ QLDebugger::DecodeInstruction(Function* p_function,BYTE* code,int lc,bool p_gene
   // Print the ORG of the function, at the first offset
   if(lc == 0)
   {
-    buffer.Format("              ORG    %s\n",name);
+    buffer.Format("              ORG    %s\n",name.GetString());
     osputs(buffer);
   }
 
@@ -230,7 +230,7 @@ void
 QLDebugger::PrintReturn(Function* p_function)
 {
   CString buffer;
-  buffer.Format("\n              RET    %s", p_function->GetFullName());
+  buffer.Format("\n              RET    %s",p_function->GetFullName().GetString());
   osputs(buffer);
 }
 

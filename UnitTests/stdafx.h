@@ -30,7 +30,8 @@
 #include <afxcmn.h>             // MFC support for Windows Common Controls
 #endif 
 
-#include "SQLComponents.h"
+#include <BaseLibrary.h>
+#include <SQLComponents.h>
 
 using namespace SQLComponents;
 

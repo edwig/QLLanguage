@@ -241,7 +241,7 @@ QLVirtualMachine::ReadString(FILE* p_fp, bool p_trace)
   {
     throw QLException("Misread string!");
   }
-  return nullptr;
+  return "";
 }
 
 CString 

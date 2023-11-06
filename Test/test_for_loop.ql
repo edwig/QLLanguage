@@ -13,4 +13,5 @@ main()
   {
     print("Value of i: ",i,"\n");
   }
+  return 3;
 }

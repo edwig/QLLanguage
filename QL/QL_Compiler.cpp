@@ -44,7 +44,7 @@ QLCompiler::~QLCompiler()
   if(cbuff)
   {
     free(cbuff);
-    cbuff = NULL;
+    cbuff = nullptr;
   }
   FreeLiterals();
 }
@@ -90,7 +90,7 @@ QLCompiler::CompileDefinitions(int (*getcf)(void*),void *getcd)
   }
   // Done with the scanner
   delete m_scanner;
-  m_scanner = NULL;
+  m_scanner = nullptr;
 
   return result;
 }
@@ -329,7 +329,7 @@ QLCompiler::do_member_function(Class* p_class)
   }
 
   // make sure the type matches the declaration 
-  if((entry = p_class->FindMember(selector)) != NULL &&
+  if((entry = p_class->FindMember(selector)) != nullptr &&
       entry->m_type != DTYPE_SCRIPT) // &&
 //       entry->m_type != DTYPE_INTERNAL &&
 //       entry->m_type != DTYPE_EXTERNAL)
@@ -700,7 +700,7 @@ QLCompiler::AddSwitch()
   if (++ssp < &sstack[SSIZE]) 
   {
     ssp->nCases = 0;
-    ssp->cases = NULL;
+    ssp->cases = nullptr;
     ssp->defaultLabel = 0;
   }
   else
@@ -715,7 +715,7 @@ void
 QLCompiler::RemoveSwitch(SWENTRY *old)
 {
   CENTRY *entry,*next;
-  for (entry = ssp->cases; entry != NULL; entry = next) 
+  for (entry = ssp->cases; entry != nullptr; entry = next) 
   {
     next = entry->next;
     free(entry);
@@ -812,7 +812,7 @@ QLCompiler::do_case()
     FetchRequireToken(':');
 
     // find the place to add the new case
-    for (pNext = &ssp->cases; (entry = *pNext) != NULL; pNext = &entry->next) 
+    for (pNext = &ssp->cases; (entry = *pNext) != nullptr; pNext = &entry->next) 
     {
       if (value < entry->value)
       {
@@ -825,13 +825,14 @@ QLCompiler::do_case()
     }
 
     // add the case to the list of cases
-    if ((entry = (CENTRY *)calloc(1,sizeof(CENTRY))) == NULL)
+    if ((entry = (CENTRY *)calloc(1,sizeof(CENTRY))) == nullptr)
     {
       m_scanner->ParseError("Out of memory");
+      return;
     }
     entry->value = value;
     entry->label = cptr;
-    entry->next = *pNext;
+    entry->next  = *pNext;
     *pNext = entry;
 
     // increment the number of cases
@@ -1730,8 +1731,8 @@ QLCompiler::RequireToken(int tkn,int rtkn)
   if (tkn != rtkn) 
   {
     message.Format("Expected token '%s', found '%s'"
-                  ,m_scanner->TokenName(rtkn)
-                  ,m_scanner->TokenName(tkn));
+                  ,m_scanner->TokenName(rtkn).GetString()
+                  ,m_scanner->TokenName(tkn) .GetString());
     m_scanner->ParseError(message);
   }
 }
@@ -1741,7 +1742,7 @@ void
 QLCompiler::do_lit_integer(long n)
 {
   MemObject* lit = nullptr;
-  code_literal(AddLiteral(DTYPE_INTEGER,&lit,nullptr,n));
+  code_literal(AddLiteral(DTYPE_INTEGER,&lit,"",n));
   lit->m_value.v_integer = n;
 }
 
@@ -1993,7 +1994,7 @@ char*
 QLCompiler::GetMemory(int size)
 {
   char *val;
-  if ((val = (char*)calloc(1,size)) == NULL)
+  if ((val = (char*)calloc(1,size)) == nullptr)
   {
     m_vm->Error("Insufficient memory");
   }

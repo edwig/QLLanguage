@@ -226,6 +226,53 @@ QLVirtualMachine::IsSourceFile(const char* p_filename)
   return false;
 }
 
+int readbuffer(void* p_buff)
+{
+  __declspec(thread) static char* buffer = nullptr;
+
+  char* buff = reinterpret_cast<char*>(p_buff);
+  if(!buffer)
+  {
+    buffer = buff;
+  }
+  if(!*buffer)
+  {
+    return EOF;
+  }
+  return *buffer++;
+}
+
+// Compile a QL source code buffer string into this VM
+bool
+QLVirtualMachine::CompileBuffer(const char* p_buffer,bool p_trace)
+{
+  // See to it that the VM is initialized
+  CheckInit();
+
+  bool result = false;
+  // compile file
+  QLCompiler comp(this);
+  QLDebugger* dbg = nullptr;
+  FILE* file = nullptr;
+
+  // See if tracing the compiler is requested
+  if(p_trace)
+  {
+    dbg = new QLDebugger(this);
+    comp.SetDebugger(dbg,1);
+  }
+
+  result = comp.CompileDefinitions(readbuffer,(void*)p_buffer);
+
+  // Remove the debugger again
+  if(dbg)
+  {
+    delete dbg;
+    dbg = nullptr;
+  }
+  return result;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // MEMORY API

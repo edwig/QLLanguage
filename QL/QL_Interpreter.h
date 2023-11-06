@@ -39,7 +39,7 @@ public:
   // Execute a bytecode function
   int               Execute(CString p_name);
   // interpret - interpret bytecode instructions
-  void              Interpret(Object* p_object,Function* p_function);
+  int               Interpret(Object* p_object,Function* p_function);
 
   // REGISTER OPERATIONS FOR GC
   void              Mark();

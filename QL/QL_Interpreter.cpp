@@ -155,7 +155,7 @@ QLInterpreter::Execute(CString p_name)
     {
       m_vm->Error("Cannot find the entry point: %s\n",p_name);
       // Symbol not found
-      return FALSE;
+      return -1;
     }
     type = DTYPE_SCRIPT;
   }
@@ -169,17 +169,16 @@ QLInterpreter::Execute(CString p_name)
   switch(type)
   {
     case DTYPE_INTERNAL:  (*symbol->m_value.v_internal)(this,0);
-                          return TRUE;
+                          return -1;
     case DTYPE_EXTERNAL:  // CallExternalFunction()
-                          return TRUE;
-    case DTYPE_SCRIPT:    Interpret(nullptr,func);
-                          return TRUE;
+                          return -1;
+    case DTYPE_SCRIPT:    return Interpret(nullptr,func);
   }
-  return FALSE;
+  return -1;
 }
 
 // interpret - interpret bytecode instructions
-void 
+int
 QLInterpreter::Interpret(Object* p_object,Function* p_function)
 {
   register int  pcoff,n;
@@ -243,7 +242,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                           case DTYPE_SCRIPT:  calFunction = m_stack_pointer[n]->m_value.v_script;
                                               break;
                           default:            m_vm->Error("Call to non-procedure, Type %s",GetTypename(m_stack_pointer[n]->m_type));
-                                              return;
+                                              return -1;
                         }
                         if(calFunction)
                         {
@@ -271,7 +270,12 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                             osputs("\n");
                           }
                           // Last return on top level. Stops the script interpreting
-                          return;
+                          // See if we did a integer return value
+                          if(m_stack_pointer[0]->m_type == DTYPE_INTEGER)
+                          {
+                            return m_stack_pointer[0]->m_value.v_integer;
+                          }
+                          return 0;
                         }
                         val             = m_stack_pointer[0];
                         runObject       = nullptr;
@@ -636,6 +640,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
       pop = 0;
     }
   }
+  return 0;
 }
 
 // Test correct data types and number of arguments
@@ -827,7 +832,7 @@ QLInterpreter::inter_bcdbcd_operator(BYTE p_operator)
     case OP_MUL:  fl = *left * *right;
                   SetBcd( fl);
                   break;
-    case OP_DIV:  if(right->IsNull())
+    case OP_DIV:  if(right->IsNULL())
                   {
                     m_vm->Info("Caught a 'division by zero'");
                     fl.Zero();
@@ -838,7 +843,7 @@ QLInterpreter::inter_bcdbcd_operator(BYTE p_operator)
                   }
                   SetBcd(fl);
                   break;
-    case OP_REM:  if(right->IsNull())
+    case OP_REM:  if(right->IsNULL())
                   {
                     m_vm->Info("Caught a 'division by zero'");
                     fl.Zero();
@@ -1153,7 +1158,7 @@ QLInterpreter::inter_bcdvar_operator(BYTE p_operator)
     case OP_MUL:  result = *left * right;
                   SetBcd(result);
                   break;
-    case OP_DIV:  if(right.IsNull())
+    case OP_DIV:  if(right.IsNULL())
                   {
                     m_vm->Info("Caught a 'division by zero'");
                   }
@@ -1163,7 +1168,7 @@ QLInterpreter::inter_bcdvar_operator(BYTE p_operator)
                   }
                   SetBcd(result);
                   break;
-    case OP_REM:  if(right.IsNull() == 0)
+    case OP_REM:  if(right.IsNULL() == 0)
                   {
                     m_vm->Info("Caught a 'division by zero'");
                   }
@@ -1426,7 +1431,7 @@ QLInterpreter::inter_varbcd_operator(BYTE p_operator)
     case OP_MUL:  number = left * *right;
                   SetBcd(number);
                   break;
-    case OP_DIV:  if(right->IsNull())
+    case OP_DIV:  if(right->IsNULL())
                   {
                     m_vm->Info("Caught a 'division by zero'");
                   }
@@ -1436,7 +1441,7 @@ QLInterpreter::inter_varbcd_operator(BYTE p_operator)
                   }
                   SetBcd(number);
                   break;
-    case OP_REM:  if(right->IsNull())
+    case OP_REM:  if(right->IsNULL())
                   {
                     m_vm->Info("Caught a 'division by zero'");
                   }

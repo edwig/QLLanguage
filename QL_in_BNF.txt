@@ -30,7 +30,13 @@ LOCAL-DECLARATION
   <local-declaration> , ...;
 
 DATATYPE
-  <built-in-datatype>
+  int
+  string
+  bcd
+  file
+  database
+  query
+  variant
   <class-name>
 
 STATEMENT
@@ -177,6 +183,9 @@ STANDARD METHODS
   string.substring(<expression>[,<expression])
   string.left(<expression>)
   string.right(<expression>)
+  // string methods to implement:
+  string.reverseIndex(<expression>)
+  string.reverseFind(<expression>)
   string.makeupper()
   string.makelower()
 
@@ -203,11 +212,24 @@ STANDARD METHODS
   query.SetParameter(n,<expression>)
 
   // array methods to implement
+  array.push_front(<expression>)
+  array.push_back (<expression>)
+  array.pop_front()
+  array.pop_back()
+  array.front()
+  array.back()
+  array.size()
   array.find(<expression>)
+  array.get(n)
+  array.next()
+  array.prev()
+  array.clear()
 
   // Stil to implement:
-  bcd.*     (all bcd members)
-  sqlvar.*  (all SQLVariant members)
+  bcd.*     (all bcd         members)
+  sqlvar.*  (all SQLVariant  members)
+  query.*   (all SQLQuery    members)
+  dbase.*   (all SQLDatabase members)
 
 
 DLL IMPORT FUNCTIONS FOR LIBRARIES
@@ -231,3 +253,10 @@ The following are valid options
 -o        show contents of object file
 -x        check for memory leaks on exit
 -s        Print stack on error exit
+
+
+QLLinker program
+================
+QLLinker -o <outputfile[.qob]> <inputfile[.qob]> ...
+
+(links all but first header, wich rewrites)
