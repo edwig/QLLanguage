@@ -161,8 +161,8 @@ QLInterpreter::Execute(CString p_name)
   }
   else
   {
-    type = symbol->m_type;
     MemObject* symbol = it->second;
+    type = symbol->m_type;
   }
 
   // EXECUTE the main entry point
