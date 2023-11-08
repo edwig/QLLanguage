@@ -104,3 +104,37 @@ Method;
 typedef std::map<CString, MemObject*>     NameMap;
 typedef std::map<CString, Class*>         ClassMap;
 typedef std::multimap<CString, Method*>   MethodMap;
+
+// Selecting the right library to link with automatically
+// So we do not need to worry about which library to use in the linker settings
+#ifdef UNICODE
+
+#if defined _M_IX86
+#define QLL_PLATFORM "Ux86"
+#else
+#define QLL_PLATFORM "Ux64"
+#endif
+
+#else // UNICODE
+
+#if defined _M_IX86
+#define QLL_PLATFORM "x86"
+#else
+#define QLL_PLATFORM "x64"
+#endif
+
+#endif // UNICODE
+
+
+#if defined _DEBUG
+#define QLL_CONFIGURATION "D"
+#else
+#define QLL_CONFIGURATION "R"
+#endif 
+
+#ifndef QLL_COMPONENTS_NOAUTOLINK
+#pragma comment(lib,"QL_Language_"                       QLL_PLATFORM QLL_CONFIGURATION ".lib")
+#pragma message("Automatically linking with QLLanguage_" QLL_PLATFORM QLL_CONFIGURATION ".lib")
+#else
+#pragma message("Now building library QLLanguage_" QLL_PLATFORM QLL_CONFIGURATION ".lib")
+#endif 

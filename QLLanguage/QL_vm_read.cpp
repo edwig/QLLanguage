@@ -222,7 +222,7 @@ QLVirtualMachine::ReadString(FILE* p_fp, bool p_trace)
 
   if(MustReadInteger(p_fp,p_trace,&size,"MISREAD STRING LENGTH"))
   {
-    TracingText(p_trace,"Stringsize: %d",size);
+    TracingText(p_trace,"String size: %d",size);
 
     CString theString;
 
@@ -232,7 +232,7 @@ QLVirtualMachine::ReadString(FILE* p_fp, bool p_trace)
     }
     if(Getc(p_fp,p_trace) != 0)
     {
-      QLException("String with no ending!");
+      throw QLException("String with no ending!");
     }
     TracingText(p_trace,"String : [%s]", theString.GetString());
     return theString;

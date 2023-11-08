@@ -1005,7 +1005,7 @@ QLCompiler::do_expr2(PVAL* pv)
         || tkn == T_ADDEQ || tkn == T_SUBEQ
         || tkn == T_MULEQ || tkn == T_DIVEQ || tkn == T_REMEQ
         || tkn == T_ANDEQ || tkn == T_OREQ  || tkn == T_XOREQ
-        || tkn == T_SHLEQ || tkn == T_SHLEQ) 
+        || tkn == T_SHLEQ) 
   {
     Check_LValue(pv);
     switch (tkn) 
