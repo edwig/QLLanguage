@@ -22,9 +22,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Forward declarations
-void osputs(const char* str);
-
 #define iszero(x)	((x)->m_type == DTYPE_INTEGER && (x)->m_value.v_integer == 0)
 #define istrue(x)	((x)->m_type != DTYPE_NIL && !iszero(x))
 
@@ -270,7 +267,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         {
                           if(m_trace)
                           {
-                            osputs("\n");
+                            osputs_stderr("\n");
                           }
                           // Last return on top level. Stops the script interpreting
                           // See if we did a integer return value

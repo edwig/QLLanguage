@@ -24,8 +24,16 @@ static char THIS_FILE[] = __FILE__;
 
 using namespace std;
 
-int    qlargc = 0;
-char** qlargv = NULL;
+// Provide standard drivers for output
+void osputs_stdout(const char* p_string)
+{
+  fputs(p_string,stdout);
+}
+
+void osputs_stderr(const char* p_string)
+{
+  fputs(p_string,stderr);
+}
 
 // Static command line options
 bool    verbose     = false;
@@ -35,9 +43,6 @@ bool    inttrace    = false;
 bool    objectfile  = false;
 bool    dumpmem     = false;
 CString entrypoint("main");
-CString db_database;
-CString db_user;
-CString db_password;
 
 void PrintVersion()
 {
@@ -142,11 +147,6 @@ ParseCommandLine(int& index)
     }
   }
   return true;
-}
-
-void osputs(const char* p_string)
-{
-  fputs(p_string, stderr);
 }
 
 //////////////////////////////////////////////////////////////////////////

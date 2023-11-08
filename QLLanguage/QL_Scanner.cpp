@@ -15,9 +15,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Forward declarations
-void osputs(const char* str);
-
 // keyword table 
 static KeywordTable keywordTable[] =
 {
@@ -484,7 +481,7 @@ void QLScanner::ParseError(const char* msg)
 
   // redisplay the line with the error
   buffer.Format(">>> %s <<<\n>>> in line %d <<<\n%s", msg, m_line_number, m_line);
-  osputs(buffer);
+  osputs_stderr(buffer);
 
   // point to the position immediately following the error 
   for(int ind = 0;ind < m_line.GetLength(); ++ind)
@@ -494,7 +491,7 @@ void QLScanner::ParseError(const char* msg)
   }
   // Add the pointer
   pointer += "^\n";
-  osputs(pointer);
+  osputs_stderr(pointer);
 
   // invoke the error trap
   throw 1;

@@ -26,6 +26,14 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+// Globals for the QL language are defined here
+int    qlargc = 0;
+char** qlargv = NULL;
+
+CString db_database;
+CString db_user;
+CString db_password;
+
 QLVirtualMachine::QLVirtualMachine()
 {
   m_root_object   = nullptr;
@@ -747,50 +755,53 @@ QLVirtualMachine::Print(FILE* p_fp,int p_quoteFlag,MemObject* p_value)
   if(p_value)
   switch (p_value->m_type)
   {
-    case DTYPE_NIL:  	  len = fputs("NIL", p_fp);
+    case DTYPE_NIL:     value = "NIL";
                         break;
-    case DTYPE_ENDMARK: len = fputs("<ENDMARK>",p_fp);
+    case DTYPE_ENDMARK: value = "<ENDMARK>";
                         break;
-    case DTYPE_INTEGER: len = fprintf(p_fp, "%ld",p_value->m_value.v_integer);
+    case DTYPE_INTEGER: value.Format("%ld",p_value->m_value.v_integer);
                         break;
-    case DTYPE_STRING:  if (p_quoteFlag)
-                        {
-                          fputc('"', p_fp);
-                        }
-                        len = fprintf(p_fp, *p_value->m_value.v_string);
+    case DTYPE_STRING:  value = *p_value->m_value.v_string;
                         if (p_quoteFlag)
                         {
-                          fputc('"', p_fp);
-                          len += 2;
+                          value = "\"" + value + "\"";
                         }
                         break;
-    case DTYPE_BCD:     len = fprintf(p_fp, p_value->m_value.v_floating->AsString());
+    case DTYPE_BCD:     value = p_value->m_value.v_floating->AsString();
                         break;
-    case DTYPE_FILE:   	len = fprintf(p_fp,"<File: %s>",FindSymbolName(p_value).GetString());
+    case DTYPE_FILE:   	value.Format("<File: %s>",FindSymbolName(p_value).GetString());
                         break;
-    case DTYPE_DATABASE:len = fprintf(p_fp,"<Database: %s>",p_value->m_value.v_database->GetDatabaseName().GetString());
+    case DTYPE_DATABASE:value.Format("<Database: %s>",p_value->m_value.v_database->GetDatabaseName().GetString());
                         break;
-    case DTYPE_QUERY:   len = fprintf(p_fp,"<Query: %p>",p_value->m_value.v_query);
+    case DTYPE_QUERY:   value.Format("<Query: %p>",p_value->m_value.v_query);
                         break;
     case DTYPE_VARIANT: p_value->m_value.v_variant->GetAsString(value);
-                        len = fprintf(p_fp,value);
                         break;
-    case DTYPE_ARRAY:	  len = fprintf(p_fp,"<Array: %p>",p_value->m_value.v_array);
+    case DTYPE_ARRAY:   value.Format("<Array: %p>",p_value->m_value.v_array);
                         break;
-    case DTYPE_OBJECT:	len = fprintf(p_fp,"<Object: %p Class: %s>"
+    case DTYPE_OBJECT:  value.Format("<Object: %p Class: %s>"
                                      ,p_value->m_value.v_object
                                      ,p_value->m_value.v_object->GetClass()->GetName().GetString());
                         break;
-    case DTYPE_CLASS:  	len = fprintf(p_fp,"<Class: %s>",p_value->m_value.v_class->GetName().GetString());
+    case DTYPE_CLASS:   value.Format("<Class: %s>",p_value->m_value.v_class->GetName().GetString());
                         break;
-    case DTYPE_SCRIPT:  len = fprintf(p_fp,"<Function: %s>",p_value->m_value.v_script->GetName().GetString());
+    case DTYPE_SCRIPT:  value.Format("<Function: %s>",p_value->m_value.v_script->GetName().GetString());
                         break;
-    case DTYPE_INTERNAL:len = fprintf(p_fp,"<Internal: %s>",FindSymbolName(p_value).GetString());
+    case DTYPE_INTERNAL:value.Format("<Internal: %s>",FindSymbolName(p_value).GetString());
                         break;
-    case DTYPE_EXTERNAL:len = fprintf(p_fp,"<External: %s>",p_value->m_value.v_sysname->GetString());
+    case DTYPE_EXTERNAL:value.Format("<External: %s>",p_value->m_value.v_sysname->GetString());
                         break;
-    default:        	  Error("Undefined type: %d", p_value->m_type);
+    default:            Error("Undefined type: %d", p_value->m_type);
                         break;
+  }
+  if(p_fp == stdout)
+  {
+    osputs_stdout(value);
+    len = value.GetLength();
+  }
+  else
+  {
+    len = fprintf(p_fp,value);
   }
   return len;
 } 

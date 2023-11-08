@@ -99,11 +99,23 @@ typedef struct _method
 }
 Method;
 
-
 // Name mapping for global objects in the virtual machine
 typedef std::map<CString, MemObject*>     NameMap;
 typedef std::map<CString, Class*>         ClassMap;
 typedef std::multimap<CString, Method*>   MethodMap;
+
+// Globals for the QL library
+extern int    qlargc;       // Rest of the startup parameters
+extern char** qlargv;       // All startup parameters
+
+extern CString db_database; // Default database name
+extern CString db_user;     // Default user name for the database
+extern CString db_password; // Default password for the database user
+
+// Forward declarations
+// Implementations must provide these!
+void osputs_stdout(const char* str);
+void osputs_stderr(const char* str);
 
 // Selecting the right library to link with automatically
 // So we do not need to worry about which library to use in the linker settings
