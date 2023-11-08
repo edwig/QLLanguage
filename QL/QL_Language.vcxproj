@@ -78,7 +78,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
     <TargetName>ql</TargetName>
     <OutDir>$(SolutionDir)bin\</OutDir>
   </PropertyGroup>

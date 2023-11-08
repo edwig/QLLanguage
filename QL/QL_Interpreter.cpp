@@ -168,7 +168,10 @@ QLInterpreter::Execute(CString p_name)
   // EXECUTE the main entry point
   switch(type)
   {
-    case DTYPE_INTERNAL:  (*symbol->m_value.v_internal)(this,0);
+    case DTYPE_INTERNAL:  if(symbol && symbol->m_value.v_internal)
+                          {
+                            (*symbol->m_value.v_internal)(this,0);
+                          }
                           return -1;
     case DTYPE_EXTERNAL:  // CallExternalFunction()
                           return -1;
@@ -1666,7 +1669,7 @@ QLInterpreter::Inter_binary(BYTE p_operator)
                   m_stack_pointer[1]->m_value.v_integer ^ m_stack_pointer[0]->m_value.v_integer;
                   break;
     case OP_BNOT: // OPERATOR BINARY-NOT on an INTEGER
-                  m_stack_pointer[0]->m_value.v_integer = !m_stack_pointer[0]->m_value.v_integer;
+                  m_stack_pointer[0]->m_value.v_integer = m_stack_pointer[0]->m_value.v_integer > 0 ? 0 : 1;
                   break;
   }
 }
