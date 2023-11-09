@@ -12,6 +12,8 @@ class QLVirtualMachine;
 class QLDebugger;
 class Function;
 
+using SQLComponents::SQLVariant;
+
 // EACH STACKFRAME CONTAINS
 // 1) Script function to be run
 // 2) Number of arguments on the stack
@@ -59,6 +61,14 @@ public:
   void              SetFile   (FILE* p_fp);
   void              SetBcd    (bcd p_float);
   void              SetVariant(SQLVariant p_variant);
+
+  // External testing system
+  int               GetTestInterations();
+  int               GetTestResult();
+  int               GetTestRunning();
+  void              SetTestIterations(int p_iterations);
+  void              SetTestResult(int p_result);
+  void              SetTestRunning(int p_running);
 
   // Datatypes check and reporting
   void              CheckType (int p_offset,int p_type1,int p_type2 = 0);
@@ -135,15 +145,20 @@ private:
   QLVirtualMachine* m_vm;             // Connected Virtual Machine
   QLDebugger*       m_debugger;       // Connected debugger
   bool              m_trace;          // variable to control tracing
-  BYTE*             m_code;		        // currently executing code vector
-  BYTE*             m_pc;	            // the program counter
+  BYTE*             m_code;           // currently executing code vector
+  BYTE*             m_pc;             // the program counter
 
   // The system stack
   unsigned int      m_stacksize;      // System wide stacksize
   MemObject**       m_stack_base;     // array of MemObject[_stacksize];
   MemObject**       m_stack_top;      // _stack_base + _stacksize * sizeof(MemObject)
-  MemObject**       m_stack_pointer;  // current stackpointer
+  MemObject**       m_stack_pointer;  // current stack pointer
   MemObject**       m_frame_pointer;  // the frame pointer
+
+  // External testing system
+  int               m_testIterations { 0 };   // Number of iterations of latest test
+  int               m_testResult     { 0 };   // Result of latest test (0 = OK, >0 = ERROR)
+  int               m_testRunning    { 0 };   // Do one more iteration? (0 = NO, 1 = YES)
 };
 
 inline MemObject**

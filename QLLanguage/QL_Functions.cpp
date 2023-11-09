@@ -1268,6 +1268,46 @@ static int xstrLower(QLInterpreter* p_inter,int p_argc)
   return 0;
 }
 
+static int xsleep(QLInterpreter* p_inter,int p_argc)
+{
+  argcount(p_inter,p_argc,1);
+  p_inter->CheckType(0,DTYPE_INTEGER);
+  int wait = p_inter->GetIntegerArgument(0);
+  if(wait)
+  {
+    Sleep(wait);
+  }
+  return 0;
+}
+
+// Function for outside test framework
+
+// Do the "TestIterations" function
+static int xtestit(QLInterpreter* p_inter,int p_argc)
+{
+  argcount(p_inter,p_argc,0);
+  p_inter->SetInteger(p_inter->GetTestInterations());
+  return 0;
+}
+
+// Do the "TestResult" function
+static int xtestres(QLInterpreter* p_inter,int p_argc)
+{
+  argcount(p_inter,p_argc,0);
+  p_inter->SetInteger(p_inter->GetTestResult());
+  return 0;
+}
+
+// Do the "TestRunning(1)" function
+static int xtestrun(QLInterpreter* p_inter,int p_argc)
+{
+  argcount(p_inter,p_argc,1);
+  int running = p_inter->GetIntegerArgument(0);
+  p_inter->SetInteger(running);
+  p_inter->SetTestRunning(running);
+  return 0;
+}
+
 /////////////////////////////////////////////////////////////////////
 //
 // Now we can do the INIT of all functions
@@ -1323,6 +1363,12 @@ void init_functions(QLVirtualMachine* p_vm)
   add_function("tovariant", xtovariant,   p_vm);
   add_function("abs",       xabs,         p_vm);
   add_function("round",     xround,       p_vm);
+  add_function("Sleep",     xsleep,       p_vm);
+
+  // Function for outside test framework
+  add_function("TestIterations",xtestit,  p_vm);
+  add_function("TestResult",    xtestres, p_vm);
+  add_function("TestRunning",   xtestrun, p_vm);
 
   // Add all object methods
   add_method(DTYPE_DATABASE, "IsOpen",                xdbsIsOpen,   p_vm);

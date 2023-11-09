@@ -2147,3 +2147,45 @@ QLInterpreter::GetSQLVariantArgument(int p_num)
   }
   return nullptr;
 }
+
+//////////////////////////////////////////////////////////////////////////
+//
+//  External test system
+//
+//////////////////////////////////////////////////////////////////////////
+
+int
+QLInterpreter::GetTestInterations()
+{
+  return m_testIterations;
+}
+
+int
+QLInterpreter::GetTestResult()
+{
+  return m_testResult;
+}
+
+int
+QLInterpreter::GetTestRunning()
+{
+  return m_testRunning;
+}
+
+void
+QLInterpreter::SetTestIterations(int p_iterations)
+{
+  m_testIterations = p_iterations;
+}
+
+void
+QLInterpreter::SetTestResult(int p_result)
+{
+  m_testResult = p_result;
+}
+
+void
+QLInterpreter::SetTestRunning(int p_running)
+{
+  m_testRunning = p_running;
+}

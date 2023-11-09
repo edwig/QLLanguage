@@ -18,6 +18,8 @@
 class QLCompiler;
 class QLInterpreter;
 
+using SQLComponents::SQLTransaction;
+
 class QLVirtualMachine
 {
 public:

@@ -234,20 +234,21 @@ QLVirtualMachine::IsSourceFile(const char* p_filename)
   return false;
 }
 
+__declspec(thread) static char* compile_buffer = nullptr;
+
 int readbuffer(void* p_buff)
 {
-  __declspec(thread) static char* buffer = nullptr;
 
   char* buff = reinterpret_cast<char*>(p_buff);
-  if(!buffer)
+  if(!compile_buffer)
   {
-    buffer = buff;
+    compile_buffer = buff;
   }
-  if(!*buffer)
+  if(!*compile_buffer)
   {
     return EOF;
   }
-  return *buffer++;
+  return *compile_buffer++;
 }
 
 // Compile a QL source code buffer string into this VM
@@ -269,7 +270,9 @@ QLVirtualMachine::CompileBuffer(const char* p_buffer,bool p_trace)
     dbg = new QLDebugger(this);
     comp.SetDebugger(dbg,1);
   }
-
+  // Reset our buffer
+  compile_buffer = nullptr;
+  // Compile the buffered string
   result = comp.CompileDefinitions(readbuffer,(void*)p_buffer);
 
   // Remove the debugger again
@@ -797,6 +800,11 @@ QLVirtualMachine::Print(FILE* p_fp,int p_quoteFlag,MemObject* p_value)
   if(p_fp == stdout)
   {
     osputs_stdout(value);
+    len = value.GetLength();
+  }
+  else if(p_fp == stderr)
+  {
+    osputs_stderr(value);
     len = value.GetLength();
   }
   else
