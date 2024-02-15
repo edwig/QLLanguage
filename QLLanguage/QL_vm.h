@@ -29,8 +29,8 @@ public:
   // Check initialization
   void        CheckInit();
   // Compile a QL source code file into this VM
-  bool        CompileFile(const char* p_filename,bool p_trace);
-  bool        CompileBuffer(const char* p_buffer,bool p_trace);
+  bool        CompileFile(LPCTSTR p_filename,bool p_trace);
+  bool        CompileBuffer(LPCTSTR p_buffer,bool p_trace);
 
   // SetInterpreter
   void        SetInterpreter(QLInterpreter* p_inter);
@@ -41,9 +41,9 @@ public:
   // Garbage Collection
   void        GC();
   // Error handling for all objects
-  static void Error(const char* p_format, ...);
+  static void Error(LPCTSTR p_format, ...);
   // Printing of information
-  void        Info(const char* p_format, ...);
+  void        Info(LPCTSTR p_format, ...);
   // Print - print one value 
   int         Print(FILE* p_fp,int p_quoteFlag,MemObject* p_value);
 
@@ -88,12 +88,12 @@ public:
   bool        HasInitCode();
 
   // FILE STREAMING OPERATIONS
-  bool        WriteFile(char* p_filename,bool p_trace);
-  bool        LoadFile (char* p_filename,bool p_trace);
+  bool        WriteFile(TCHAR* p_filename,bool p_trace);
+  bool        LoadFile (TCHAR* p_filename,bool p_trace);
 
   // Test for types of files
-  bool        IsObjectFile(const char* p_filename);
-  bool        IsSourceFile(const char* p_filename);
+  bool        IsObjectFile(const TCHAR* p_filename);
+  bool        IsSourceFile(const TCHAR* p_filename);
 
   // SQLTransaction
   int             SetSQLTransaction(SQLTransaction* p_trans);
@@ -112,18 +112,18 @@ private:
   void        CleanUpInitcode();
   void        DumpObject(MemObject* p_object);
 
-  void        TracingText(bool p_trace,const char* p_text,...);
+  void        TracingText(bool p_trace,const TCHAR* p_text,...);
 
   // Writing the heap to file
   bool        WriteToFile   (FILE* p_fp, bool p_trace);
   int         Putc  (int cc, FILE* p_fp, bool p_trace);
   void        WriteHeader   (FILE* p_fp, bool p_trace);
-  void        WriteStream   (FILE* p_fp, bool p_trace, char* p_message);
+  void        WriteStream   (FILE* p_fp, bool p_trace, TCHAR* p_message);
   void        WriteInteger  (FILE* p_fp, bool p_trace, int n);
-  void        WriteString   (FILE* p_fp, bool p_trace, CString*   p_string,   char* p_extra = nullptr);
+  void        WriteString   (FILE* p_fp, bool p_trace, CString*   p_string,   TCHAR* p_extra = nullptr);
   void        WriteFloat    (FILE* p_fp, bool p_trace, bcd*       p_float);
   void        WriteFileName (FILE* p_fp, bool p_trace, MemObject* p_object);
-  void        WriteArray    (FILE* p_fp, bool p_trace, Array*     p_array,    char* p_extra = nullptr,bool p_doScripts = false);
+  void        WriteArray    (FILE* p_fp, bool p_trace, Array*     p_array,    TCHAR* p_extra = nullptr,bool p_doScripts = false);
   void        WriteObject   (FILE* p_fp, bool p_trace, Object*    p_object);
   void        WriteClass    (FILE* p_fp, bool p_trace, Class*     p_class);
   void        WriteBytecode (FILE* p_fp, bool p_trace, BYTE*      p_bytecode, int p_length);
@@ -134,22 +134,22 @@ private:
   void        WriteReference(FILE* p_fp, bool p_trace, MemObject* p_object);
   void        WriteMemObject(FILE* p_fp, bool p_trace, MemObject* p_object,bool p_ref = false);
   void        WriteClasses  (FILE* p_fp, bool p_trace, ClassMap&  p_map);
-  void        WriteNameMap  (FILE* p_fp, bool p_trace, NameMap&   p_map,const char* p_name,bool p_doScripts);
+  void        WriteNameMap  (FILE* p_fp, bool p_trace, NameMap&   p_map,const TCHAR* p_name,bool p_doScripts);
 
   // Reading into the heap from a file
   bool        ReadFromFile    (FILE* p_fp, bool p_trace);
   int         Getc            (FILE* p_fp, bool p_trace);
   bool        ReadHeader      (FILE* p_fp, bool p_trace);
-  void        ReadStream      (FILE* p_fp, bool p_trce,  char* p_errorMessage);
+  void        ReadStream      (FILE* p_fp, bool p_trce,  TCHAR* p_errorMessage);
   bool        ReadInteger     (FILE* p_fp, bool p_trace, long* n);
-  bool        MustReadInteger (FILE* p_fp, bool p_trace, long* n, char* p_errorMessage);
+  bool        MustReadInteger (FILE* p_fp, bool p_trace, long* n, TCHAR* p_errorMessage);
   CString     ReadString      (FILE* p_fp, bool p_trace);
-  CString     MustReadString  (FILE* p_fp, bool p_trace, char* p_errorMessage);
+  CString     MustReadString  (FILE* p_fp, bool p_trace, TCHAR* p_errorMessage);
   bcd*        ReadFloat       (FILE* p_fp, bool p_trace);
-  bcd*        MustReadFloat   (FILE* p_fp, bool p_trace, char* p_message);
+  bcd*        MustReadFloat   (FILE* p_fp, bool p_trace, TCHAR* p_message);
   FILE*       ReadFileName    (FILE* p_fp, bool p_trace);
-  Array*      ReadArray       (FILE* p_fp, bool p_trace, Array* p_array = nullptr,char* p_name = nullptr);
-  Array*      MustReadArray   (FILE* p_fp, bool p_trace, Array* p_array = nullptr,char* p_name = nullptr);
+  Array*      ReadArray       (FILE* p_fp, bool p_trace, Array* p_array = nullptr,TCHAR* p_name = nullptr);
+  Array*      MustReadArray   (FILE* p_fp, bool p_trace, Array* p_array = nullptr,TCHAR* p_name = nullptr);
   Object*     ReadObject      (FILE* p_fp, bool p_trace);
   Class*      ReadClass       (FILE* p_fp, bool p_trace);
   void        ReadBytecode    (FILE* p_fp, bool p_trace, BYTE** p_bytecode,int* p_size);
@@ -159,7 +159,7 @@ private:
   void        ReadReference   (FILE* p_fp, bool p_trace, MemObject* p_object);
   MemObject*  ReadMemObject   (FILE* p_fp, bool p_trace);
   void        ReadClasses     (FILE* p_fp, bool p_trace, ClassMap& p_map);
-  void        ReadNameMap     (FILE* p_fp, bool p_trace, NameMap&  p_map,char* p_name);
+  void        ReadNameMap     (FILE* p_fp, bool p_trace, NameMap&  p_map,TCHAR* p_name);
 
   // Thunking to be done after a file load
   void        Thunking();

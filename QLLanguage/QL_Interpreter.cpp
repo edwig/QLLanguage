@@ -150,7 +150,7 @@ QLInterpreter::Execute(CString p_name)
     func = m_vm->FindScript(p_name);
     if(func == nullptr)
     {
-      m_vm->Error("Cannot find the entry point: %s\n",p_name);
+      m_vm->Error(_T("Cannot find the entry point: %s\n"),p_name);
       // Symbol not found
       return -1;
     }
@@ -236,12 +236,12 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                           case DTYPE_STRING:  calFunction = m_vm->FindScript(*m_stack_pointer[n]->m_value.v_string);
                                               if(calFunction == nullptr)
                                               {
-                                                m_vm->Error("Call to non-existing function: %s",*m_stack_pointer[n]->m_value.v_string);
+                                                m_vm->Error(_T("Call to non-existing function: %s"),*m_stack_pointer[n]->m_value.v_string);
                                               }
                                               break;
                           case DTYPE_SCRIPT:  calFunction = m_stack_pointer[n]->m_value.v_script;
                                               break;
-                          default:            m_vm->Error("Call to non-procedure, Type %s",GetTypename(m_stack_pointer[n]->m_type));
+                          default:            m_vm->Error(_T("Call to non-procedure, Type %s"),GetTypename(m_stack_pointer[n]->m_type));
                                               return -1;
                         }
                         if(calFunction)
@@ -267,7 +267,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         {
                           if(m_trace)
                           {
-                            osputs_stderr("\n");
+                            osputs_stderr(_T("\n"));
                           }
                           // Last return on top level. Stops the script interpreting
                           // See if we did a integer return value
@@ -525,7 +525,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                                                   break;
                             case DTYPE_SCRIPT:    calFunction = val->m_value.v_script;
                                                   break;
-                            default:		          m_vm->Error("Bad method, Selector '%s', Type %d",selector,val->m_type);
+                            default:		          m_vm->Error(_T("Bad method, Selector '%s', Type %d"),selector,val->m_type);
                                                   break;
                           }
                           if(calFunction)
@@ -579,7 +579,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         PushInteger(0);
                         m_stack_pointer[0] = m_stack_pointer[1];
 
-                        val = calObject->GetClass()->RecursiveFindFuncMember("destroy");
+                        val = calObject->GetClass()->RecursiveFindFuncMember(_T("destroy"));
                         if(val && val->m_value.v_script)
                         {
                            // Use destroy function: no arguments allowed
@@ -624,7 +624,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         m_pc = m_code + GetWordOperand();
                         break;
       default:		      // UNKNOWN BYTECODE
-                        m_vm->Error("INTERNAL Bad opcode: %02X",m_pc[-1]);
+                        m_vm->Error(_T("INTERNAL Bad opcode: %02X"),m_pc[-1]);
                         break;
     }
     if(m_trace)
@@ -650,7 +650,7 @@ QLInterpreter::TestFunctionArguments(Function* p_function,int p_num)
   // Check number of arguments
   if(p_function->GetNumberOfArguments() != p_num)
   {
-    m_vm->Error("Wrong number of arguments [%d] in call to function: %s. Needed: %d\n"
+    m_vm->Error(_T("Wrong number of arguments [%d] in call to function: %s. Needed: %d\n")
                ,p_num
                ,p_function->GetFullName()
                ,p_function->GetNumberOfArguments());
@@ -661,7 +661,7 @@ QLInterpreter::TestFunctionArguments(Function* p_function,int p_num)
   {
     if(m_stack_pointer[ind]->m_type != p_function->GetArgument(ind))
     {
-      m_vm->Error("Wrong datatype in parameter %d to function %s\n",p_num - ind,p_function->GetFullName());
+      m_vm->Error(_T("Wrong datatype in parameter %d to function %s\n"),p_num - ind,p_function->GetFullName());
     }
   }
 }
@@ -773,7 +773,7 @@ QLInterpreter::inter_intint_operator(BYTE p_operator)
                   break;
     case OP_DIV:  if(right == 0)
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -783,7 +783,7 @@ QLInterpreter::inter_intint_operator(BYTE p_operator)
                   break;
     case OP_REM:  if(right == 0)
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -834,7 +834,7 @@ QLInterpreter::inter_bcdbcd_operator(BYTE p_operator)
                   break;
     case OP_DIV:  if(right->IsNULL())
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                     fl.Zero();
                   }
                   else
@@ -845,7 +845,7 @@ QLInterpreter::inter_bcdbcd_operator(BYTE p_operator)
                   break;
     case OP_REM:  if(right->IsNULL())
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                     fl.Zero();
                   }
                   else
@@ -897,7 +897,7 @@ QLInterpreter::inter_intbcd_operator(BYTE p_operator)
                   break;
     case OP_DIV:  if(m_stack_pointer[0]->m_value.v_integer == 0)
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                     fl.Zero();
                   }
                   else
@@ -908,7 +908,7 @@ QLInterpreter::inter_intbcd_operator(BYTE p_operator)
                   break;
     case OP_REM:  if(m_stack_pointer[0]->m_value.v_integer == 0)
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                     fl.Zero();
                   }
                   else
@@ -960,7 +960,7 @@ QLInterpreter::inter_intvar_operator(BYTE p_operator)
                   break;
     case OP_DIV:  if(right == 0)
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -970,7 +970,7 @@ QLInterpreter::inter_intvar_operator(BYTE p_operator)
                   break;
     case OP_REM:  if(right == 0)
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1021,7 +1021,7 @@ QLInterpreter::inter_bcdint_operator(BYTE p_operator)
                   break;
     case OP_DIV:  if(m_stack_pointer[0]->m_value.v_integer == 0)
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1031,7 +1031,7 @@ QLInterpreter::inter_bcdint_operator(BYTE p_operator)
                   break;
     case OP_REM:  if(m_stack_pointer[0]->m_value.v_integer == 0)
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1115,22 +1115,22 @@ QLInterpreter::inter_intstr_operator(BYTE p_operator)
                   }
                   SetString(result);
                   break;
-    case OP_LT:   number = atoi(*str) < number;
+    case OP_LT:   number = _ttoi(*str) < number;
                   SetInteger(number);
                   break;
-    case OP_GT:   number = atoi(*str) > number;
+    case OP_GT:   number = _ttoi(*str) > number;
                   SetInteger( number);
                   break;
-    case OP_LE:   number = atoi(*str) <= number;
+    case OP_LE:   number = _ttoi(*str) <= number;
                   SetInteger( number);
                   break;
-    case OP_GE:   number = atoi(*str) >= number;
+    case OP_GE:   number = _ttoi(*str) >= number;
                   SetInteger( number);
                   break;
-    case OP_EQ:   number = atoi(*str) == number;
+    case OP_EQ:   number = _ttoi(*str) == number;
                   SetInteger( number);
                   break;
-    case OP_NE:   number = atoi(*str) != number;
+    case OP_NE:   number = _ttoi(*str) != number;
                   SetInteger( number);
                   break;
     default:      BadOperator(p_operator);
@@ -1160,7 +1160,7 @@ QLInterpreter::inter_bcdvar_operator(BYTE p_operator)
                   break;
     case OP_DIV:  if(right.IsNULL())
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1170,7 +1170,7 @@ QLInterpreter::inter_bcdvar_operator(BYTE p_operator)
                   break;
     case OP_REM:  if(right.IsNULL() == 0)
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1204,14 +1204,14 @@ void
 QLInterpreter::inter_strint_operator(BYTE p_operator)
 {
   bool yesno = false;
-  int left   = atoi(*m_stack_pointer[1]->m_value.v_string);
+  int left   = _ttoi(*m_stack_pointer[1]->m_value.v_string);
   int right  =       m_stack_pointer[0]->m_value.v_integer;
   CString str;
 
   switch(p_operator)
   {
     case OP_ADD:  str = *m_stack_pointer[1]->m_value.v_string;
-                  str.AppendFormat("%d",right);
+                  str.AppendFormat(_T("%d"),right);
                   SetString(str);
                   break;
     case OP_MUL:  for(int ind = 0;ind < right; ++ind)
@@ -1372,7 +1372,7 @@ QLInterpreter::inter_varint_operator(BYTE p_operator)
                   break;
     case OP_DIV:  if(right == 0)
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1382,7 +1382,7 @@ QLInterpreter::inter_varint_operator(BYTE p_operator)
                   break;
     case OP_REM:  if(right == 0)
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1433,7 +1433,7 @@ QLInterpreter::inter_varbcd_operator(BYTE p_operator)
                   break;
     case OP_DIV:  if(right->IsNULL())
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1443,7 +1443,7 @@ QLInterpreter::inter_varbcd_operator(BYTE p_operator)
                   break;
     case OP_REM:  if(right->IsNULL())
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1494,7 +1494,7 @@ QLInterpreter::inter_varstr_operator(BYTE p_operator)
                   break;
     case OP_DIV:  if(right.IsNULL() || right.IsEmpty())
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1504,7 +1504,7 @@ QLInterpreter::inter_varstr_operator(BYTE p_operator)
                   break;
     case OP_REM:  if(right.IsNULL() || right.IsEmpty())
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1555,7 +1555,7 @@ QLInterpreter::inter_varvar_operator(BYTE p_operator)
                   break;
     case OP_DIV:  if(right->IsNULL() || right->IsEmpty())
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1565,7 +1565,7 @@ QLInterpreter::inter_varvar_operator(BYTE p_operator)
                   break;
     case OP_REM:  if(right->IsNULL() || right->IsEmpty())
                   {
-                    m_vm->Info("Caught a 'division by zero'");
+                    m_vm->Info(_T("Caught a 'division by zero'"));
                   }
                   else
                   {
@@ -1605,14 +1605,14 @@ QLInterpreter::Equal(MemObject* p_left,MemObject* p_right)
     case DTYPE_INTEGER: switch(p_right->m_type)
                         {
                           case DTYPE_INTEGER: return p_left->m_value.v_integer == p_right->m_value.v_integer;
-                          case DTYPE_STRING:  return p_left->m_value.v_integer == atoi(*p_right->m_value.v_string);
+                          case DTYPE_STRING:  return p_left->m_value.v_integer == _ttoi(*p_right->m_value.v_string);
                           case DTYPE_BCD:     return p_left->m_value.v_integer == p_right->m_value.v_floating->AsLong();
                           case DTYPE_VARIANT: return p_left->m_value.v_integer == p_right->m_value.v_variant->GetAsSLong();
                         }
                         break;
     case DTYPE_STRING:  switch(p_right->m_type)
                         {
-                          case DTYPE_INTEGER: return atoi(*p_left->m_value.v_string) ==  p_right->m_value.v_integer;
+                          case DTYPE_INTEGER: return _ttoi(*p_left->m_value.v_string) ==  p_right->m_value.v_integer;
                           case DTYPE_STRING:  return *p_left->m_value.v_string       == *p_right->m_value.v_string;
                           case DTYPE_BCD:     return bcd(*p_left->m_value.v_string)  == *p_right->m_value.v_floating;
                           case DTYPE_VARIANT: return *p_left->m_value.v_string       == CString(p_right->m_value.v_variant->GetAsChar());
@@ -1634,10 +1634,10 @@ QLInterpreter::Equal(MemObject* p_left,MemObject* p_right)
                           case DTYPE_VARIANT: return *p_left->m_value.v_variant                      == *p_right->m_value.v_variant;
                         }
                         break;
-    default:            m_vm->Error("Cannot be used as selector for a switch statement. Type: %d\n",p_left->m_type);
+    default:            m_vm->Error(_T("Cannot be used as selector for a switch statement. Type: %d\n"),p_left->m_type);
                         return false;
   }
-  m_vm->Error("Cannot be used as selector for a case statement in a switch. Type: %d\n",p_right->m_type);
+  m_vm->Error(_T("Cannot be used as selector for a case statement in a switch. Type: %d\n"),p_right->m_type);
   return false;
 }
 
@@ -1682,14 +1682,14 @@ QLInterpreter::ArgumentReference(int n)
     number = m_frame_pointer[SF_OFF_ARGUMENTS]->m_value.v_integer;
     if(n && n >= number)
     {
-      m_vm->Error("Too few arguments in calling function/member");
+      m_vm->Error(_T("Too few arguments in calling function/member"));
     }
     // Calculate stack offset for argument
     number = STACKFRAME_SIZE + number - n - 1;
   }
   else
   {
-    m_vm->Error("Illegal argument reference: %d",n);
+    m_vm->Error(_T("Illegal argument reference: %d"),n);
   }
   return number;
 }
@@ -1722,7 +1722,7 @@ QLInterpreter::VectorRef()
 
   if (index < 0 || index >= array->GetSize())
   {
-    m_vm->Error("Array subscript out of bounds: %d",index);
+    m_vm->Error(_T("Array subscript out of bounds: %d"),index);
   }
   m_stack_pointer[0] = array->GetEntry(index);
 }
@@ -1740,7 +1740,7 @@ QLInterpreter::StringRef()
   int cc = 0;
   if(index < 0 || index >= string->GetLength())
   {
-    m_vm->Error("String subscript out of bounds: %d",index);
+    m_vm->Error(_T("String subscript out of bounds: %d"),index);
   }
   else
   {
@@ -1767,7 +1767,7 @@ QLInterpreter::VectorSet()
 
   if (index < 0 || index >= array->GetSize())
   {
-    m_vm->Error("Array subscript out of bounds: %d",index);
+    m_vm->Error(_T("Array subscript out of bounds: %d"),index);
   }
   array->SetEntry(index,m_stack_pointer[0]);
 }
@@ -1786,7 +1786,7 @@ QLInterpreter::StringSet()
   CheckType(0,DTYPE_INTEGER);
   if (index < 0 || index >= string->GetLength())
   {
-    m_vm->Error("String subscript out of bounds: %d",index);
+    m_vm->Error(_T("String subscript out of bounds: %d"),index);
   }
   string->SetAt(index,cc);
   SetInteger(cc);
@@ -1819,29 +1819,29 @@ QLInterpreter::DoSendInternal(int p_offset)
   }
   else
   {
-    QLVirtualMachine::Error("Internal method [%s::%s] not found!",GetTypename(type),name);
+    QLVirtualMachine::Error(_T("Internal method [%s::%s] not found!"),GetTypename(type),name);
   }
 }
 
 /* type names */
-static char *tnames[] = 
+static TCHAR *tnames[] = 
 {
-   ""
-  ,"ENDMARKER"
-  ,"NIL"
-  ,"INTEGER"
-  ,"STRING"
-  ,"BCD"
-  ,"FILE"
-  ,"SQLDATABASE"
-  ,"SQLQUERY"
-  ,"SQLVARIANT"
-  ,"ARRAY"
-  ,"OBJECT"
-  ,"CLASS"
-  ,"SCRIPT"
-  ,"INTERNAL"
-  ,"EXTERNAL"
+   _T("")
+  ,_T("ENDMARKER")
+  ,_T("NIL")
+  ,_T("INTEGER")
+  ,_T("STRING")
+  ,_T("BCD")
+  ,_T("FILE")
+  ,_T("SQLDATABASE")
+  ,_T("SQLQUERY")
+  ,_T("SQLVARIANT")
+  ,_T("ARRAY")
+  ,_T("OBJECT")
+  ,_T("CLASS")
+  ,_T("SCRIPT")
+  ,_T("INTERNAL")
+  ,_T("EXTERNAL")
 };
 
 // typename - get the name of a type 
@@ -1853,7 +1853,7 @@ QLInterpreter::GetTypename(int type)
   {
     return (tnames[type]);
   }
-  buffer.Format("TYPE (%d)",type);
+  buffer.Format(_T("TYPE (%d)"),type);
   return buffer;
 }
 
@@ -1863,31 +1863,31 @@ QLInterpreter::BadType(int off,int expected_type)
 {
   CString type1 = GetTypename(m_stack_pointer[off]->m_type);
   CString type2 = GetTypename(expected_type);
-  m_vm->Info("PC: %04x, Offset %d, Type %s, Expected %s",(int)(m_pc - m_code),off,type1,type2);
-  m_vm->Error("Bad argument type");
+  m_vm->Info(_T("PC: %04x, Offset %d, Type %s, Expected %s"),(int)(m_pc - m_code),off,type1,type2);
+  m_vm->Error(_T("Bad argument type"));
   return 0;
 }
 
 typedef struct _opnames 
 {
   int   opcode;
-  char* oper;
+  TCHAR* oper;
 }
 OpNames;
 
 OpNames opnames[] =
 {
-  { OP_ADD,   "+ (add)"             }
- ,{ OP_SUB,   "- (subtract)"        }
- ,{ OP_MUL,   "* (multiply)"        }
- ,{ OP_DIV,   "/ (division)"        }
- ,{ OP_REM,   "% (remainder)"       }
- ,{ OP_EQ,    "== (equals)"         }
- ,{ OP_NE,    "!= (not equal)"      }
- ,{ OP_LT,    "< (less than)"       }
- ,{ OP_GT,    "> (greater than)"    }
- ,{ OP_LE,    "<= (lesser equal)"   }
- ,{ OP_GE,    ">= (greater equal)"  }
+  { OP_ADD,   _T("+ (add)")             }
+ ,{ OP_SUB,   _T("- (subtract)")        }
+ ,{ OP_MUL,   _T("* (multiply)")        }
+ ,{ OP_DIV,   _T("/ (division)")        }
+ ,{ OP_REM,   _T("% (remainder)")       }
+ ,{ OP_EQ,    _T("== (equals)")         }
+ ,{ OP_NE,    _T("!= (not equal)")      }
+ ,{ OP_LT,    _T("< (less than)")       }
+ ,{ OP_GT,    _T("> (greater than)")    }
+ ,{ OP_LE,    _T("<= (lesser equal)")   }
+ ,{ OP_GE,    _T(">= (greater equal)")  }
  ,{ 0,        NULL                  }
 };
 
@@ -1903,7 +1903,7 @@ QLInterpreter::OperatorName(int p_opcode)
     }
     ++oper;
   }
-  return "";
+  return _T("");
 }
 
 void
@@ -1913,15 +1913,15 @@ QLInterpreter::BadOperator(int p_oper)
   CString typeName1 = GetTypename(m_stack_pointer[1]->m_type);
   CString typeName2 = GetTypename(m_stack_pointer[0]->m_type);
 
-  m_vm->Info("PC: %04x, Bad types/operator combination: %s %s %s",(int)(m_pc - m_code),typeName1,operName,typeName2);
-  m_vm->Error("Bad operator type");
+  m_vm->Info(_T("PC: %04x, Bad types/operator combination: %s %s %s"),(int)(m_pc - m_code),typeName1,operName,typeName2);
+  m_vm->Error(_T("Bad operator type"));
 }
 
 // Report a failure to find a method for a selector
 void 
 QLInterpreter::NoMethod(CString selector)
 {
-  m_vm->Error("No method for selector '%s'",selector);
+  m_vm->Error(_T("No method for selector '%s'"),selector);
 }
 
 // No such number of members on an object
@@ -1929,14 +1929,14 @@ void
 QLInterpreter::BadMemberArgument(Object* p_object,int p_member)
 {
   CString classname = p_object->GetClass()->GetName();
-  m_vm->Error("Object of class [%s] does not have %d members",classname,p_member);
+  m_vm->Error(_T("Object of class [%s] does not have %d members"),classname,p_member);
 }
 
 // Report a stack overflow error
 void 
 QLInterpreter::StackOverflow()
 {
-  m_vm->Error("Stack overflow");
+  m_vm->Error(_T("Stack overflow"));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -2084,7 +2084,7 @@ QLInterpreter::GetIntegerArgument(int p_num)
   {
     case DTYPE_INTEGER:   number = m_stack_pointer[p_num]->m_value.v_integer;
                           break;
-    case DTYPE_STRING:    number = atoi(*m_stack_pointer[p_num]->m_value.v_string);
+    case DTYPE_STRING:    number = _ttoi(*m_stack_pointer[p_num]->m_value.v_string);
                           break;
     case DTYPE_BCD:       number = m_stack_pointer[p_num]->m_value.v_floating->AsLong();
                           break;
@@ -2105,7 +2105,7 @@ QLInterpreter::GetStringArgument(int p_num)
   {
     case DTYPE_STRING:  str = *m_stack_pointer[p_num]->m_value.v_string;
                         break;
-    case DTYPE_INTEGER: str.Format("%d",m_stack_pointer[p_num]->m_value.v_integer);
+    case DTYPE_INTEGER: str.Format(_T("%d"),m_stack_pointer[p_num]->m_value.v_integer);
                         break;
     case DTYPE_BCD:     str = m_stack_pointer[p_num]->m_value.v_floating->AsString();
                         break;

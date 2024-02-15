@@ -30,7 +30,7 @@ QLCompiler::QLCompiler(QLVirtualMachine* p_vm)
            ,cptr(0)
            ,m_decode(0)
 {
-  cbuff = (unsigned char *) GetMemory(CMAX);
+  cbuff = (BYTE*) GetMemory(CMAX);
 
   // Init break/continue stacks
   bsp = &bstack[0];
@@ -78,14 +78,14 @@ QLCompiler::CompileDefinitions(int (*getcf)(void*),void *getcd)
                             break;
         case T_CLASS:       do_class();
                             break;
-        default:	          m_scanner->ParseError("Expecting a declaration");
+        default:	          m_scanner->ParseError(_T("Expecting a declaration"));
                             break;
       }
     }
   }
   catch(int code)
   {
-    fprintf(stderr,"ERROR: Compiler stopped with error: %d\n",code);
+    _ftprintf(stderr,_T("ERROR: Compiler stopped with error: %d\n"),code);
     result = false;
   }
   // Done with the scanner
@@ -118,7 +118,7 @@ QLCompiler::do_global_declaration()
       int type = FindDataType(datatype);
       if(type == DTYPE_NIL)
       {
-        m_scanner->ParseError("Unknown global data type: " + datatype);
+        m_scanner->ParseError(_T("Unknown global data type: ") + datatype);
       }
       // Get local variable name
       FetchRequireToken(T_IDENTIFIER);
@@ -185,7 +185,7 @@ QLCompiler::do_class()
     baseClass = get_class(baseClassName);
     if(m_decode)
     {
-      m_vm->Info("Class '%s', Base class '%s'",className,baseClassName);
+      m_vm->Info(_T("Class '%s', Base class '%s'"),className,baseClassName);
     }
   }
   else 
@@ -193,7 +193,7 @@ QLCompiler::do_class()
     m_scanner->SaveToken(tkn);
     if(m_decode)
     {
-      m_vm->Info("Class '%s'",className);
+      m_vm->Info(_T("Class '%s'"),className);
     }
   }
   FetchRequireToken('{');
@@ -225,7 +225,7 @@ QLCompiler::do_class()
     // get the first identifier
     if (tkn != T_IDENTIFIER)
     {
-      m_scanner->ParseError("Expecting a member declaration");
+      m_scanner->ParseError(_T("Expecting a member declaration"));
     }
     member = m_scanner->GetTokenAsString();
 
@@ -245,16 +245,16 @@ QLCompiler::do_class()
         int type = FindDataType(member);
         if(type == DTYPE_NIL)
         {
-          m_scanner->ParseError("Class data members must have a data type");
+          m_scanner->ParseError(_T("Class data members must have a data type"));
         }
         if(tkn != T_IDENTIFIER)
         {
-          m_scanner->ParseError("Class data member must be an identifier");
+          m_scanner->ParseError(_T("Class data member must be an identifier"));
         }
         member = m_scanner->GetTokenAsString();
         if(!theClass->AddDataMember(m_vm,member,storage == T_STATIC ? ST_SDATA : ST_DATA))
         {
-          m_scanner->ParseError("Global variable of this name already exists!");
+          m_scanner->ParseError(_T("Global variable of this name already exists!"));
         }
 
         // Getting next token
@@ -279,11 +279,11 @@ QLCompiler::do_function(CString p_name)
 {
   switch (m_scanner->GetToken()) 
   {
-    case '(': 	  do_regular_function(p_name);
+    case _T('('): 	  do_regular_function(p_name);
                   break;
     case T_CC:	  do_member_function(get_class(p_name));
                   break;
-    default:	    m_scanner->ParseError("Expecting a function declaration");
+    default:	    m_scanner->ParseError(_T("Expecting a function declaration"));
                   break;
   }
 }
@@ -325,7 +325,7 @@ QLCompiler::do_member_function(Class* p_class)
   name = p_class->GetName();
   if(m_decode)
   {
-    m_vm->Info("Member function '%s::%s'",name,selector);
+    m_vm->Info(_T("Member function '%s::%s'"),name,selector);
   }
 
   // make sure the type matches the declaration 
@@ -334,7 +334,7 @@ QLCompiler::do_member_function(Class* p_class)
 //       entry->m_type != DTYPE_INTERNAL &&
 //       entry->m_type != DTYPE_EXTERNAL)
   {
-    m_scanner->ParseError("Illegal redefinition");
+    m_scanner->ParseError(_T("Illegal redefinition"));
   }
 
   // Add the Member function and get the function
@@ -366,7 +366,7 @@ QLCompiler::do_code(Function* p_function)
   // add the implicit 'this' argument for member functions
   if(p_function->GetClass() != nullptr)
   {
-    AddArgument("this");
+    AddArgument(_T("this"));
   }
   m_methodclass = p_function->GetClass();
     
@@ -388,7 +388,7 @@ QLCompiler::do_code(Function* p_function)
   if(p_function->GetClass())
   {
     if((p_function->GetName().Compare(p_function->GetClass()->GetName()) == 0) ||
-       (p_function->GetName().Compare("destroy") == 0))
+       (p_function->GetName().Compare(_T("destroy")) == 0))
     {
       // End XTOR/DTOR with loading the 'this' pointer
       putcbyte(OP_ALOAD);
@@ -433,7 +433,7 @@ QLCompiler::get_class(CString p_name)
   Class* sym = m_vm->FindClass(p_name);
   if (sym == nullptr)
   {
-    m_scanner->ParseError("Expecting a class name");
+    m_scanner->ParseError(_T("Expecting a class name"));
   }
   return sym;
 }
@@ -455,8 +455,8 @@ QLCompiler::do_statement()
     case T_SWITCH:    do_switch();  break;
     case T_CASE:      do_case();    break;
     case T_DEFAULT:   do_default(); break;
-    case '{':		      do_block();	  break;
-    case ';':		      ;		          break;
+    case _T('{'):		      do_block();	  break;
+    case _T(';'):		      ;		          break;
     default:		      m_scanner->SaveToken(tkn);
                       do_expr();
                       FetchRequireToken(';');  
@@ -508,7 +508,7 @@ QLCompiler::addbreak(int lbl)
   }
   else
   {
-    m_scanner->ParseError("Too many nested loops");
+    m_scanner->ParseError(_T("Too many nested loops"));
   }
   return (old);
 }
@@ -531,7 +531,7 @@ QLCompiler::addcontinue(int lbl)
   }
   else
   {
-    m_scanner->ParseError("Too many nested loops");
+    m_scanner->ParseError(_T("Too many nested loops"));
   }
   return (old);
 }
@@ -673,7 +673,7 @@ QLCompiler::do_break()
   }
   else
   {
-    m_scanner->ParseError("Break outside of loop");
+    m_scanner->ParseError(_T("Break outside of loop"));
   }
 }
 
@@ -688,7 +688,7 @@ QLCompiler::do_continue()
   }
   else
   {
-    m_scanner->ParseError("Continue outside of loop");
+    m_scanner->ParseError(_T("Continue outside of loop"));
   }
 }
 
@@ -705,7 +705,7 @@ QLCompiler::AddSwitch()
   }
   else
   {
-    m_scanner->ParseError("Too many nested switch statements");
+    m_scanner->ParseError(_T("Too many nested switch statements"));
   }
   return old;
 }
@@ -790,12 +790,12 @@ QLCompiler::do_case()
     // get the case value
     switch (m_scanner->GetToken()) 
     {
-      case '\\':        switch (m_scanner->GetToken()) 
+      case _T('\\'):        switch (m_scanner->GetToken()) 
                         {
                           case T_IDENTIFIER:  m_scanner->GetToken();
                                               value = make_lit_string(m_scanner->GetTokenAsString());
                                               break;
-                          default:            m_scanner->ParseError("Expecting a literal symbol");
+                          default:            m_scanner->ParseError(_T("Expecting a literal symbol"));
                                               value = 0; // never reached
                         }
                         break;
@@ -806,7 +806,7 @@ QLCompiler::do_case()
       case T_NIL:       value = 0;
                         do_lit_integer(0);
                         break;
-      default:          m_scanner->ParseError("Expecting a literal value");
+      default:          m_scanner->ParseError(_T("Expecting a literal value"));
                         value = 0; // never reached
     }
     FetchRequireToken(':');
@@ -820,14 +820,14 @@ QLCompiler::do_case()
       }
       else if (value == entry->value)
       {
-        m_scanner->ParseError("Duplicate case");
+        m_scanner->ParseError(_T("Duplicate case"));
       }
     }
 
     // add the case to the list of cases
     if ((entry = (CENTRY *)calloc(1,sizeof(CENTRY))) == nullptr)
     {
-      m_scanner->ParseError("Out of memory");
+      m_scanner->ParseError(_T("Out of memory"));
       return;
     }
     entry->value = value;
@@ -840,7 +840,7 @@ QLCompiler::do_case()
   }
   else
   {
-    m_scanner->ParseError("Case outside of switch");
+    m_scanner->ParseError(_T("Case outside of switch"));
   }
 }
 
@@ -855,7 +855,7 @@ QLCompiler::do_default()
   }
   else
   {
-    m_scanner->ParseError("Default outside of switch");
+    m_scanner->ParseError(_T("Default outside of switch"));
   }
 }
 
@@ -975,7 +975,7 @@ QLCompiler::Check_LValue(PVAL* pv)
 {
   if (pv->m_pval_type == PV_NOVALUE)
   {
-    m_scanner->ParseError("Expecting an lvalue");
+    m_scanner->ParseError(_T("Expecting an lvalue"));
   }
 }
 
@@ -1001,7 +1001,7 @@ QLCompiler::do_expr2(PVAL* pv)
   int tkn; // ,nxt,end;
   PVAL rhs;
   do_expr3(pv);
-  while (( tkn = m_scanner->GetToken()) == '='
+  while (( tkn = m_scanner->GetToken()) == _T('=')
         || tkn == T_ADDEQ || tkn == T_SUBEQ
         || tkn == T_MULEQ || tkn == T_DIVEQ || tkn == T_REMEQ
         || tkn == T_ANDEQ || tkn == T_OREQ  || tkn == T_XOREQ
@@ -1010,7 +1010,7 @@ QLCompiler::do_expr2(PVAL* pv)
     Check_LValue(pv);
     switch (tkn) 
     {
-      case '=': 	    emit_code(pv->m_pval_type,PUSH,0);
+      case _T('='): 	    emit_code(pv->m_pval_type,PUSH,0);
                       do_expr1(&rhs); 
                       rvalue(&rhs);
                       emit_code(pv->m_pval_type,STORE,pv->m_value);
@@ -1185,14 +1185,14 @@ QLCompiler::do_expr10(PVAL* pv)
 {
   int tkn,op;
   do_expr11(pv);
-  while ((tkn = m_scanner->GetToken()) == '<' || tkn == T_LE || tkn == T_GE || tkn == '>') 
+  while ((tkn = m_scanner->GetToken()) == _T('<') || tkn == T_LE || tkn == T_GE || tkn == '>') 
   {
     switch (tkn) 
     {
-      case '<':  op = OP_LT; break;
+      case _T('<'):  op = OP_LT; break;
       case T_LE: op = OP_LE; break;
       case T_GE: op = OP_GE; break;
-      case '>':  op = OP_GT; break;
+      case _T('>'):  op = OP_GT; break;
     }
     rvalue(pv);
     putcbyte(OP_PUSH);
@@ -1231,12 +1231,12 @@ QLCompiler::do_expr12(PVAL* pv)
 {
   int tkn,op;
   do_expr13(pv);
-  while ((tkn = m_scanner->GetToken()) == '+' || tkn == '-') 
+  while ((tkn = m_scanner->GetToken()) == _T('+') || tkn == '-') 
   {
     switch (tkn) 
     {
-      case '+': op = OP_ADD; break;
-      case '-': op = OP_SUB; break;
+      case _T('+'): op = OP_ADD; break;
+      case _T('-'): op = OP_SUB; break;
     }
     rvalue(pv);
     putcbyte(OP_PUSH);
@@ -1253,13 +1253,13 @@ QLCompiler::do_expr13(PVAL* pv)
 {
   int tkn,op;
   do_expr14(pv);
-  while ((tkn = m_scanner->GetToken()) == '*' || tkn == '/' || tkn == '%') 
+  while ((tkn = m_scanner->GetToken()) == _T('*') || tkn == _T('/') || tkn == '%') 
   {
     switch (tkn) 
     {
-      case '*': op = OP_MUL; break;
-      case '/': op = OP_DIV; break;
-      case '%': op = OP_REM; break;
+      case _T('*'): op = OP_MUL; break;
+      case _T('/'): op = OP_DIV; break;
+      case _T('%'): op = OP_REM; break;
     }
     rvalue(pv);
     putcbyte(OP_PUSH);
@@ -1277,15 +1277,15 @@ QLCompiler::do_expr14(PVAL* pv)
   int tkn;
   switch (tkn = m_scanner->GetToken()) 
   {
-    case '-': 	  do_expr15(pv); 
+    case _T('-'): 	  do_expr15(pv); 
                   rvalue(pv);
                   putcbyte(OP_NEG);
                   break;
-    case '!':	    do_expr15(pv); 
+    case _T('!'):	    do_expr15(pv); 
                   rvalue(pv);
                   putcbyte(OP_NOT);
                   break;
-    case '~':	    do_expr15(pv); 
+    case _T('~'):	    do_expr15(pv); 
                   rvalue(pv);
                   putcbyte(OP_BNOT);
                   break;
@@ -1375,17 +1375,17 @@ QLCompiler::do_expr15(PVAL* pv)
   CString selector;
   int tkn;
   do_primary(pv);
-  while ((tkn = m_scanner->GetToken()) == '('
-                        ||     tkn == '['
+  while ((tkn = m_scanner->GetToken()) == _T('(')
+                        ||     tkn == _T('[')
                         ||     tkn == T_MEMREF
                         ||     tkn == T_INC
                         ||     tkn == T_DEC)
   {
     switch (tkn) 
     {
-      case '(':       do_call(pv);
+      case _T('('):       do_call(pv);
                       break;
-      case '[':       do_index(pv);
+      case _T('['):       do_index(pv);
                       break;
       case T_MEMREF:  FetchRequireToken(T_IDENTIFIER);
                       selector = m_scanner->GetTokenAsString();
@@ -1410,7 +1410,7 @@ QLCompiler::do_primary(PVAL* pv)
 
   switch (m_scanner->GetToken()) 
   {
-    case '(':         	do_expr1(pv);
+    case _T('('):         	do_expr1(pv);
                         FetchRequireToken(')');
                         break;
     case T_NUMBER:    	do_lit_integer((long)m_scanner->GetTokenAsInteger());
@@ -1437,7 +1437,7 @@ QLCompiler::do_primary(PVAL* pv)
                           FetchRequireToken(T_IDENTIFIER);
                           if (!FindClassVariable(v_class,m_scanner->GetTokenAsString(),pv))
                           {
-                            m_scanner->ParseError("Not a class member");
+                            m_scanner->ParseError(_T("Not a class member"));
                           }
                         }
                         else 
@@ -1446,7 +1446,7 @@ QLCompiler::do_primary(PVAL* pv)
                           FindVariable(id,pv);
                         }
                         break;
-    default:            m_scanner->ParseError("Expecting a primary expression");
+    default:            m_scanner->ParseError(_T("Expecting a primary expression"));
                         break;
   }
 }
@@ -1552,7 +1552,7 @@ QLCompiler::GetArgumentList(Function* p_function)
       int type = FindDataType(datatype);
       if(type == DTYPE_NIL)
       {
-        m_scanner->ParseError("Expected a valid argument data type");
+        m_scanner->ParseError(_T("Expected a valid argument data type"));
       }
       FetchRequireToken(T_IDENTIFIER);
       CString argument = m_scanner->GetTokenAsString();
@@ -1570,16 +1570,16 @@ QLCompiler::GetArgumentList(Function* p_function)
 }
 
 // DTYPE MACRO + 3!!
-const char* internal_datatypes[]
+const TCHAR* internal_datatypes[]
 {
-   "int"
-  ,"string"
-  ,"bcd"
-  ,"file"
-  ,"dbase"
-  ,"query"
-  ,"variant"
-  ,"array"
+   _T("int")
+  ,_T("string")
+  ,_T("bcd")
+  ,_T("file")
+  ,_T("dbase")
+  ,_T("query")
+  ,_T("variant")
+  ,_T("array")
 };
 
 int
@@ -1730,7 +1730,7 @@ QLCompiler::RequireToken(int tkn,int rtkn)
 
   if (tkn != rtkn) 
   {
-    message.Format("Expected token '%s', found '%s'"
+    message.Format(_T("Expected token '%s', found '%s'")
                   ,m_scanner->TokenName(rtkn).GetString()
                   ,m_scanner->TokenName(tkn) .GetString());
     m_scanner->ParseError(message);
@@ -1742,7 +1742,7 @@ void
 QLCompiler::do_lit_integer(long n)
 {
   MemObject* lit = nullptr;
-  code_literal(AddLiteral(DTYPE_INTEGER,&lit,"",n));
+  code_literal(AddLiteral(DTYPE_INTEGER,&lit,_T(""),n));
   lit->m_value.v_integer = n;
 }
 
@@ -1855,7 +1855,7 @@ QLCompiler::FindClassVariable(Class* p_class,CString p_name,PVAL* pv)
     case ST_SDATA:	    pv->m_pval_type = PV_VARIABLE;
                         pv->m_value = m_vm->AddGlobal(entry,p_name);
                         break;
-    case ST_FUNCTION: 	FindVariable("this",pv);
+    case ST_FUNCTION: 	FindVariable(_T("this"),pv);
                         do_send(p_name,pv);
                         break;
     case ST_SFUNCTION:	code_literal(make_lit_variable(entry));
@@ -1952,7 +1952,7 @@ QLCompiler::putcbyte(int b)
 {
   if (cptr >= CMAX)
   {
-    m_scanner->ParseError("Insufficient code space");
+    m_scanner->ParseError(_T("Insufficient code space"));
   }
   cbuff[cptr] = b;
   return (cptr++);
@@ -1990,14 +1990,13 @@ QLCompiler::Fixup(int chn,int val)
 #pragma warning(disable: 4996)
 
 // allocate memory and complain if there isn't enough
-char*
+TCHAR*
 QLCompiler::GetMemory(int size)
 {
-  char *val;
-  if ((val = (char*)calloc(1,size)) == nullptr)
+  TCHAR *val;
+  if ((val = (TCHAR*)calloc(1,size)) == nullptr)
   {
-    m_vm->Error("Insufficient memory");
+    m_vm->Error(_T("Insufficient memory"));
   }
   return (val);
 }
-

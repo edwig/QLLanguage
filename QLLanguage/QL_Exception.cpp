@@ -14,14 +14,14 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-QLException::QLException(char* p_message)
+QLException::QLException(TCHAR* p_message)
             :m_message(p_message)
             ,m_code(0)
 
 {
 }
 
-QLException::QLException(char* p_message, int p_code)
+QLException::QLException(TCHAR* p_message, int p_code)
             :m_message(p_message)
             ,m_code(p_code)
 
@@ -43,6 +43,6 @@ CString
 QLException::GetErrorMessage()
 {
   CString error;
-  error.Format("ERROR [%d] : %s", m_code, m_message);
+  error.Format(_T("ERROR [%d] : %s"), m_code, m_message);
   return error;
 }

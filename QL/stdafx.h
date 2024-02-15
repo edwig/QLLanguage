@@ -17,11 +17,6 @@
 #include <stdio.h>
 #include <tchar.h>
 
-#define  NO_WARN_MBCS_MFC_DEPRECATION
-#define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // some CString constructors will be explicit
-#define _AFX_NO_MFC_CONTROLS_IN_DIALOGS         // remove support for MFC controls in dialogs
-
-
 #include <afx.h>
 #include <afxwin.h>             // MFC core and standard components
 #include <afxext.h>             // MFC extensions

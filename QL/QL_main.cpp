@@ -25,14 +25,14 @@ static char THIS_FILE[] = __FILE__;
 using namespace std;
 
 // Provide standard drivers for output
-void osputs_stdout(const char* p_string)
+void osputs_stdout(LPCTSTR p_string)
 {
-  fputs(p_string,stdout);
+  _fputts(p_string,stdout);
 }
 
-void osputs_stderr(const char* p_string)
+void osputs_stderr(LPCTSTR p_string)
 {
-  fputs(p_string,stderr);
+  _fputts(p_string,stderr);
 }
 
 // Static command line options
@@ -42,35 +42,35 @@ bool    objecttrace = false;
 bool    inttrace    = false;
 bool    objectfile  = false;
 bool    dumpmem     = false;
-CString entrypoint("main");
+CString entrypoint(_T("main"));
 
 void PrintVersion()
 {
   if (verbose)
   {
-    printf("%s\n",          QUANTUM_PROMPT);
-    printf("Version: %s\n", QUANTUM_VERSION);
+    _tprintf(_T("%s\n"),          QUANTUM_PROMPT);
+    _tprintf(_T("Version: %s\n"), QUANTUM_VERSION);
   }
 }
 
 void
 Usage()
 {
-  printf("\n"
-         "ql [options] sourcefile[.ql] [objectfile.qob]\n"
-         "\n"
-         "The following are valid options\n"
-         "-v        Verbose + copyrights\n"
-         "-c        Compile only to object file\n"
-         "-b        Show compiling trace (object, method, bytecode)\n"
-         "-t        Show tracing bytecode execution\n"
-         "-e name   Use 'name' as entry point, other than 'main'\n"
-         "-d name   Use 'name' as database name\n"
-         "-u name   Use 'name' as database user's name\n"
-         "-p word   Use 'word' as database password\n"
-         "-h        Show this help page\n"
-         "-o        show contents of object file\n"
-         "-x        Dump object chain on exit\n");
+  _tprintf(_T("\n")
+         _T("ql [options] sourcefile[.ql] [objectfile.qob]\n")
+         _T("\n")
+         _T("The following are valid options\n")
+         _T("-v        Verbose + copyrights\n")
+         _T("-c        Compile only to object file\n")
+         _T("-b        Show compiling trace (object, method, bytecode)\n")
+         _T("-t        Show tracing bytecode execution\n")
+         _T("-e name   Use 'name' as entry point, other than 'main'\n")
+         _T("-d name   Use 'name' as database name\n")
+         _T("-u name   Use 'name' as database user's name\n")
+         _T("-p word   Use 'word' as database password\n")
+         _T("-h        Show this help page\n")
+         _T("-o        show contents of object file\n")
+         _T("-x        Dump object chain on exit\n"));
 }
 
 bool
@@ -78,64 +78,64 @@ ParseCommandLine(int& index)
 {
   for (index = 1; index < __argc; ++index)
   {
-    LPCSTR lpszParam = __argv[index];
+    LPCTSTR lpszParam = __targv[index];
 
-    if (lpszParam[0] == '-' || lpszParam[0] == '/')
+    if (lpszParam[0] == _T('-') || lpszParam[0] == '/')
     {
-      if (tolower(lpszParam[1]) == 'h' || lpszParam[1] == '?')
+      if (_totlower(lpszParam[1]) == _T('h') || lpszParam[1] == '?')
       {
         verbose = true;
         PrintVersion();
         Usage();
         return false;
       }
-      else if (tolower(lpszParam[1]) == 'c')
+      else if (_totlower(lpszParam[1]) == 'c')
       {
         objectfile = true;
       }
-      else if (tolower(lpszParam[1]) == 'v')
+      else if (_totlower(lpszParam[1]) == 'v')
       {
         verbose = true;
       }
-      else if (tolower(lpszParam[1]) == 'b')
+      else if (_totlower(lpszParam[1]) == 'b')
       {
         comptrace = true;
       }
-      else if (tolower(lpszParam[1]) == 't')
+      else if (_totlower(lpszParam[1]) == 't')
       {
         inttrace = true;
       }
-      else if(tolower(lpszParam[1]) == 'x')
+      else if(_totlower(lpszParam[1]) == 'x')
       {
         dumpmem = true;
       }
-      else if(tolower(lpszParam[1]) == 'o')
+      else if(_totlower(lpszParam[1]) == 'o')
       {
         objecttrace = true;
       }
-      else if (tolower(lpszParam[1]) == 'e')
+      else if (_totlower(lpszParam[1]) == 'e')
       {
-        entrypoint = __argv[++index];
+        entrypoint = __targv[++index];
         if (entrypoint.IsEmpty())
         {
-          entrypoint = "main";
+          entrypoint = _T("main");
         }
       }
-      else if (tolower(lpszParam[1]) == 'd')
+      else if (_totlower(lpszParam[1]) == 'd')
       {
-        db_database = __argv[++index];
+        db_database = __targv[++index];
       }
-      else if (tolower(lpszParam[1]) == 'u')
+      else if (_totlower(lpszParam[1]) == 'u')
       {
-        db_user = __argv[++index];
+        db_user = __targv[++index];
       }
-      else if (tolower(lpszParam[1]) == 'p')
+      else if (_totlower(lpszParam[1]) == 'p')
       {
-        db_password = __argv[++index];
+        db_password = __targv[++index];
       }
       else
       {
-        printf("Unknown option: %s",lpszParam);
+        _tprintf(_T("Unknown option: %s"),lpszParam);
         Usage();
         return false;
       }
@@ -155,14 +155,14 @@ ParseCommandLine(int& index)
 //
 //////////////////////////////////////////////////////////////////////////
 
-int main(int argc,char* argv[],char* envp[])
+int _tmain(int argc,TCHAR* argv[],TCHAR* envp[])
 {
   int nRetCode = 0;
 
   HMODULE hModule = ::GetModuleHandle(NULL);
   if (hModule == NULL)
   {
-    printf("QL: Fatal Error: module initialization failed\n");
+    _tprintf(_T("QL: Fatal Error: module initialization failed\n"));
     nRetCode = 1;
   }
   else
@@ -170,7 +170,7 @@ int main(int argc,char* argv[],char* envp[])
     // initialize MFC and print and error on failure
     if(!AfxWinInit(hModule, NULL, ::GetCommandLine(), 0))
     {
-      printf("QL: Fatal Error: MFC initialization failed\n");
+      _tprintf(_T("QL: Fatal Error: MFC initialization failed\n"));
       nRetCode = 1;
     }
     else
@@ -197,7 +197,7 @@ int main(int argc,char* argv[],char* envp[])
               compiled = vm.LoadFile(argv[ind],objecttrace);
               if(compiled && verbose)
               {
-                printf("Read object file: %s\n",argv[ind]);
+                _tprintf(_T("Read object file: %s\n"),argv[ind]);
               }
             }
             else if (vm.IsSourceFile(argv[ind]))
@@ -205,12 +205,12 @@ int main(int argc,char* argv[],char* envp[])
               compiled = vm.CompileFile(argv[ind],comptrace);
               if(compiled && verbose)
               {
-                printf("Compiled source file: %s\n",argv[ind]);
+                _tprintf(_T("Compiled source file: %s\n"),argv[ind]);
               }
             }
             else
             {
-              fprintf(stderr,"File not found: %s\n",argv[ind]);
+              _ftprintf(stderr,_T("File not found: %s\n"),argv[ind]);
               nRetCode = 1;
             }
             // Next argument from command line
@@ -222,7 +222,7 @@ int main(int argc,char* argv[],char* envp[])
             // Last argument is the object file
             if(vm.WriteFile(argv[argc - 1],objecttrace) && verbose)
             {
-              printf("Written object file: %s\n",argv[argc - 1]);
+              _tprintf(_T("Written object file: %s\n"),argv[argc - 1]);
             }
           }
           else if(compiled)
@@ -242,7 +242,7 @@ int main(int argc,char* argv[],char* envp[])
             catch(QLException& exp)
             {
               nRetCode = -1;
-              fprintf(stderr,"%s\n",exp.GetErrorMessage().GetString());
+              _ftprintf(stderr,_T("%s\n"),exp.GetErrorMessage().GetString());
             }
           }
         }

@@ -63,7 +63,7 @@
 
 typedef struct _keyword_table
 {
-  char *kt_keyword;
+  TCHAR *kt_keyword;
   int   kt_token;
 }
 KeywordTable;
@@ -81,7 +81,7 @@ public:
     
   int     SaveToken(int p_token);     // Saved token
   CString TokenName(int tkn);         // get token name
-  void    ParseError(const char* msg);
+  void    ParseError(const TCHAR* msg);
 
 
 private:

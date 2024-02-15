@@ -20,12 +20,12 @@
 // USED IN *.qob FILES
 #define QL_VERSION        200 // 2.00
 
-#define QUANTUM_PROMPT    "Quantum Language (c) 2014-2018 ir. W.E. Huisman"
-#define QUANTUM_VERSION   "2.0"
+#define QUANTUM_PROMPT    _T("Quantum Language (c) 2014-2018 ir. W.E. Huisman")
+#define QUANTUM_VERSION   _T("2.0")
 
 // Tracing macro
-#define tracing(x)          if(p_trace) fprintf(stderr,x)
-#define tracingx(x,...)     if(p_trace) fprintf(stderr,x,__VA_ARGS__)
+#define tracing(x)          if(p_trace) _ftprintf(stderr,x)
+#define tracingx(x,...)     if(p_trace) _ftprintf(stderr,x,__VA_ARGS__)
 
 // Maximum size of stack up to 0xFFFF
 #define STACK_MAX         0x7FFF // 32767
@@ -88,7 +88,7 @@ class QLInterpreter;
 
 // Types for the MemObject
 typedef int (*Internal)(QLInterpreter*,int);
-typedef unsigned char shortint;
+typedef _TUCHAR shortint;
 
 // Method for internal data types
 typedef struct _method
@@ -106,7 +106,7 @@ typedef std::multimap<CString, Method*>   MethodMap;
 
 // Globals for the QL library
 extern int    qlargc;       // Rest of the startup parameters
-extern char** qlargv;       // All startup parameters
+extern TCHAR** qlargv;       // All startup parameters
 
 extern CString db_database; // Default database name
 extern CString db_user;     // Default user name for the database
@@ -114,8 +114,8 @@ extern CString db_password; // Default password for the database user
 
 // Forward declarations
 // Implementations must provide these!
-void osputs_stdout(const char* str);
-void osputs_stderr(const char* str);
+void osputs_stdout(LPCTSTR str);
+void osputs_stderr(LPCTSTR str);
 
 // Selecting the right library to link with automatically
 // So we do not need to worry about which library to use in the linker settings

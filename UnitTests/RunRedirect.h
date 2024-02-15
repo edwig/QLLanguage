@@ -31,8 +31,8 @@
 // Miliseconds wait loop
 #define WAITTIME_STATUS 25
 
-int  CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result);
-int  CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result,int p_waittime);
+int  CallProgram_For_String(LPCTSTR p_programma,LPCTSTR p_commandLine,CString& p_result);
+int  CallProgram_For_String(LPCTSTR p_programma,LPCTSTR p_commandLine,CString& p_result,int p_waittime);
 
 
 class RunRedirect : public CRedirect
@@ -42,12 +42,12 @@ public:
    RunRedirect();
   ~RunRedirect();
 
-  void RunCommand(LPCSTR p_commandLine);
+  void RunCommand(LPCTSTR p_commandLine);
 
   // Virtual interface. Derived class must implement this!!
-  void OnChildStarted    (LPCSTR lpszCmdLine);
-  void OnChildStdOutWrite(LPCSTR lpszOutput); 
-  void OnChildStdErrWrite(LPCSTR lpszOutput);
+  void OnChildStarted    (LPCTSTR lpszCmdLine);
+  void OnChildStdOutWrite(LPCTSTR lpszOutput); 
+  void OnChildStdErrWrite(LPCTSTR lpszOutput);
   void OnChildTerminate  ();
   bool IsReady();
   bool IsEOF();

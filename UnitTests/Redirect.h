@@ -41,15 +41,15 @@ public:
  ~CRedirect();
 
   // Actual interface. Use these.
-  BOOL StartChildProcess(LPCSTR lpszCmdLine, BOOL bShowChildWindow = FALSE);
+  BOOL StartChildProcess(LPCTSTR lpszCmdLine, BOOL bShowChildWindow = FALSE);
   BOOL IsChildRunning() const;
   void TerminateChildProcess();
-  int  WriteChildStdIn(LPCSTR lpszInput);
+  int  WriteChildStdIn(LPCTSTR lpszInput);
 
   // Virtual interface. Derived class must implement this!!
-  virtual void OnChildStarted    (LPCSTR lpszCmdLine) = 0;
-  virtual void OnChildStdOutWrite(LPCSTR lpszOutput)  = 0;
-  virtual void OnChildStdErrWrite(LPCSTR lpszOutput)  = 0;
+  virtual void OnChildStarted    (LPCTSTR lpszCmdLine) = 0;
+  virtual void OnChildStdOutWrite(LPCTSTR lpszOutput)  = 0;
+  virtual void OnChildStdErrWrite(LPCTSTR lpszOutput)  = 0;
   virtual void OnChildTerminate  ()                   = 0;
 
   mutable int m_exitCode;
@@ -68,7 +68,7 @@ protected:
   // Child process handle
   HANDLE m_hChildProcess;
 
-  HANDLE PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
+  HANDLE PrepAndLaunchRedirectedChild(LPCTSTR lpszCmdLine
                                      ,HANDLE hStdOut
                                      ,HANDLE hStdIn
                                      ,HANDLE hStdErr

@@ -27,8 +27,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Globals for the QL language are defined here
-int    qlargc = 0;
-char** qlargv = NULL;
+int     qlargc = 0;
+TCHAR** qlargv = NULL;
 
 CString db_database;
 CString db_user;
@@ -102,7 +102,7 @@ QLVirtualMachine::SetGCThreshold(int p_threshold)
 }
 
 /*static*/ void
-QLVirtualMachine::Error(const char* p_format,...)
+QLVirtualMachine::Error(LPCTSTR p_format,...)
 {
   CString text;
 
@@ -110,14 +110,14 @@ QLVirtualMachine::Error(const char* p_format,...)
   va_start(argList, p_format);
   text.FormatV(p_format,argList);
   va_end(argList);
-  fputs(text,stderr);
+  _fputts(text,stderr);
 
   // throw as an error exception
   throw QLException(text,EXCEPTION_BY_ERROR);
 }
 
 void
-QLVirtualMachine::Info(const char* p_format,...)
+QLVirtualMachine::Info(LPCTSTR p_format,...)
 {
   CString text;
 
@@ -125,7 +125,7 @@ QLVirtualMachine::Info(const char* p_format,...)
   va_start(argList, p_format);
   text.FormatV(p_format, argList);
   va_end(argList);
-  fprintf(stdout,"[%s]\n",text.GetString());
+  _ftprintf(stdout,_T("[%s]\n"),text.GetString());
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -134,9 +134,32 @@ QLVirtualMachine::Info(const char* p_format,...)
 //
 //////////////////////////////////////////////////////////////////////////
 
+static XString g_input_buffer;
+static int     g_input_position;
+
+static void readfile_reset()
+{
+  g_input_position = 0;
+  g_input_buffer.Empty();
+}
+
+static int readfile(void* p_buff)
+{
+  WinFile* file = reinterpret_cast<WinFile*>(p_buff);
+  if(g_input_position >= g_input_buffer.GetLength())
+  {
+    if(!file->Read(g_input_buffer))
+    {
+      return EOF;
+    }
+    g_input_position = 0;
+  }
+  return g_input_buffer.GetAt(g_input_position++);
+}
+
 // Compile a QL source code file into this VM
 bool        
-QLVirtualMachine::CompileFile(const char* p_filename,bool p_trace)
+QLVirtualMachine::CompileFile(LPCTSTR p_filename,bool p_trace)
 {
   // See to it that the VM is initialized
   CheckInit();
@@ -145,7 +168,6 @@ QLVirtualMachine::CompileFile(const char* p_filename,bool p_trace)
   // compile file
   QLCompiler comp(this);
   QLDebugger* dbg  = nullptr;
-  FILE*       file = nullptr;
 
   // See if tracing the compiler is requested
   if(p_trace)
@@ -156,16 +178,17 @@ QLVirtualMachine::CompileFile(const char* p_filename,bool p_trace)
 
   // check that name ends in .ql
   CString filename(p_filename);
-  if(filename.Right(3).CompareNoCase(".ql"))
+  if(filename.Right(3).CompareNoCase(_T(".ql")))
   {
-    filename += ".ql";
+    filename += _T(".ql");
   }
 
-  fopen_s(&file,filename,"r");
-  if(file)
+  readfile_reset();
+  WinFile file(filename);
+  if(file.Open(winfile_read))
   {
-    result = comp.CompileDefinitions((int(*)(void*))fgetc,(void*)file);
-    fclose(file);
+    result = comp.CompileDefinitions((int(*)(void*))readfile,(void*)&file);
+    file.Close();
   }
 
   // Remove the debugger again
@@ -174,25 +197,26 @@ QLVirtualMachine::CompileFile(const char* p_filename,bool p_trace)
     delete dbg;
     dbg = nullptr;
   }
+  readfile_reset();
   return result;
 }
 
 bool
-QLVirtualMachine::IsObjectFile(const char* p_filename)
+QLVirtualMachine::IsObjectFile(const TCHAR* p_filename)
 {
   bool result = false;
   CString filename(p_filename);
 
-  if(_access(p_filename,04) != 0)
+  if(_taccess(p_filename,04) != 0)
   {
-    filename += ".qob";
+    filename += _T(".qob");
   }
-  if(_access(p_filename,04) != 0)
+  if(_taccess(p_filename,04) != 0)
   {
     return false;
   }
   FILE* fp = nullptr;
-  fopen_s(&fp,filename,"r");
+  _tfopen_s(&fp,filename,_T("r"));
   if(fp != nullptr)
   {
     try
@@ -213,20 +237,20 @@ QLVirtualMachine::IsObjectFile(const char* p_filename)
 }
 
 bool
-QLVirtualMachine::IsSourceFile(const char* p_filename)
+QLVirtualMachine::IsSourceFile(const TCHAR* p_filename)
 {
   CString filename(p_filename);
 
-  if(_access(p_filename,04) == 0)
+  if(_taccess(p_filename,04) == 0)
   {
     return true;
   }
 
   // Test for a .QL file
-  if(filename.Right(3).CompareNoCase(".ql"))
+  if(filename.Right(3).CompareNoCase(_T(".ql")))
   {
-    filename += ".ql";
-    if(_access(filename,04) == 0)
+    filename += _T(".ql");
+    if(_taccess(filename,04) == 0)
     {
       return true;
     }
@@ -234,26 +258,26 @@ QLVirtualMachine::IsSourceFile(const char* p_filename)
   return false;
 }
 
-__declspec(thread) static char* compile_buffer = nullptr;
+__declspec(thread) static TCHAR* compile_buffer = nullptr;
 
 int readbuffer(void* p_buff)
 {
 
-  char* buff = reinterpret_cast<char*>(p_buff);
+  TCHAR* buff = reinterpret_cast<TCHAR*>(p_buff);
   if(!compile_buffer)
   {
     compile_buffer = buff;
   }
   if(!*compile_buffer)
   {
-    return EOF;
+    return _TEOF;
   }
   return *compile_buffer++;
 }
 
 // Compile a QL source code buffer string into this VM
 bool
-QLVirtualMachine::CompileBuffer(const char* p_buffer,bool p_trace)
+QLVirtualMachine::CompileBuffer(LPCTSTR p_buffer,bool p_trace)
 {
   // See to it that the VM is initialized
   CheckInit();
@@ -312,7 +336,7 @@ QLVirtualMachine::AllocMemObject(int p_type,bool p_running /*=true*/)
   }
   else if(p_running)
   {
-    Error("INTERNAL: AllocMemObject called before VM is initialized!");
+    Error(_T("INTERNAL: AllocMemObject called before VM is initialized!"));
   }
   // Record the flags
   object->m_generation = GC_ALIVE;
@@ -381,7 +405,7 @@ QLVirtualMachine::AllocMemObject(const MemObject* p_other)
     case DTYPE_CLASS:     // error
     case DTYPE_SCRIPT:    
     case DTYPE_INTERNAL:
-    case DTYPE_EXTERNAL:  Error("Cannot copy this type of object");
+    case DTYPE_EXTERNAL:  Error(_T("Cannot copy this type of object"));
   }
   object->m_type = p_other->m_type;
   
@@ -507,7 +531,7 @@ QLVirtualMachine::FindScript(CString p_name)
   }
 
   // Maybe it's an objects member
-  int pos = p_name.Find("::");
+  int pos = p_name.Find(_T("::"));
   if(pos > 0)
   {
     CString classname  = p_name.Left(pos);
@@ -640,7 +664,7 @@ QLVirtualMachine::GetGlobal(unsigned p_index)
   {
     return m_globals->GetEntry(p_index);
   }
-  Error("Global entry out of range: %d",p_index);
+  Error(_T("Global entry out of range: %d"),p_index);
   return nullptr;
 }
 
@@ -652,7 +676,7 @@ QLVirtualMachine::SetGlobal(unsigned p_index,MemObject* p_object)
     m_globals->SetEntry(p_index,p_object);
     return;
   }
-  Error("Global entry out of range: %d", p_index);
+  Error(_T("Global entry out of range: %d"), p_index);
 }
 
 MemObject*
@@ -677,7 +701,7 @@ QLVirtualMachine::FindSymbolName(MemObject* p_object)
       return sym.first;
     }
   }
-  return CString("<Symbol-not-found>");
+  return CString(_T("<Symbol-not-found>"));
 }
 
 Method*
@@ -758,43 +782,43 @@ QLVirtualMachine::Print(FILE* p_fp,int p_quoteFlag,MemObject* p_value)
   if(p_value)
   switch (p_value->m_type)
   {
-    case DTYPE_NIL:     value = "NIL";
+    case DTYPE_NIL:     value = _T("NIL");
                         break;
-    case DTYPE_ENDMARK: value = "<ENDMARK>";
+    case DTYPE_ENDMARK: value = _T("<ENDMARK>");
                         break;
-    case DTYPE_INTEGER: value.Format("%ld",p_value->m_value.v_integer);
+    case DTYPE_INTEGER: value.Format(_T("%ld"),p_value->m_value.v_integer);
                         break;
     case DTYPE_STRING:  value = *p_value->m_value.v_string;
                         if (p_quoteFlag)
                         {
-                          value = "\"" + value + "\"";
+                          value = _T("\"") + value + _T("\"");
                         }
                         break;
     case DTYPE_BCD:     value = p_value->m_value.v_floating->AsString();
                         break;
-    case DTYPE_FILE:   	value.Format("<File: %s>",FindSymbolName(p_value).GetString());
+    case DTYPE_FILE:   	value.Format(_T("<File: %s>"),FindSymbolName(p_value).GetString());
                         break;
-    case DTYPE_DATABASE:value.Format("<Database: %s>",p_value->m_value.v_database->GetDatabaseName().GetString());
+    case DTYPE_DATABASE:value.Format(_T("<Database: %s>"),p_value->m_value.v_database->GetDatabaseName().GetString());
                         break;
-    case DTYPE_QUERY:   value.Format("<Query: %p>",p_value->m_value.v_query);
+    case DTYPE_QUERY:   value.Format(_T("<Query: %p>"),p_value->m_value.v_query);
                         break;
     case DTYPE_VARIANT: p_value->m_value.v_variant->GetAsString(value);
                         break;
-    case DTYPE_ARRAY:   value.Format("<Array: %p>",p_value->m_value.v_array);
+    case DTYPE_ARRAY:   value.Format(_T("<Array: %p>"),p_value->m_value.v_array);
                         break;
-    case DTYPE_OBJECT:  value.Format("<Object: %p Class: %s>"
+    case DTYPE_OBJECT:  value.Format(_T("<Object: %p Class: %s>")
                                      ,p_value->m_value.v_object
                                      ,p_value->m_value.v_object->GetClass()->GetName().GetString());
                         break;
-    case DTYPE_CLASS:   value.Format("<Class: %s>",p_value->m_value.v_class->GetName().GetString());
+    case DTYPE_CLASS:   value.Format(_T("<Class: %s>"),p_value->m_value.v_class->GetName().GetString());
                         break;
-    case DTYPE_SCRIPT:  value.Format("<Function: %s>",p_value->m_value.v_script->GetName().GetString());
+    case DTYPE_SCRIPT:  value.Format(_T("<Function: %s>"),p_value->m_value.v_script->GetName().GetString());
                         break;
-    case DTYPE_INTERNAL:value.Format("<Internal: %s>",FindSymbolName(p_value).GetString());
+    case DTYPE_INTERNAL:value.Format(_T("<Internal: %s>"),FindSymbolName(p_value).GetString());
                         break;
-    case DTYPE_EXTERNAL:value.Format("<External: %s>",p_value->m_value.v_sysname->GetString());
+    case DTYPE_EXTERNAL:value.Format(_T("<External: %s>"),p_value->m_value.v_sysname->GetString());
                         break;
-    default:            Error("Undefined type: %d", p_value->m_type);
+    default:            Error(_T("Undefined type: %d"), p_value->m_type);
                         break;
   }
   if(p_fp == stdout)
@@ -809,7 +833,7 @@ QLVirtualMachine::Print(FILE* p_fp,int p_quoteFlag,MemObject* p_value)
   }
   else
   {
-    len = fprintf(p_fp,value);
+    len = _ftprintf(p_fp,value);
   }
   return len;
 } 
@@ -971,9 +995,9 @@ QLVirtualMachine::DestroyObjectChain()
 void
 QLVirtualMachine::DumpObject(MemObject* p_object)
 {
-  fputs("MEM: ",stderr);
+  _fputts(_T("MEM: "),stderr);
   Print(stderr,true,p_object);
-  fputs("\n",stderr);
+  _fputts(_T("\n"),stderr);
 }
 
 void

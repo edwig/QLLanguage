@@ -69,7 +69,7 @@ CRedirect::~CRedirect()
 // Create standard handles, try to start child from command line.
 
 BOOL 
-CRedirect::StartChildProcess(LPCSTR lpszCmdLine, BOOL bShowChildWindow)
+CRedirect::StartChildProcess(LPCTSTR lpszCmdLine, BOOL bShowChildWindow)
 {
   HANDLE hProcess = ::GetCurrentProcess();
 
@@ -121,7 +121,7 @@ CRedirect::StartChildProcess(LPCSTR lpszCmdLine, BOOL bShowChildWindow)
   if (m_hChildProcess == NULL)
   {
     TCHAR lpszBuffer[BUFFER_SIZE];
-    sprintf_s(lpszBuffer, BUFFER_SIZE, "Unable to start %s\n", lpszCmdLine);
+    _stprintf_s(lpszBuffer, BUFFER_SIZE, _T("Unable to start %s\n"), lpszCmdLine);
     OnChildStdOutWrite(lpszBuffer);
 
     // close all handles and return FALSE
@@ -260,7 +260,7 @@ void CRedirect::TerminateChildProcess()
 
 // Launch the process that you want to redirect.
 
-HANDLE CRedirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
+HANDLE CRedirect::PrepAndLaunchRedirectedChild(LPCTSTR lpszCmdLine
                                               ,HANDLE hStdOut
                                               ,HANDLE hStdIn
                                               ,HANDLE hStdErr
@@ -300,7 +300,7 @@ HANDLE CRedirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
 
   // Try to spawn the process.
   BOOL bResult = ::CreateProcess(NULL
-                                ,(char*)lpszCmdLine
+                                ,(TCHAR*)lpszCmdLine
                                 ,lpSA
                                 ,NULL
                                 ,TRUE
@@ -339,9 +339,9 @@ int
 CRedirect::StdOutThread(HANDLE hStdOutRead)
 {
   DWORD nBytesRead;
-  CHAR  lpszBuffer[10];
-  CHAR  lineBuffer[BUFFER_SIZE+10];
-  char* linePointer = lineBuffer;
+  TCHAR  lpszBuffer[10];
+  TCHAR  lineBuffer[BUFFER_SIZE+10];
+  TCHAR* linePointer = lineBuffer;
 
   while(true)
   {
@@ -362,10 +362,10 @@ CRedirect::StdOutThread(HANDLE hStdOutRead)
         break;
       }
       *linePointer++ = lpszBuffer[0];
-      if(lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
+      if(lpszBuffer[0] == _T('\n') || ((linePointer - lineBuffer) > BUFFER_SIZE))
       {
         // Virtual function to notify derived class that
-        // characters are writted to stdout.
+        // characters are written to stdout.
         *linePointer = 0;
         OnChildStdOutWrite(lineBuffer);
         linePointer = lineBuffer;
@@ -392,9 +392,9 @@ int
 CRedirect::StdErrThread(HANDLE hStdErrRead)
 {
   DWORD nBytesRead;
-  CHAR  lpszBuffer[10];
-  CHAR  lineBuffer[BUFFER_SIZE+1];
-  char* linePointer = lineBuffer;
+  TCHAR  lpszBuffer[10];
+  TCHAR  lineBuffer[BUFFER_SIZE+1];
+  TCHAR* linePointer = lineBuffer;
 
   while (m_bRunThread)
   {
@@ -412,7 +412,7 @@ CRedirect::StdErrThread(HANDLE hStdErrRead)
         break;
       }
       *linePointer++ = lpszBuffer[0];
-      if(lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
+      if(lpszBuffer[0] == _T('\n') || ((linePointer - lineBuffer) > BUFFER_SIZE))
       {
         // Virtual function to notify derived class that
         // characters are writted to stdout.
@@ -485,10 +485,10 @@ CRedirect::ProcessThread()
 // Function that write to the child stdin.
 
 int
-CRedirect::WriteChildStdIn(LPCSTR lpszInput)
+CRedirect::WriteChildStdIn(LPCTSTR lpszInput)
 {
   DWORD nBytesWrote;
-  DWORD Length = (DWORD) strlen(lpszInput);
+  DWORD Length = (DWORD) _tcslen(lpszInput);
   if (m_hStdInWrite != NULL && Length > 0)
   {
     if(!::WriteFile(m_hStdInWrite, lpszInput, Length, &nBytesWrote, NULL))

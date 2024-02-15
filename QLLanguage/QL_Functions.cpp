@@ -30,7 +30,7 @@ static char THIS_FILE[] = __FILE__;
 
 // Add a built-in function
 static void
-add_function(char* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_vm)
+add_function(TCHAR* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_vm)
 {
   MemObject* sym = p_vm->AddInternal(p_name);
   sym->m_value.v_internal = p_fcn;
@@ -38,7 +38,7 @@ add_function(char* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_v
 
 // Add a built-in file
 static void 
-add_file(char* p_name,FILE* p_fp,QLVirtualMachine* p_vm)
+add_file(TCHAR* p_name,FILE* p_fp,QLVirtualMachine* p_vm)
 {
   MemObject* sym = p_vm->AddSymbol(p_name);
   p_vm->MemObjectSetType(sym,DTYPE_NIL);
@@ -48,7 +48,7 @@ add_file(char* p_name,FILE* p_fp,QLVirtualMachine* p_vm)
 
 // Add a method for a built-in-datatype
 static void 
-add_method(int p_type,char* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_vm)
+add_method(int p_type,TCHAR* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_vm)
 {
   Method* method = p_vm->AddMethod(p_name,p_type);
   method->m_internal = p_fcn;
@@ -67,12 +67,12 @@ argcount(QLInterpreter* p_inter,int n,int cnt)
   }
   if ((n) < (cnt)) 
   {
-    vm->Error("Too many arguments");
+    vm->Error(_T("Too many arguments"));
     return (FALSE);
   }
   else if ((n) > (cnt))
   {
-    vm->Error("Too few arguments");
+    vm->Error(_T("Too few arguments"));
     return (FALSE);
   }
   // n == cnt
@@ -115,7 +115,7 @@ static int xnewarray(QLInterpreter* p_inter,int argc)
 static int xnewstring(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,0);
-  p_inter->SetString("");
+  p_inter->SetString(_T(""));
   return 0;
 }
 
@@ -166,7 +166,7 @@ static int xfopen(QLInterpreter* p_inter,int argc)
   CString fileName = p_inter->GetStringArgument(1);
   CString mode     = p_inter->GetStringArgument(0);
 
-  fopen_s(&fp,fileName,mode);
+  _tfopen_s(&fp,fileName,mode);
   if (fp == NULL)
   {
     p_inter->SetNil(0);
@@ -193,7 +193,7 @@ static int  xgetc(QLInterpreter* p_inter,int argc)
   argcount(p_inter,argc,1);
   p_inter->CheckType(0,DTYPE_FILE);
   FILE* fp = p_inter->GetStackPointer()[0]->m_value.v_file;
-  p_inter->SetInteger(getc(fp));
+  p_inter->SetInteger(_gettc(fp));
   return 0;
 }
 
@@ -205,7 +205,7 @@ static int xputc(QLInterpreter* p_inter,int argc)
   argcount(p_inter,argc,2);
   FILE* fp = sp[0]->m_value.v_file;
   int   cc = p_inter->GetIntegerArgument(1);
-  p_inter->SetInteger(putc(cc,fp));
+  p_inter->SetInteger(_puttc(cc,fp));
   return 0;
 }
 
@@ -218,9 +218,9 @@ static int xgets(QLInterpreter* p_inter,int argc)
   argcount(p_inter,argc,1);
   FILE* fp = sp[0]->m_value.v_file;
   CString s;
-  while((cc = getc(fp)) != EOF && cc != '\n')
+  while((cc = _gettc(fp)) != _TEOF && cc != '\n')
   {
-    s.Append((const char*) &cc);
+    s.Append((const TCHAR*) &cc);
   }
   p_inter->SetString(s);
   return 0;
@@ -233,7 +233,7 @@ static int xputs(QLInterpreter* p_inter,int argc)
   argcount(p_inter,argc,2);
   FILE* fp = sp[0]->m_value.v_file;
   CString* str = sp[1]->m_value.v_string;
-  p_inter->SetInteger(fputs(*str,fp));
+  p_inter->SetInteger(_fputts(*str,fp));
   return 0;
 }
 
@@ -297,7 +297,7 @@ static int xsystem(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
   CString command = p_inter->GetStringArgument(0);
-  p_inter->SetInteger(system(command));
+  p_inter->SetInteger(_tsystem(command));
   return 0;
 }
 
@@ -505,7 +505,7 @@ static int xtoint(QLInterpreter* p_inter,int argc)
   else if(object->m_type == DTYPE_STRING)
   {
     CString str = p_inter->GetStringArgument(0);
-    p_inter->SetInteger(atoi(str));
+    p_inter->SetInteger(_ttoi(str));
   }
   else if(object->m_type == DTYPE_VARIANT)
   {
@@ -533,7 +533,7 @@ static int xtostr(QLInterpreter* p_inter,int argc)
   {
     int n = p_inter->GetIntegerArgument(0);
     CString str;
-    str.Format("%d",n);
+    str.Format(_T("%d"),n);
     p_inter->SetString(str);
   }
   else if(object->m_type == DTYPE_BCD)
@@ -632,7 +632,7 @@ static int xnewdbase(QLInterpreter* p_inter,int argc)
 
   if(argc > 3)
   {
-    vm->Error("Too many arguments");
+    vm->Error(_T("Too many arguments"));
     return (FALSE);
   }
   CString database(db_database);
@@ -673,7 +673,7 @@ static int xnewdbase(QLInterpreter* p_inter,int argc)
   {
     // Build the connect string
     CString connect;
-    connect.Format("DSN=%s;UID=%s;PWD=%s",database,user,password);
+    connect.Format(_T("DSN=%s;UID=%s;PWD=%s"),database,user,password);
 
     try
     {
@@ -681,12 +681,12 @@ static int xnewdbase(QLInterpreter* p_inter,int argc)
     }
     catch(CString& s)
     {
-      vm->Info("Open SQL database: %s",s);
+      vm->Info(_T("Open SQL database: %s"),s);
     }
   }
   else
   {
-    vm->Info("To open a ODBC database, you must at least supply a database name!");
+    vm->Info(_T("To open a ODBC database, you must at least supply a database name!"));
   }
   // Return SQLDatabase on the stack
   sp[0] = object;
@@ -746,7 +746,7 @@ static int xdbsTrans(QLInterpreter* p_inter,int argc)
   MemObject**  sp  = p_inter->GetStackPointer();
   SQLDatabase* dbs = sp[1]->m_value.v_database;
 
-  SQLTransaction* trans = new SQLTransaction(dbs,"QL");
+  SQLTransaction* trans = new SQLTransaction(dbs,_T("QL"));
   if(trans)
   {
     QLVirtualMachine* vm = p_inter->GetVirtualMachine();
@@ -777,7 +777,7 @@ static int xdbsCommit(QLInterpreter* p_inter,int argc)
     }
     catch(CString& error)
     {
-      vm->Info("Transaction error: %s",error);
+      vm->Info(_T("Transaction error: %s"),error);
     }
   }
   // Result of the commit
@@ -815,7 +815,7 @@ static int xqryDoSQL(QLInterpreter* p_inter,int argc)
   }
   catch(CString& s)
   {
-    vm->Info("SQL error: %s",s);
+    vm->Info(_T("SQL error: %s"),s);
     return 0;
   }
   p_inter->SetInteger(result);
@@ -854,7 +854,7 @@ int xqryRecord(QLInterpreter* p_inter,int argc)
   }
   catch(CString& s)
   {
-    vm->Info("SQL error: %s",s);
+    vm->Info(_T("SQL error: %s"),s);
   }
   p_inter->SetInteger(result);
   return 0;
@@ -900,7 +900,7 @@ static int xqryColType(QLInterpreter* p_inter,int argc)
   }
   else
   {
-    p_inter->GetVirtualMachine()->Error("GetColumnType: Wrong column number: %d",column);
+    p_inter->GetVirtualMachine()->Error(_T("GetColumnType: Wrong column number: %d"),column);
   }
   p_inter->SetInteger(type);
   return 0;
@@ -939,7 +939,7 @@ static int xqryColName(QLInterpreter* p_inter,int argc)
   }
   else
   {
-    p_inter->GetVirtualMachine()->Error("GetColumnName: Wrong column number: %d",column);
+    p_inter->GetVirtualMachine()->Error(_T("GetColumnName: Wrong column number: %d"),column);
   }
   p_inter->SetString(name);
   return 0;
@@ -962,7 +962,7 @@ static int xqryColLength(QLInterpreter* p_inter,int argc)
   }
   else
   {
-    p_inter->GetVirtualMachine()->Error("GetColumnLength: Wrong column number: %d",column);
+    p_inter->GetVirtualMachine()->Error(_T("GetColumnLength: Wrong column number: %d"),column);
   }
   p_inter->SetInteger(length);
   return 0;
@@ -985,7 +985,7 @@ static int xqryColDLen(QLInterpreter* p_inter,int argc)
   }
   else
   {
-    p_inter->GetVirtualMachine()->Error("GetColumnDisplaySize: Wrong column number: %d",column);
+    p_inter->GetVirtualMachine()->Error(_T("GetColumnDisplaySize: Wrong column number: %d"),column);
   }
   p_inter->SetInteger(length);
   return 0;
@@ -1147,7 +1147,7 @@ static int xstrFind(QLInterpreter* p_inter,int argc)
   }
   else
   {
-    p_inter->GetVirtualMachine()->Error("Wrong number of arguments");
+    p_inter->GetVirtualMachine()->Error(_T("Wrong number of arguments"));
   }
 
   // Finding either string or char
@@ -1237,7 +1237,7 @@ static int xstrSubstring(QLInterpreter* p_inter,int p_argc)
   }
   else
   {
-    p_inter->GetVirtualMachine()->Error("Wrong number of arguments");
+    p_inter->GetVirtualMachine()->Error(_T("Wrong number of arguments"));
   }
   CString result = string->Mid(start,length);
 
@@ -1318,89 +1318,89 @@ static int xtestrun(QLInterpreter* p_inter,int p_argc)
 void init_functions(QLVirtualMachine* p_vm)
 {
   // Adding default streams
-  add_file("stdin", stdin,  p_vm);
-  add_file("stdout",stdout, p_vm);
-  add_file("stderr",stderr, p_vm);
+  add_file(_T("stdin"), stdin,  p_vm);
+  add_file(_T("stdout"),stdout, p_vm);
+  add_file(_T("stderr"),stderr, p_vm);
 
   // Adding default functions
-  add_function("typeof",    xtypeof,      p_vm);
-  add_function("newarray",  xnewarray,    p_vm);
-  add_function("newstring", xnewstring,   p_vm);
-  add_function("newdbase",  xnewdbase,    p_vm);
-  add_function("newquery",  xnewquery,    p_vm);
-  add_function("sizeof",    xsizeof,      p_vm);
-  add_function("trace",     xtrace,       p_vm);
-  add_function("fopen",     xfopen,       p_vm);
-  add_function("fclose",    xfclose,      p_vm);
-  add_function("getc",      xgetc,        p_vm);
-  add_function("putc",      xputc,        p_vm);
-  add_function("gets",      xgets,        p_vm);
-  add_function("puts",      xputs,        p_vm);
-  add_function("print",     xprint,       p_vm);
-  add_function("fprint",    xfprint,      p_vm);
-  add_function("getarg",    xgetarg,      p_vm);
-  add_function("system",    xsystem,      p_vm);
-  add_function("exit",      xexit,        p_vm);
-  add_function("gc",        xgc,          p_vm);
-  add_function("sin",       xsin,         p_vm);
-  add_function("cos",       xcos,         p_vm);
-  add_function("tan",       xtan,         p_vm);
-  add_function("asin",      xasin,        p_vm);
-  add_function("acos",      xacos,        p_vm);
-  add_function("atan",      xatan,        p_vm);
-  add_function("sqrt",      xsqrt,        p_vm);
-  add_function("ceil",      xceil,        p_vm);
-  add_function("floor",     xfloor,       p_vm);
-  add_function("exp",       xexp,         p_vm);
-  add_function("log",       xlog,         p_vm);
-  add_function("logn",      xlogn,        p_vm);
-  add_function("log10",     xlog10,       p_vm);
-  add_function("pow",       xpow,         p_vm);
-  add_function("rand",      xrand,        p_vm);
-  add_function("tobcd",     xtobcd,       p_vm);
-  add_function("toint",     xtoint,       p_vm);
-  add_function("tostring",  xtostr,       p_vm);
-  add_function("tovariant", xtovariant,   p_vm);
-  add_function("abs",       xabs,         p_vm);
-  add_function("round",     xround,       p_vm);
-  add_function("Sleep",     xsleep,       p_vm);
+  add_function(_T("typeof"),    xtypeof,      p_vm);
+  add_function(_T("newarray"),  xnewarray,    p_vm);
+  add_function(_T("newstring"), xnewstring,   p_vm);
+  add_function(_T("newdbase"),  xnewdbase,    p_vm);
+  add_function(_T("newquery"),  xnewquery,    p_vm);
+  add_function(_T("sizeof"),    xsizeof,      p_vm);
+  add_function(_T("trace"),     xtrace,       p_vm);
+  add_function(_T("fopen"),     xfopen,       p_vm);
+  add_function(_T("fclose"),    xfclose,      p_vm);
+  add_function(_T("getc"),      xgetc,        p_vm);
+  add_function(_T("putc"),      xputc,        p_vm);
+  add_function(_T("gets"),      xgets,        p_vm);
+  add_function(_T("puts"),      xputs,        p_vm);
+  add_function(_T("print"),     xprint,       p_vm);
+  add_function(_T("fprint"),    xfprint,      p_vm);
+  add_function(_T("getarg"),    xgetarg,      p_vm);
+  add_function(_T("system"),    xsystem,      p_vm);
+  add_function(_T("exit"),      xexit,        p_vm);
+  add_function(_T("gc"),        xgc,          p_vm);
+  add_function(_T("sin"),       xsin,         p_vm);
+  add_function(_T("cos"),       xcos,         p_vm);
+  add_function(_T("tan"),       xtan,         p_vm);
+  add_function(_T("asin"),      xasin,        p_vm);
+  add_function(_T("acos"),      xacos,        p_vm);
+  add_function(_T("atan"),      xatan,        p_vm);
+  add_function(_T("sqrt"),      xsqrt,        p_vm);
+  add_function(_T("ceil"),      xceil,        p_vm);
+  add_function(_T("floor"),     xfloor,       p_vm);
+  add_function(_T("exp"),       xexp,         p_vm);
+  add_function(_T("log"),       xlog,         p_vm);
+  add_function(_T("logn"),      xlogn,        p_vm);
+  add_function(_T("log10"),     xlog10,       p_vm);
+  add_function(_T("pow"),       xpow,         p_vm);
+  add_function(_T("rand"),      xrand,        p_vm);
+  add_function(_T("tobcd"),     xtobcd,       p_vm);
+  add_function(_T("toint"),     xtoint,       p_vm);
+  add_function(_T("tostring"),  xtostr,       p_vm);
+  add_function(_T("tovariant"), xtovariant,   p_vm);
+  add_function(_T("abs"),       xabs,         p_vm);
+  add_function(_T("round"),     xround,       p_vm);
+  add_function(_T("Sleep"),     xsleep,       p_vm);
 
   // Function for outside test framework
-  add_function("TestIterations",xtestit,  p_vm);
-  add_function("TestResult",    xtestres, p_vm);
-  add_function("TestRunning",   xtestrun, p_vm);
+  add_function(_T("TestIterations"),xtestit,  p_vm);
+  add_function(_T("TestResult"),    xtestres, p_vm);
+  add_function(_T("TestRunning"),   xtestrun, p_vm);
 
   // Add all object methods
-  add_method(DTYPE_DATABASE, "IsOpen",                xdbsIsOpen,   p_vm);
-  add_method(DTYPE_DATABASE, "Close",                 xdbsClose,    p_vm);
-  add_method(DTYPE_DATABASE, "StartTransaction",      xdbsTrans,    p_vm);
-  add_method(DTYPE_DATABASE, "Commit",                xdbsCommit,   p_vm);
+  add_method(DTYPE_DATABASE, _T("IsOpen"),                xdbsIsOpen,   p_vm);
+  add_method(DTYPE_DATABASE, _T("Close"),                 xdbsClose,    p_vm);
+  add_method(DTYPE_DATABASE, _T("StartTransaction"),      xdbsTrans,    p_vm);
+  add_method(DTYPE_DATABASE, _T("Commit"),                xdbsCommit,   p_vm);
   // QUERY methods
-  add_method(DTYPE_QUERY,    "Close",                 xqryClose,    p_vm);
-  add_method(DTYPE_QUERY,    "DoSQLStatement",        xqryDoSQL,    p_vm);
-  add_method(DTYPE_QUERY,    "DoSQLScalar",           xqryScalar,   p_vm);
-  add_method(DTYPE_QUERY,    "GetRecord",             xqryRecord,   p_vm);
-  add_method(DTYPE_QUERY,    "GetColumn",             xqryColumn,   p_vm);
-  add_method(DTYPE_QUERY,    "GetColumnType",         xqryColType,  p_vm);
-  add_method(DTYPE_QUERY,    "GetColumnNumber",       xqryColNumber,p_vm);
-  add_method(DTYPE_QUERY,    "GetColumnName",         xqryColName,  p_vm);
-  add_method(DTYPE_QUERY,    "GetColumnLength",       xqryColLength,p_vm);
-  add_method(DTYPE_QUERY,    "GetColumnDisplayLength",xqryColDLen,  p_vm);
-  add_method(DTYPE_QUERY,    "GetError",              xqryError,    p_vm);
-  add_method(DTYPE_QUERY,    "GetNumberOfColumns",    xqryNumCols,  p_vm);
-  add_method(DTYPE_QUERY,    "SetMaxRows",            xqryMaxRows,  p_vm);
-  add_method(DTYPE_QUERY,    "SetParameter",          xqrySetParam, p_vm);
-  add_method(DTYPE_QUERY,    "IsNull",                xqryIsNull,   p_vm);
-  add_method(DTYPE_QUERY,    "IsEmpty",               xqryIsEmpty,  p_vm);
+  add_method(DTYPE_QUERY,    _T("Close"),                 xqryClose,    p_vm);
+  add_method(DTYPE_QUERY,    _T("DoSQLStatement"),        xqryDoSQL,    p_vm);
+  add_method(DTYPE_QUERY,    _T("DoSQLScalar"),           xqryScalar,   p_vm);
+  add_method(DTYPE_QUERY,    _T("GetRecord"),             xqryRecord,   p_vm);
+  add_method(DTYPE_QUERY,    _T("GetColumn"),             xqryColumn,   p_vm);
+  add_method(DTYPE_QUERY,    _T("GetColumnType"),         xqryColType,  p_vm);
+  add_method(DTYPE_QUERY,    _T("GetColumnNumber"),       xqryColNumber,p_vm);
+  add_method(DTYPE_QUERY,    _T("GetColumnName"),         xqryColName,  p_vm);
+  add_method(DTYPE_QUERY,    _T("GetColumnLength"),       xqryColLength,p_vm);
+  add_method(DTYPE_QUERY,    _T("GetColumnDisplayLength"),xqryColDLen,  p_vm);
+  add_method(DTYPE_QUERY,    _T("GetError"),              xqryError,    p_vm);
+  add_method(DTYPE_QUERY,    _T("GetNumberOfColumns"),    xqryNumCols,  p_vm);
+  add_method(DTYPE_QUERY,    _T("SetMaxRows"),            xqryMaxRows,  p_vm);
+  add_method(DTYPE_QUERY,    _T("SetParameter"),          xqrySetParam, p_vm);
+  add_method(DTYPE_QUERY,    _T("IsNull"),                xqryIsNull,   p_vm);
+  add_method(DTYPE_QUERY,    _T("IsEmpty"),               xqryIsEmpty,  p_vm);
   // STRING METHODS
-  add_method(DTYPE_STRING,   "index",                 xstrIndex,    p_vm);
-  add_method(DTYPE_STRING,   "find",                  xstrFind,     p_vm);
-  add_method(DTYPE_STRING,   "size",                  xstrSize,     p_vm);
-  add_method(DTYPE_STRING,   "substring",             xstrSubstring,p_vm);
-  add_method(DTYPE_STRING,   "left",                  xstrLeft,     p_vm);
-  add_method(DTYPE_STRING,   "right",                 xstrRight,    p_vm);
-  add_method(DTYPE_STRING,   "makeupper",             xstrUpper,    p_vm);
-  add_method(DTYPE_STRING,   "makelower",             xstrLower,    p_vm);
+  add_method(DTYPE_STRING,   _T("index"),                 xstrIndex,    p_vm);
+  add_method(DTYPE_STRING,   _T("find"),                  xstrFind,     p_vm);
+  add_method(DTYPE_STRING,   _T("size"),                  xstrSize,     p_vm);
+  add_method(DTYPE_STRING,   _T("substring"),             xstrSubstring,p_vm);
+  add_method(DTYPE_STRING,   _T("left"),                  xstrLeft,     p_vm);
+  add_method(DTYPE_STRING,   _T("right"),                 xstrRight,    p_vm);
+  add_method(DTYPE_STRING,   _T("makeupper"),             xstrUpper,    p_vm);
+  add_method(DTYPE_STRING,   _T("makelower"),             xstrLower,    p_vm);
 
   // SQLQuery methods to implement:
   // 

@@ -15,7 +15,7 @@ typedef std::vector<MemObject*> Members;
 typedef std::vector<int>        ArgTypes;
 
 // Finding your datatype name with DTYPE_* macros
-extern char* datatype_names[];
+extern TCHAR* datatype_names[];
 
 class Array
 {

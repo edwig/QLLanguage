@@ -143,7 +143,7 @@ private:
   void      freelist(ARGUMENT* p_list);
   int       FindArgument(CString p_name);
   int       FindTemporary(CString p_name);
-  int       AddLiteral(int p_type,MemObject** p_result,CString p_name = "",int p_value = 0);
+  int       AddLiteral(int p_type,MemObject** p_result,CString p_name = _T(""),int p_value = 0);
   void      FreeLiterals();
   void      FetchRequireToken(int rtkn);
   void      RequireToken(int tkn,int rtkn);
@@ -164,7 +164,7 @@ private:
   int       putcword(int w);
   void      Fixup(int chn,int val);
   void      fixup_ref(int chn,int val);
-  char*     GetMemory(int size);
+  TCHAR*     GetMemory(int size);
 
   // DATA
   QLVirtualMachine* m_vm;           // QL Virtual Machine

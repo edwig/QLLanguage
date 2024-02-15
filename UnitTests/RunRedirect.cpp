@@ -45,21 +45,21 @@ RunRedirect::~RunRedirect()
 }
 
 void 
-RunRedirect::RunCommand(LPCSTR p_commandLine)
+RunRedirect::RunCommand(LPCTSTR p_commandLine)
 {
   Acquire();
   StartChildProcess(p_commandLine,FALSE);
   Release();
 }
 
-void RunRedirect::OnChildStarted(LPCSTR /*lpszCmdLine*/) 
+void RunRedirect::OnChildStarted(LPCTSTR /*lpszCmdLine*/) 
 {
   Acquire();
-  m_lines = "";
+  m_lines = _T("");
   m_ready = false;
   Release();
 }
-void RunRedirect::OnChildStdOutWrite(LPCSTR lpszOutput) 
+void RunRedirect::OnChildStdOutWrite(LPCTSTR lpszOutput) 
 {
   CString standard(lpszOutput);
   Acquire();
@@ -68,7 +68,7 @@ void RunRedirect::OnChildStdOutWrite(LPCSTR lpszOutput)
 }
 
 void 
-RunRedirect::OnChildStdErrWrite(LPCSTR lpszOutput)
+RunRedirect::OnChildStdErrWrite(LPCTSTR lpszOutput)
 {
   CString standard(lpszOutput);
   Acquire();
@@ -112,7 +112,7 @@ RunRedirect::Release()
 }
 
 int 
-CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result)
+CallProgram_For_String(LPCTSTR p_programma,LPCTSTR p_commandLine,CString& p_result)
 {
   AFX_MANAGE_STATE(AfxGetStaticModuleState());
   RunRedirect run;
@@ -123,7 +123,7 @@ CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result
   p_result.Empty();
 
   // Create a new command line
-  commandLine.Format("\"%s\" %s",p_programma,p_commandLine);
+  commandLine.Format(_T("\"%s\" %s"),p_programma,p_commandLine);
 
   run.RunCommand(commandLine.GetString());
   while((run.IsEOF() == false) && (run.IsReady() == false))
@@ -135,7 +135,7 @@ CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result
 }
 
 int 
-CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result,int p_waittime)
+CallProgram_For_String(LPCTSTR p_programma,LPCTSTR p_commandLine,CString& p_result,int p_waittime)
 {
   AFX_MANAGE_STATE(AfxGetStaticModuleState());
   RunRedirect run;
@@ -143,10 +143,10 @@ CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result
   CString commandLine;
 
   // Result is initieel leeg.
-  p_result = "";
+  p_result = _T("");
 
   // Creeer een command line 
-  commandLine.Format("\"%s\" %s",p_programma,p_commandLine);
+  commandLine.Format(_T("\"%s\" %s"),p_programma,p_commandLine);
 
   run.RunCommand(commandLine.GetString());
   while((run.IsEOF() == false) && (run.IsReady() == false))

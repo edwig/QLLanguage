@@ -20,7 +20,7 @@
 typedef struct 
 { 
   int   ot_code; // OPCODE in internal numeric value 
-  char* ot_name; // OPCODE logical name as a string
+  TCHAR* ot_name; // OPCODE logical name as a string
   int   ot_fmt;  // Type of formatting to be done
   int   ot_poff; // Print stack offset (-1 = do nothing)
 } 

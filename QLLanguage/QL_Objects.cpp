@@ -18,25 +18,25 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Finding your datatype name with DTYPE_* macros
-char* datatype_names[0x11]
+TCHAR* datatype_names[0x11]
 {
-   ""
-  ,"ENDMARK"
-  ,"NIL"
-  ,"INTEGER"
-  ,"STRING"
-  ,"BCD"
-  ,"FILE"
-  ,"DATABASE"
-  ,"QUERY"
-  ,"VARIANT"
-  ,"ARRAY"
-  ,"OBJECT"
-  ,"CLASS"
-  ,"SCRIPT"
-  ,"INTERNAL"
-  ,"EXTERNAL"
-  ,"STREAM"
+   _T("")
+  ,_T("ENDMARK")
+  ,_T("NIL")
+  ,_T("INTEGER")
+  ,_T("STRING")
+  ,_T("BCD")
+  ,_T("FILE")
+  ,_T("DATABASE")
+  ,_T("QUERY")
+  ,_T("VARIANT")
+  ,_T("ARRAY")
+  ,_T("OBJECT")
+  ,_T("CLASS")
+  ,_T("SCRIPT")
+  ,_T("INTERNAL")
+  ,_T("EXTERNAL")
+  ,_T("STREAM")
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ MemObject::AllocateType(int p_type)
     case DTYPE_VARIANT:     m_value.v_variant = new SQLVariant();
                             m_flags |= FLAG_DEALLOC;
                             break;
-    default:                QLvm::Error("INTERNAL: Unknown datatype in AllocMemObject: %d",p_type);
+    default:                QLvm::Error(_T("INTERNAL: Unknown datatype in AllocMemObject: %d"),p_type);
   }
   m_type = p_type;
 }
@@ -145,7 +145,7 @@ MemObject::DeAllocate()
       case DTYPE_SCRIPT:  delete m_value.v_script;      break;
       case DTYPE_INTERNAL:break; // Never reached
       case DTYPE_EXTERNAL:delete m_value.v_sysname;     break;
-      default:            QLvm::Error("INTERNAL: Unknown datatype in DeAllocate: %d",m_type);
+      default:            QLvm::Error(_T("INTERNAL: Unknown datatype in DeAllocate: %d"),m_type);
     }
     // Reset the pointer value
     m_value.v_all = NULL;
@@ -669,7 +669,7 @@ Function::GetFullName()
 {
   if(m_class)
   {
-    return m_class->GetName() + "::" + m_name;
+    return m_class->GetName() + _T("::") + m_name;
   }
   return m_name;
 }
@@ -730,7 +730,7 @@ Function::GetLiteralString(unsigned p_number)
       return *(object->m_value.v_string);
     }
   }
-  return CString("");
+  return CString(_T(""));
 }
 
 Array*  

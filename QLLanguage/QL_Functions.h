@@ -13,8 +13,8 @@ void init_functions(QLVirtualMachine* p_vm);
 
 // MUST BE DEFINED IN THE MAIN PROGRAM DRIVER!!
 // Used for the xgetarg function
-extern int    qlargc;
-extern char** qlargv;
+extern int     qlargc;
+extern TCHAR** qlargv;
 
 extern CString db_database;
 extern CString db_user;
