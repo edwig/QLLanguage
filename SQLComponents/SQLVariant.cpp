@@ -2,7 +2,7 @@
 //
 // File: SQLVariant.cpp
 //
-// Copyright (c) 1998-2022 ir. W.E. Huisman
+// Copyright (c) 1998-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -685,7 +685,7 @@ SQLVariant::SetNumericPrecisionScale(int p_precision,int p_scale)
 
 // Reduction of SQL_XXX to SQL_C_XXX type
 int
-SQLVariant::FindDataTypeFromSQLType()
+SQLVariant::FindDataTypeFromSQLType() const
 {
   switch(m_sqlDatatype)
   {
@@ -3171,7 +3171,7 @@ SQLVariant::BinaryToString(unsigned char* buffer,int buflen) const
 // Store a hex string encoded binary 
 // back into a binary buffer as Oracle does
 bool
-SQLVariant::StringToBinary(const char* p_data)
+SQLVariant::StringToBinary(const char* p_data) const
 {
   const char* colPointer = p_data;
   int len = (int)strlen(p_data);

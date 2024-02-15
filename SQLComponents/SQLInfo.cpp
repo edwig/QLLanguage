@@ -2,7 +2,7 @@
 //
 // File: SQLInfo.cpp
 //
-// Copyright (c) 1998-2022 ir. W.E. Huisman
+// Copyright (c) 1998-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -2756,7 +2756,7 @@ SQLInfo::NativeSQL(HDBC hdbc,XString& sqlCommand)
   }
 
   SQLINTEGER retLen = 0;
-  SQLINTEGER buflen = sqlCommand.GetLength() * 2;
+  SQLINTEGER buflen = sqlCommand.GetLength() * 4;
   SQLTCHAR*  buffer = new SQLTCHAR[(size_t)buflen + 1];
 
   // Perform the conversion call
@@ -2771,7 +2771,7 @@ SQLInfo::NativeSQL(HDBC hdbc,XString& sqlCommand)
     if(retLen >= 0 && retLen <= buflen)
     {
       buffer[retLen] = 0;
-      XString result(reinterpret_cast<char*>(buffer));
+      XString result(reinterpret_cast<LPCTSTR>(buffer));
       delete[] buffer;
       return result;
     }

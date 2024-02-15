@@ -2,7 +2,7 @@
 //
 // File: SQLInfoInformix.cpp
 //
-// Copyright (c) 1998-2022 ir. W.E. Huisman
+// Copyright (c) 1998-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -138,6 +138,13 @@ SQLInfoInformix::GetRDBMSSupportsOrderByExpression() const
 // Supports the ODBC escape sequence {[?=] CALL procedure (?,?,?)}
 bool
 SQLInfoInformix::GetRDBMSSupportsODBCCallEscapes() const
+{
+  return true;
+}
+
+// Supports the ODBC call procedure with named parameters
+bool
+SQLInfoInformix::GetRDBMSSupportsODBCCallNamedParameters() const
 {
   return true;
 }
@@ -418,6 +425,19 @@ SQLInfoInformix::GetSQLTopNRows(XString p_sql,int p_top,int p_skip /*= 0*/) cons
   return p_sql;
 }
 
+// Expand a SELECT with an 'FOR UPDATE' lock clause
+XString
+SQLInfoInformix::GetSelectForUpdateTableClause(unsigned /*p_lockWaitTime*/) const
+{
+  return "";
+}
+
+XString
+SQLInfoInformix::GetSelectForUpdateTrailer(XString p_select,unsigned /*p_lockWaitTime*/) const
+{
+  return p_select + "\nFOR UPDATE";
+}
+
 // Query to perform a keep alive ping
 XString
 SQLInfoInformix::GetPing() const
@@ -500,6 +520,13 @@ XString
 SQLInfoInformix::GetSQLDDLIdentifier(XString p_identifier) const
 {
   return p_identifier;
+}
+
+// Get the name of a temp table (local temporary or global temporary)
+XString
+SQLInfoInformix::GetTempTablename(XString /*p_schema*/,XString p_tablename,bool /*p_local*/) const
+{
+  return p_tablename;
 }
 
 // Changes to parameters before binding to an ODBC HSTMT handle

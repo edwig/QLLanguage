@@ -2,7 +2,7 @@
 //
 // File: SQLInfoOracle.cpp
 //
-// Copyright (c) 1998-2022 ir. W.E. Huisman
+// Copyright (c) 1998-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -144,6 +144,14 @@ SQLInfoOracle::GetRDBMSSupportsODBCCallEscapes() const
   return true;
 }
 
+// Supports the ODBC call procedure with named parameters
+bool
+SQLInfoOracle::GetRDBMSSupportsODBCCallNamedParameters() const
+{
+  // Must use the "paramname => value [,...]" convention !!
+  return false;
+}
+
 // If the database does not support the datatype TIME, it can be implemented as a DECIMAL
 bool
 SQLInfoOracle::GetRDBMSSupportsDatatypeTime() const
@@ -190,8 +198,8 @@ void
 SQLInfoOracle::GetRDBMSNumericPrecisionScale(SQLULEN& p_precision, SQLSMALLINT& p_scale) const
 {
   // ORACLE SPECIFIC CHECKS
-  if(p_precision == NUMERIC_MAX_PRECISION &&
-     p_scale     == NUMERIC_MIN_SCALE)
+  if(p_precision == (SQLULEN)     NUMERIC_MAX_PRECISION &&
+     p_scale     == (SQLSMALLINT) NUMERIC_MIN_SCALE)
   {
     p_scale = NUMERIC_DEFAULT_SCALE;
   }
@@ -200,7 +208,7 @@ SQLInfoOracle::GetRDBMSNumericPrecisionScale(SQLULEN& p_precision, SQLSMALLINT& 
   // GENERAL CHECKS
 
   // Max precision for numerics is 38
-  if(p_precision > NUMERIC_MAX_PRECISION)
+  if(p_precision > (SQLULEN) NUMERIC_MAX_PRECISION)
   {
     p_precision = NUMERIC_MAX_PRECISION;
   }
@@ -219,7 +227,7 @@ SQLInfoOracle::GetRDBMSNumericPrecisionScale(SQLULEN& p_precision, SQLSMALLINT& 
   }
 
   // Scale MUST be smaller than the precision
-  if(p_scale >= p_precision)
+  if(p_scale >= (SQLSMALLINT) p_precision)
   {
     p_scale = (SQLSMALLINT) (p_precision - 1);
   }
@@ -525,6 +533,28 @@ SQLInfoOracle::GetSQLTopNRows(XString p_sql,int p_top,int p_skip /*= 0*/) const
   return p_sql;
 }
 
+// Expand a SELECT with an 'FOR UPDATE' lock clause
+XString
+SQLInfoOracle::GetSelectForUpdateTableClause(unsigned /*p_lockWaitTime*/) const
+{
+  return "";
+}
+
+XString
+SQLInfoOracle::GetSelectForUpdateTrailer(XString p_select,unsigned p_lockWaitTime) const
+{
+  XString sql = p_select + _T("\nFOR UPDATE");
+  if(p_lockWaitTime)
+  {
+    sql.AppendFormat(_T(" WAIT %d"),p_lockWaitTime);
+  }
+  else
+  {
+    sql += _T(" SKIP LOCKED");
+  }
+  return sql;
+}
+
 // Query to perform a keep alive ping
 XString
 SQLInfoOracle::GetPing() const
@@ -610,6 +640,13 @@ XString
 SQLInfoOracle::GetSQLDDLIdentifier(XString p_identifier) const
 {
   return p_identifier;
+}
+
+// Get the name of a temp table (local temporary or global temporary)
+XString
+SQLInfoOracle::GetTempTablename(XString /*p_schema*/,XString p_tablename,bool /*p_local*/) const
+{
+  return p_tablename;
 }
 
 // Changes to parameters before binding to an ODBC HSTMT handle

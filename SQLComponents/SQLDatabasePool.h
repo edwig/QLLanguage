@@ -2,7 +2,7 @@
 //
 // File: SQLDatabasePool.cpp
 //
-// Copyright (c) 1998-2022 ir. W.E. Huisman
+// Copyright (c) 1998-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -54,6 +54,7 @@ public:
   SQLDatabase*    GetDatabase(const XString& p_connectionName);
   // Get the connection by name
   SQLConnection*  GetConnection(const XString& p_connectionName);
+  SQLConnection*  GetConnection(const int p_index);
   // Return current number of connections
   unsigned        GetConnections();
   // Return current number of maximum databases

@@ -2,7 +2,7 @@
 //
 // File: SQLDataSet.cpp
 //
-// Copyright (c) 1998-2022 ir. W.E. Huisman
+// Copyright (c) 1998-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -552,6 +552,10 @@ SQLDataSet::ParseSelection(SQLQuery& p_query)
       sql += _T(" ");
       sql += m_primaryAlias;
     }
+    if(m_lockForUpdate && m_database)
+    {
+      sql += m_database->GetSQLInfoDB()->GetSelectForUpdateTableClause(m_lockWaitTime);
+    }
   }
   int count = 0;
   int number = 0;
@@ -645,6 +649,11 @@ SQLDataSet::GetSelectionSQL(SQLQuery& p_qry)
   if(!m_orderby.IsEmpty())
   {
     sql += _T("\n ORDER BY ") + m_orderby;
+  }
+
+  if(m_lockForUpdate && m_database)
+  {
+    sql = m_database->GetSQLInfoDB()->GetSelectForUpdateTrailer(sql,m_lockWaitTime);
   }
 
   return sql;

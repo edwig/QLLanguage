@@ -2,7 +2,7 @@
 //
 // File: SQLInfoSQLServer.cpp
 //
-// Copyright (c) 1998-2022 ir. W.E. Huisman
+// Copyright (c) 1998-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -135,6 +135,13 @@ SQLInfoSQLServer::GetRDBMSSupportsODBCCallEscapes() const
   return true;
 }
 
+// Supports the ODBC call procedure with named parameters
+bool
+SQLInfoSQLServer::GetRDBMSSupportsODBCCallNamedParameters() const
+{
+  return true;
+}
+
 // If the database does not support the datatype TIME, it can be implemented as a DECIMAL
 bool
 SQLInfoSQLServer::GetRDBMSSupportsDatatypeTime() const
@@ -197,7 +204,7 @@ SQLInfoSQLServer::GetRDBMSNumericPrecisionScale(SQLULEN& p_precision, SQLSMALLIN
   }
 
   // Scale MUST be smaller than the precision
-  if(p_scale >= p_precision)
+  if(p_scale >= (SQLSMALLINT) p_precision)
   {
     p_scale = (SQLSMALLINT) (p_precision - 1);
   }
@@ -572,6 +579,25 @@ SQLInfoSQLServer::GetSQLTopNRows(XString p_sql,int p_top,int p_skip /*= 0*/) con
   return p_sql;
 }
 
+// Expand a SELECT with an 'FOR UPDATE' lock clause
+XString
+SQLInfoSQLServer::GetSelectForUpdateTableClause(unsigned p_lockWaitTime) const
+{
+  XString clause(" WITH (ROWLOCK,UPDLOCK");
+  if(p_lockWaitTime == 0)
+  {
+    clause += ",READPAST";
+  }
+  clause += ")";
+  return clause;
+}
+
+XString
+SQLInfoSQLServer::GetSelectForUpdateTrailer(XString p_select,unsigned /*p_lockWaitTime*/) const
+{
+  return p_select + "\nFOR UPDATE";
+}
+
 // Query to perform a keep alive ping
 XString
 SQLInfoSQLServer::GetPing() const
@@ -647,6 +673,35 @@ SQLInfoSQLServer::GetSQLDDLIdentifier(XString p_identifier) const
   p_identifier.MakeLower();
   ident.Format(_T("[%s]"),p_identifier.GetString());
   return ident;;
+}
+
+// Get the name of a temp table (local temporary or global temporary)
+XString
+SQLInfoSQLServer::GetTempTablename(XString p_schema,XString p_tablename,bool p_local) const
+{
+  if(p_local)
+  {
+    // LOCAL TEMPORARY
+    if(p_tablename.GetLength() > 1)
+    {
+      if(p_tablename.Left(1).Compare(_T("#")))
+      {
+        p_tablename = _T("#") + p_tablename;
+      }
+    }
+  }
+  else
+  {
+    // GLOBAL TEMPORARY
+    if(p_tablename.GetLength() > 2)
+    {
+      if(p_tablename.Left(2).Compare(_T("##")))
+      {
+        p_tablename = _T("##") + p_tablename;
+      }
+    }
+  }
+  return p_tablename;
 }
 
 // Changes to parameters before binding to an ODBC HSTMT handle
@@ -755,14 +810,25 @@ SQLInfoSQLServer::GetCATALOGDefaultCollation() const
 XString
 SQLInfoSQLServer::GetCATALOGTableExists(XString& p_schema,XString& p_tablename) const
 {
+  XString orgtable(p_tablename);
+  XString catalog = GetCatalogAndSchema(p_schema,p_tablename);
+  bool istemp = p_tablename.GetAt(0) == '#';
+
   p_schema.MakeLower();
   p_tablename.MakeLower();
-  XString query = _T("SELECT count(*)\n")
-                  _T("  FROM dbo.sysobjects tab\n")
-                  _T("      ,dbo.sysschemas sch\n")
-                  _T(" WHERE sch.name = ?\n")
-                  _T("   AND tab.name = ?\n")
-                  _T("   AND tab.schema_id = sch.schema_id\n");
+  XString query = _T("SELECT COUNT(*)\n")
+                  _T("  FROM " + catalog + ".tables  tab\n")
+                  _T("      ," + catalog + ".schemas sch\n")
+                  _T(" WHERE tab.schema_id = sch.schema_id\n")
+                  _T("   AND sch.name = ?\n");
+  if(istemp)
+  {
+    query += _T("   AND tab.object_id = object_id('tempdb..?')");
+  }
+  else
+  {
+    query += _T("   AND tab.name = ?");
+  }
   return query;
 }
 
@@ -971,7 +1037,21 @@ SQLInfoSQLServer::GetCATALOGTableDrop(XString p_schema,XString p_tablename,bool 
 XString 
 SQLInfoSQLServer::GetCATALOGTemptableCreate(XString p_schema,XString p_tablename,XString p_select) const
 {
-  return _T("CREATE TABLE #") + p_schema + _T(".") + p_tablename + _T("\nAS ") + p_select;
+  CString sel(p_select);
+  sel.MakeLower();
+  int pos = sel.Find(_T("from "));
+
+  if(pos > 0)
+  {
+    if(p_tablename.Left(1).Compare(_T("#")))
+    {
+      p_tablename = _T("#") + p_tablename;
+    }
+    sel = p_select.Left(pos) + _T("INTO ") + p_tablename + _T("\n") + sel.Mid(pos);
+    return sel;
+  }
+  // Don't know how to do this!!
+  return _T("");
 }
 
 XString 
@@ -3026,6 +3106,7 @@ SQLInfoSQLServer::GetSESSIONConstraintsImmediate() const
 SQLVariant*
 SQLInfoSQLServer::DoSQLCall(SQLQuery* /*p_query*/,XString& /*p_schema*/,XString& /*p_procedure*/)
 {
+  // MS-SQLServer supports standard calls
   return nullptr;
 }
 
@@ -3033,6 +3114,7 @@ SQLInfoSQLServer::DoSQLCall(SQLQuery* /*p_query*/,XString& /*p_schema*/,XString&
 SQLVariant*
 SQLInfoSQLServer::DoSQLCallNamedParameters(SQLQuery* /*p_query*/,XString& /*p_schema*/,XString& /*p_procedure*/)
 {
+  // MS-SQLServer supports standard calls with named parameters
   return nullptr;
 }
 
@@ -3043,18 +3125,18 @@ SQLInfoSQLServer::DoSQLCallNamedParameters(SQLQuery* /*p_query*/,XString& /*p_sc
 //////////////////////////////////////////////////////////////////////////
 
 // Adjust catalog for temporary objects
-// XString 
-// SQLInfoSQLServer::GetCatalogAndSchema(XString& p_schema,XString p_table)
-// {
-//   if(p_table.Left(1).Compare("#") == 0)
-//   {
-//     // Temp tables are stored in the 'dbo' schema in the 'tempdbs' database
-//     p_schema = "dbo";
-//     return "tempdbs.sys.";
-//   }
-//   // Normal object, use the sys schema
-//   return "sys.";
-// }
+XString
+SQLInfoSQLServer::GetCatalogAndSchema(XString& p_schema,XString& p_table) const
+{
+  if(p_table.GetLength() > 1 && p_table.Left(1).Compare(_T("#")) == 0)
+  {
+    // Temp tables are stored in the 'dbo' schema in the 'tempdbs' database
+    p_schema = _T("dbo");
+    return _T("tempdb.sys");
+  }
+  // Normal object, use the sys schema
+  return _T("sys");
+}
 
 // End of namespace
 }
