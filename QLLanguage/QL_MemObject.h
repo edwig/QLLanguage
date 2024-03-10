@@ -9,6 +9,7 @@
 
 #pragma once
 #include "QL_Language.h"
+#include <WinFile.h>
 
 // General memory object for use in all modules
 // This class structure is publicly available
@@ -18,7 +19,7 @@ class MemObject
 public:
   MemObject();
   MemObject(MemObject* p_orig);
-  ~MemObject();
+ ~MemObject();
 
   // Assignment operator
   MemObject& operator=(const MemObject& p_other);
@@ -37,10 +38,10 @@ public:
   union _value
   {
     UINT_PTR      v_all;            // Used if accessed as a memory object, instead of a type
-    int			      v_integer;        // DTYPE_INTEGER  value
+    int           v_integer;        // DTYPE_INTEGER  value
     CString*      v_string;         // DTYPE_STRING   value
     bcd*          v_floating;       // DTYPE_BCD      value
-    FILE*         v_file;           // DTYPE_FILE     value
+    WinFile*      v_file;           // DTYPE_FILE     value
     Array*        v_array;          // DTYPE_ARRAY    value
     Object*       v_object;         // DTYPE_OBJECT   value
     Class*        v_class;          // DTYPE_CLASS    value

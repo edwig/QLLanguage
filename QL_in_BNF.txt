@@ -225,6 +225,15 @@ STANDARD METHODS
   array.prev()
   array.clear()
 
+  // file functions
+  fopen(file,mode)
+  fclose(file)
+  getc(file)
+  putc(file,ch)
+  s = gets(file)
+  puts(file,s)
+  fprint(file,"arg",..)
+
   // Stil to implement:
   bcd.*     (all bcd         members)
   sqlvar.*  (all SQLVariant  members)

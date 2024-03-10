@@ -18,4 +18,6 @@ main()
    
    str3 = str2 + num2;
    print("Mixed : ",str3,"\n");
+   
+   return 0;
 }

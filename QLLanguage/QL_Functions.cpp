@@ -1,5 +1,4 @@
 //////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
 //
 // QL Language functions
 // ir. W.E. Huisman (c) 2018
@@ -38,7 +37,7 @@ add_function(TCHAR* p_name,int (*p_fcn)(QLInterpreter*,int),QLVirtualMachine* p_
 
 // Add a built-in file
 static void 
-add_file(TCHAR* p_name,FILE* p_fp,QLVirtualMachine* p_vm)
+add_file(TCHAR* p_name,WinFile* p_fp,QLVirtualMachine* p_vm)
 {
   MemObject* sym = p_vm->AddSymbol(p_name);
   p_vm->MemObjectSetType(sym,DTYPE_NIL);
@@ -160,20 +159,28 @@ static int xtrace(QLInterpreter* p_inter,int argc)
 // open a file
 static int xfopen(QLInterpreter* p_inter,int argc)
 {
-  FILE*  fp = NULL;
+  WinFile* fp = new WinFile();
 
   argcount(p_inter,argc,2);
   CString fileName = p_inter->GetStringArgument(1);
   CString mode     = p_inter->GetStringArgument(0);
 
-  _tfopen_s(&fp,fileName,mode);
-  if (fp == NULL)
+  DWORD flags = 0;
+  if(mode.Find("r") >= 0) flags = winfile_read;
+  if(mode.Find("w") >= 0) flags = winfile_write;
+  if(mode.Find("a") >= 0) flags = winfile_append;
+  
+  fp->SetFilename(fileName);
+  fp->Open(flags,FAttributes::attrib_none,Encoding::UTF8);
+  
+  if(fp->GetIsOpen())
   {
-    p_inter->SetNil(0);
+    p_inter->SetFile(fp);
   }
   else
   {
-    p_inter->SetFile(fp);
+    p_inter->SetNil(0);
+    delete fp;
   }
   return 0;
 }
@@ -182,18 +189,37 @@ static int xfopen(QLInterpreter* p_inter,int argc)
 static int xfclose(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
-  FILE* fp = p_inter->GetStackPointer()[0]->m_value.v_file;
-  p_inter->SetInteger(fclose(fp));
+  WinFile* fp = p_inter->GetStackPointer()[0]->m_value.v_file;
+  int res = 0;
+  switch((INT_PTR)fp)
+  {
+    case QL_STDIN:  res = fclose(stdin);  break;
+    case QL_STDOUT: res = fclose(stdout); break;
+    case QL_STDERR: res = fclose(stderr); break;
+    default:        res = fp->Close();    break;
+  }
+  p_inter->SetInteger(res);
   return 0;
 }
 
 // Get a character from a file
-static int  xgetc(QLInterpreter* p_inter,int argc)
+static int xgetc(QLInterpreter* p_inter,int argc)
 {
   argcount(p_inter,argc,1);
   p_inter->CheckType(0,DTYPE_FILE);
-  FILE* fp = p_inter->GetStackPointer()[0]->m_value.v_file;
-  p_inter->SetInteger(_gettc(fp));
+  WinFile* fp = p_inter->GetStackPointer()[0]->m_value.v_file;
+  int ch = EOF;
+  switch((INT_PTR)fp)
+  {
+    case QL_STDIN:  ch = _gettc(stdin);
+                    break;
+    case QL_STDOUT: [[fallthrough]];
+    case QL_STDERR: p_inter->BadType(0,DTYPE_FILE);
+                    break;
+    default:        ch = fp->Getch();
+                    break;
+  }
+  p_inter->SetInteger(ch);
   return 0;
 }
 
@@ -203,9 +229,19 @@ static int xputc(QLInterpreter* p_inter,int argc)
   MemObject** sp = p_inter->GetStackPointer();
 
   argcount(p_inter,argc,2);
-  FILE* fp = sp[0]->m_value.v_file;
-  int   cc = p_inter->GetIntegerArgument(1);
-  p_inter->SetInteger(_puttc(cc,fp));
+  WinFile* fp = sp[0]->m_value.v_file;
+  int cc = p_inter->GetIntegerArgument(1);
+  int res = EOF;
+  switch((INT_PTR)fp)
+  {
+    case QL_STDIN:  p_inter->BadType(0,DTYPE_FILE);
+                    break;
+    case QL_STDOUT: res = _puttc(cc,stdout); break;
+    case QL_STDERR: res = _puttc(cc,stderr); break;
+    default:        res = fp->Putch(cc);
+                    break;
+  }
+  p_inter->SetInteger(res);
   return 0;
 }
 
@@ -216,11 +252,20 @@ static int xgets(QLInterpreter* p_inter,int argc)
   MemObject** sp = p_inter->GetStackPointer();
 
   argcount(p_inter,argc,1);
-  FILE* fp = sp[0]->m_value.v_file;
+  WinFile* fp = sp[0]->m_value.v_file;
   CString s;
-  while((cc = _gettc(fp)) != _TEOF && cc != '\n')
+  switch((INT_PTR)fp)
   {
-    s.Append((const TCHAR*) &cc);
+    case QL_STDIN:  while((cc = _gettc(stdin)) != _TEOF && cc != '\n')
+                    {
+                      s.Append((const TCHAR*)&cc);
+                    }
+                    break;
+    case QL_STDOUT: [[fallthrough]];
+    case QL_STDERR: p_inter->BadType(0,DTYPE_FILE);
+                    break;
+    default:        fp->Read(s);
+                    break;
   }
   p_inter->SetString(s);
   return 0;
@@ -231,9 +276,21 @@ static int xputs(QLInterpreter* p_inter,int argc)
   MemObject** sp = p_inter->GetStackPointer();
 
   argcount(p_inter,argc,2);
-  FILE* fp = sp[0]->m_value.v_file;
+  WinFile* fp = sp[0]->m_value.v_file;
   CString* str = sp[1]->m_value.v_string;
-  p_inter->SetInteger(_fputts(*str,fp));
+  int res = EOF;
+  switch((INT_PTR)fp)
+  {
+    case QL_STDIN:  p_inter->BadType(0,DTYPE_FILE);
+                    break;
+    case QL_STDOUT: res = _fputts(*str,stdout);
+                    break;
+    case QL_STDERR: res = _fputts(*str,stderr);
+                    break;
+    default:        res = fp->Write(*str);
+                    break;
+  }
+  p_inter->SetInteger(res);
   return 0;
 }
 
@@ -246,7 +303,7 @@ static int xprint(QLInterpreter* p_inter,int argc)
 
   for (int n = argc; --n >= 0; )
   {
-    len += vm->Print(stdout,FALSE,sp[n]);
+    len += vm->Print((WinFile*)QL_STDOUT,FALSE,sp[n]);
   }
   // total chars printed
   p_inter->SetInteger(len);
@@ -263,7 +320,7 @@ static int xfprint(QLInterpreter* p_inter,int argc)
 
   // First argument is the file descriptor
   p_inter->CheckType(argc,DTYPE_FILE);
-  FILE* file = sp[argc]->m_value.v_file;
+  WinFile* file = sp[argc]->m_value.v_file;
 
   for (int n = argc - 1; n >= 0; --n)
   {
@@ -679,9 +736,9 @@ static int xnewdbase(QLInterpreter* p_inter,int argc)
     {
       object->m_value.v_database->Open(connect);
     }
-    catch(CString& s)
+    catch(StdException& s)
     {
-      vm->Info(_T("Open SQL database: %s"),s);
+      vm->Info(_T("Open SQL database: %s"),s.GetErrorMessage());
     }
   }
   else
@@ -775,9 +832,9 @@ static int xdbsCommit(QLInterpreter* p_inter,int argc)
       vm->SetSQLTransaction(nullptr);
       result = 1;
     }
-    catch(CString& error)
+    catch(StdException& error)
     {
-      vm->Info(_T("Transaction error: %s"),error);
+      vm->Info(_T("Transaction error: %s"),error.GetErrorMessage());
     }
   }
   // Result of the commit
@@ -813,9 +870,9 @@ static int xqryDoSQL(QLInterpreter* p_inter,int argc)
     qry->DoSQLStatement(text);
     result = 1;
   }
-  catch(CString& s)
+  catch(StdException& s)
   {
-    vm->Info(_T("SQL error: %s"),s);
+    vm->Info(_T("SQL error: %s"),s.GetErrorMessage());
     return 0;
   }
   p_inter->SetInteger(result);
@@ -852,9 +909,9 @@ int xqryRecord(QLInterpreter* p_inter,int argc)
   {
     result = qry->GetRecord();
   }
-  catch(CString& s)
+  catch(StdException& s)
   {
-    vm->Info(_T("SQL error: %s"),s);
+    vm->Info(_T("SQL error: %s"),s.GetErrorMessage());
   }
   p_inter->SetInteger(result);
   return 0;
@@ -1318,9 +1375,9 @@ static int xtestrun(QLInterpreter* p_inter,int p_argc)
 void init_functions(QLVirtualMachine* p_vm)
 {
   // Adding default streams
-  add_file(_T("stdin"), stdin,  p_vm);
-  add_file(_T("stdout"),stdout, p_vm);
-  add_file(_T("stderr"),stderr, p_vm);
+  add_file(_T("stdin"), (WinFile*) QL_STDIN,  p_vm);
+  add_file(_T("stdout"),(WinFile*) QL_STDOUT, p_vm);
+  add_file(_T("stderr"),(WinFile*) QL_STDERR, p_vm);
 
   // Adding default functions
   add_function(_T("typeof"),    xtypeof,      p_vm);

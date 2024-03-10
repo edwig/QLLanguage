@@ -95,4 +95,5 @@ Technical constraints of the QL Interpreter
 256    Max members in an object
 256    Max global variables
 256    Max number of cases in a switch statement
+10     Max levels of scope in a function/method
 

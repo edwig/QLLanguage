@@ -180,11 +180,11 @@ QLDebugger::DecodeInstruction(Function* p_function,BYTE* code,int lc,bool p_gene
                           osputs_stderr(_T("   ; "));
                           if(p_function)
                           {
-                            m_vm->Print(stderr,TRUE,p_function->GetLiteral(cp[1]));
+                            m_vm->Print((WinFile*)QL_STDERR,TRUE,p_function->GetLiteral(cp[1]));
                           }
                           else
                           {
-                            m_vm->Print(stderr,TRUE,m_vm->GetLiteral(cp[1]));
+                            m_vm->Print((WinFile*)QL_STDERR,TRUE,m_vm->GetLiteral(cp[1]));
                             osputs_stderr(_T("\n"));
                           }
                         }
@@ -201,7 +201,7 @@ QLDebugger::DecodeInstruction(Function* p_function,BYTE* code,int lc,bool p_gene
                         {
                           buffer.Format(_T("     %02X%02X  %02X%02X   ; "),cp[i+1],cp[i],cp[i+3],cp[i+2]);
                           osputs_stderr(buffer);
-                          m_vm->Print(stderr,TRUE,p_function->GetLiteral((cp[i+1] << 8) | cp[i]));
+                          m_vm->Print((WinFile*)QL_STDERR,TRUE,p_function->GetLiteral((cp[i+1] << 8) | cp[i]));
                           osputs_stderr(_T("\n"));
                           i += 4;
                         }
@@ -238,7 +238,7 @@ QLDebugger::PrintObject(MemObject* p_stack,bool p_newline /*=true*/)
   if(m_printObject >= 0 && p_stack)
   {
     osputs_stderr(_T("   ; "));
-    m_vm->Print(stderr, TRUE, &p_stack[m_printObject]);
+    m_vm->Print((WinFile*)QL_STDERR, TRUE, &p_stack[m_printObject]);
   }
   if(p_newline)
   {
@@ -252,17 +252,17 @@ void
 QLDebugger::PrintIndexedObject(MemObject* p_vector,MemObject* p_index,MemObject* p_value)
 {
   osputs_stderr(_T("   ; "));
-  m_vm->Print(stderr,TRUE,p_vector);
+  m_vm->Print((WinFile*)QL_STDERR,TRUE,p_vector);
   if(p_index)
   {
     osputs_stderr(_T("["));
-    m_vm->Print(stderr,TRUE,p_index);
+    m_vm->Print((WinFile*)QL_STDERR,TRUE,p_index);
     osputs_stderr(_T("]"));
   }
   if(p_value)
   {
     osputs_stderr(_T(" = "));
-    m_vm->Print(stderr,TRUE,p_value);
+    m_vm->Print((WinFile*)QL_STDERR,TRUE,p_value);
   }
 }
 

@@ -17,6 +17,7 @@
 // Forward declarations
 class QLCompiler;
 class QLInterpreter;
+class WinFile;
 
 using SQLComponents::SQLTransaction;
 
@@ -45,7 +46,7 @@ public:
   // Printing of information
   void        Info(LPCTSTR p_format, ...);
   // Print - print one value 
-  int         Print(FILE* p_fp,int p_quoteFlag,MemObject* p_value);
+  int         Print(WinFile* p_fp,int p_quoteFlag,MemObject* p_value);
 
   // Getters
   NameMap&    GetSymbols();
@@ -147,7 +148,7 @@ private:
   CString     MustReadString  (FILE* p_fp, bool p_trace, TCHAR* p_errorMessage);
   bcd*        ReadFloat       (FILE* p_fp, bool p_trace);
   bcd*        MustReadFloat   (FILE* p_fp, bool p_trace, TCHAR* p_message);
-  FILE*       ReadFileName    (FILE* p_fp, bool p_trace);
+  WinFile*    ReadFileName    (FILE* p_fp, bool p_trace);
   Array*      ReadArray       (FILE* p_fp, bool p_trace, Array* p_array = nullptr,TCHAR* p_name = nullptr);
   Array*      MustReadArray   (FILE* p_fp, bool p_trace, Array* p_array = nullptr,TCHAR* p_name = nullptr);
   Object*     ReadObject      (FILE* p_fp, bool p_trace);

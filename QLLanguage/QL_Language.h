@@ -74,6 +74,11 @@
 #define ST_FUNCTION	  4	  // function member        lives in m_classes class.members
 #define ST_SFUNCTION	5	  // static function member lives in m_symbols/m_globals
 
+// POSIX File streams
+#define QL_STDIN      0   // Read from stdin
+#define QL_STDOUT     1   // Write to stdout
+#define QL_STDERR     2   // Write to stderr
+
 // Forward declarations for many objects
 class Array;
 class Class;

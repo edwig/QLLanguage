@@ -58,7 +58,7 @@ public:
   void              SetNil    (int p_offset);
   void              SetInteger(int p_value);
   void              SetString (CString p_string);
-  void              SetFile   (FILE* p_fp);
+  void              SetFile   (WinFile* p_fp);
   void              SetBcd    (bcd p_float);
   void              SetVariant(SQLVariant p_variant);
 
@@ -101,6 +101,18 @@ private:
   MemObject** PushInteger(int p_num);
   MemObject** PushFunction(Function* p_func);
   MemObject** PushObject (Object* p_object);
+
+  int         Inter_call  (int& numArguments,bool& newline,int& pop,Function*& calFunction,Function*& runFunction,Object*& runObject);
+  void        Inter_return(int& numArguments,MemObject*& val,Object*& runObject,int& pcoff,Function*& runFunction);
+  void        Inter_send  (int& numArguments,bool& newline,Object*& calObject,Class*& vClass,CString& selector,MemObject*& val,int& pop,Function*& calFunction,Object*& runObject,Function*& runFunction);
+  void        Inter_vload();
+  void        Inter_vstore();
+  void        Inter_shiftLeft();
+  void        Inter_shiftRight();
+  void        Inter_literal(MemObject*& val,Function*& runFunction);
+  void        Inter_duplicate2();
+  void        Inter_Destroy(MemObject*& val,Function*& calFunction,Object*& calObject,Function*& runFunction,Object*& runObject);
+  void        Inter_switch(int& numArguments,MemObject*& val,Function*& runFunction,int& pcoff);
 
   // Unary operators
   void        Inter_increment();

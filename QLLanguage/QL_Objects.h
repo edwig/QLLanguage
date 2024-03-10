@@ -31,7 +31,7 @@ public:
   int          FindStringEntry(CString p_name);
   int          FindIntegerEntry(int p_value);
 
-  // Add an array member (all datamembers)
+  // Add an array member (all data members)
   MemObject*   AddEntry(QLvm* p_vm,CString p_string);
   MemObject*   AddEntry(QLvm* p_vm,int     p_integer);
   MemObject*   AddEntry(MemObject* p_memob);
@@ -118,7 +118,6 @@ public:
 
   // Setters
   void        SetName(CString p_name);
-  void        SetSize(unsigned p_size);
   void        SetBaseClass(Class* p_base);
   // Getters
   CString     GetName();
@@ -133,7 +132,6 @@ private:
   CString     m_name;         // Our class name
   Class*      m_base;         // Pointer to the base class
   Array       m_members;      // Member functions
-  unsigned    m_size;         // Size of attributes, including baseclass attributes
   Array       m_attributes;   // Attributes of this derived class only
 };
 

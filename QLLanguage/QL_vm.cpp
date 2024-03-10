@@ -346,10 +346,10 @@ QLVirtualMachine::AllocMemObject(int p_type,bool p_running /*=true*/)
   MemObjectSetType(object,p_type);
 
 // #ifdef _DEBUG
-//   TRACE("Number of allocs: %d\n",m_allocs);
+//   TRACE("Number of allocations: %d\n",m_allocs);
 // #endif
 
-  // Increment the number of allocs
+  // Increment the number of allocations
   ++m_allocs;
 
   return object;
@@ -410,10 +410,10 @@ QLVirtualMachine::AllocMemObject(const MemObject* p_other)
   object->m_type = p_other->m_type;
   
 // #ifdef _DEBUG
-//   TRACE("Number of allocs: %d\n",m_allocs);
+//   TRACE("Number of allocations: %d\n",m_allocs);
 // #endif
 
-  // Increment the number of allocs
+  // Increment the number of allocations
   ++m_allocs;
 
   return object;
@@ -428,7 +428,7 @@ QLVirtualMachine::FreeMemObject(MemObject* p_object,bool p_running /*=true*/)
 
   if(p_running)
   {
-    // If the object is not one of the endmarkers in the chain
+    // If the object is not one of the end-markers in the chain
     // readjust the prev/next chain of the other objects
     // so this object becomes free
     if(p_object->m_next && p_object->m_prev)
@@ -440,12 +440,12 @@ QLVirtualMachine::FreeMemObject(MemObject* p_object,bool p_running /*=true*/)
 // #ifdef _DEBUG
 //   TRACE("Freeing an alloc: %d\n",--m_allocs);
 // #endif
-  // Now delete the memobject
+  // Now delete the MemObject
   delete p_object;
 }
 
 // Can be called with DTYPE_NIL to deallocate storage and set to NIL
-// OR can be called to allocate a specific datatype
+// OR can be called to allocate a specific data type
 /*static*/ void
 QLVirtualMachine::MemObjectSetType(MemObject* p_object,int p_type)
 {
@@ -769,14 +769,14 @@ QLVirtualMachine::AddBytecode(BYTE* p_bytecode,unsigned p_size)
 
 // print1 - print one value 
 int
-QLVirtualMachine::Print(FILE* p_fp,int p_quoteFlag,MemObject* p_value)
+QLVirtualMachine::Print(WinFile* p_fp,int p_quoteFlag,MemObject* p_value)
 {
   int len = 0;
   CString value;
 
   if(p_fp == nullptr)
   {
-    p_fp = stdout;
+    p_fp = (WinFile*) QL_STDOUT;
   }
 
   if(p_value)
@@ -821,19 +821,19 @@ QLVirtualMachine::Print(FILE* p_fp,int p_quoteFlag,MemObject* p_value)
     default:            Error(_T("Undefined type: %d"), p_value->m_type);
                         break;
   }
-  if(p_fp == stdout)
+  if((INT_PTR)p_fp == QL_STDOUT)
   {
     osputs_stdout(value);
     len = value.GetLength();
   }
-  else if(p_fp == stderr)
+  else if((INT_PTR)p_fp == QL_STDERR)
   {
     osputs_stderr(value);
     len = value.GetLength();
   }
   else
   {
-    len = _ftprintf(p_fp,value);
+    len = p_fp->Write(value);
   }
   return len;
 } 
@@ -996,7 +996,7 @@ void
 QLVirtualMachine::DumpObject(MemObject* p_object)
 {
   _fputts(_T("MEM: "),stderr);
-  Print(stderr,true,p_object);
+  Print((WinFile*)QL_STDERR,true,p_object);
   _fputts(_T("\n"),stderr);
 }
 

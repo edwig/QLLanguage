@@ -296,7 +296,7 @@ QLVirtualMachine::MustReadFloat(FILE* p_fp,bool p_trace,TCHAR* p_message)
   return ReadFloat(p_fp,p_trace);
 }
 
-FILE*
+WinFile*
 QLVirtualMachine::ReadFileName(FILE* p_fp, bool p_trace)
 {
   CString name = MustReadString(p_fp,p_trace,_T("Misread file stream name!"));

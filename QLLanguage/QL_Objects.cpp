@@ -365,14 +365,12 @@ Array::Mark(QLvm* p_vm)
 Class::Class(CString p_name)
       :m_name(p_name)
       ,m_base(nullptr)
-      ,m_size(0)
 {
 }
 
 Class::Class(CString p_name, Class* p_base)
       :m_name(p_name)
       ,m_base(p_base)
-      ,m_size(0)
 {
 
 }
@@ -395,9 +393,6 @@ Class::AddDataMember(QLvm* p_vm,CString p_name,int p_storage)
 
   MemObject* member = m_attributes.AddEntry(p_vm,p_name);
   member->m_storage = p_storage;
-  // One more data member in this class
-  ++m_size;
-
   return member;
 }
 
@@ -424,12 +419,6 @@ void
 Class::SetName(CString p_name)
 {
   m_name = p_name;
-}
-
-void
-Class::SetSize(unsigned p_size)
-{
-  m_size = p_size;
 }
 
 void
@@ -464,7 +453,12 @@ Class::GetMembers()
 unsigned 
 Class::GetSize()
 {
-  return m_size;
+  unsigned size = m_attributes.GetSize();
+  if(m_base)
+  {
+    size += m_base->GetSize();
+  }
+  return size;
 }
 
 Array&  
@@ -540,8 +534,8 @@ Class::RecursiveFindDataMember(CString p_name,int& p_entryNum)
   MemObject* entry = m_attributes.FindEntry(p_name,p_entryNum);
   if(entry)
   {
-    int offset  = m_size - m_attributes.GetSize();
-    p_entryNum += offset;
+    // Offset for derived classes
+    p_entryNum += m_base ? m_base->GetSize() : 0;;
     return entry;
   }
   if(m_base)

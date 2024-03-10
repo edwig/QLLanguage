@@ -201,13 +201,6 @@ QLCompiler::do_class()
   // create the new class object
   theClass = new Class(className,baseClass);
 
-  if(baseClass)
-  {
-    // Initial amount of members for this class
-    // Each object has the members of their parent classes
-    theClass->SetSize(baseClass->GetSize());
-  }
-
   // Save the class information
   m_vm->AddClass(theClass);
 
@@ -279,11 +272,11 @@ QLCompiler::do_function(CString p_name)
 {
   switch (m_scanner->GetToken()) 
   {
-    case _T('('): 	  do_regular_function(p_name);
+    case _T('('): do_regular_function(p_name);
                   break;
-    case T_CC:	  do_member_function(get_class(p_name));
+    case T_CC:    do_member_function(get_class(p_name));
                   break;
-    default:	    m_scanner->ParseError(_T("Expecting a function declaration"));
+    default:      m_scanner->ParseError(_T("Expecting a function declaration"));
                   break;
   }
 }
@@ -445,21 +438,21 @@ QLCompiler::do_statement()
   int tkn;
   switch (tkn = m_scanner->GetToken()) 
   {
-    case T_IF:		    do_if();	    break;
-    case T_WHILE:	    do_while();	  break;
-    case T_DO:		    do_dowhile();	break;
-    case T_FOR:		    do_for();	    break;
-    case T_BREAK:	    do_break();	  break;
-    case T_CONTINUE:	do_continue();break;
-    case T_RETURN:	  do_return();	break;
+    case T_IF:        do_if();      break;
+    case T_WHILE:     do_while();   break;
+    case T_DO:        do_dowhile();	break;
+    case T_FOR:       do_for();     break;
+    case T_BREAK:     do_break();   break;
+    case T_CONTINUE:  do_continue();break;
+    case T_RETURN:    do_return();  break;
     case T_SWITCH:    do_switch();  break;
     case T_CASE:      do_case();    break;
     case T_DEFAULT:   do_default(); break;
-    case _T('{'):		      do_block();	  break;
-    case _T(';'):		      ;		          break;
-    default:		      m_scanner->SaveToken(tkn);
+    case _T('{'):     do_block();   break;
+    case _T(';'):     ;             break;
+    default:          m_scanner->SaveToken(tkn);
                       do_expr();
-                      FetchRequireToken(';');  
+                      FetchRequireToken(';');
                       break;
   }
 }

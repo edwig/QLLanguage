@@ -480,7 +480,7 @@ void QLScanner::ParseError(const TCHAR* msg)
   CString pointer;
 
   // redisplay the line with the error
-  buffer.Format(_T(">>> %s <<<\n>>> in line %d <<<\n%s"), msg, m_line_number, m_line);
+  buffer.Format(_T(">>> %s <<<\n>>> in line %d <<<\n%s"),msg,m_line_number,m_line.GetString());
   osputs_stderr(buffer);
 
   // point to the position immediately following the error 

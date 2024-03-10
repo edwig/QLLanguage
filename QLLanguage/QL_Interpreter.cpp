@@ -181,19 +181,20 @@ QLInterpreter::Execute(CString p_name)
 int
 QLInterpreter::Interpret(Object* p_object,Function* p_function)
 {
-  register int  pcoff,n;
-  Object*       runObject   = p_object;
-  Object*       calObject   = nullptr;
-  Function*     runFunction = p_function;
-  Function*     calFunction = nullptr;
-  MemObject**   topframe;
-  MemObject*    val;
-  int           number  = 0;
-  int           pop     = 0;
-  bool          newline = true;
+  int           pcoff        = 0;
+  int           numArguments = 0;;
+  Object*       runObject    = p_object;
+  Object*       calObject    = nullptr;
+  Function*     runFunction  = p_function;
+  Function*     calFunction  = nullptr;
+  MemObject**   topframe     = nullptr;
+  MemObject*    val          = nullptr;
+  Class*        vClass       = nullptr;
+  int           number       = 0;
+  int           pop          = 0;
+  bool          newline      = true;
   bcd           floating;
   CString       selector;
-  Class*        vClass;
 
   // initialize
   m_code = m_pc = runFunction ? runFunction->GetBytecode() : m_vm->GetBytecode();
@@ -220,50 +221,14 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
     // Execute program counter and increment it in the same action
     switch(*m_pc++) 
     {
-      case OP_CALL:		  // CALL A FUNCTION (SCRIPT, INTERNAL, EXTERNAL)
-                        n = *m_pc++;  // Where we find our callee
-                        if(m_trace)
+      case OP_CALL:     // CALL A FUNCTION (SCRIPT, INTERNAL, EXTERNAL)
+                        if(Inter_call(numArguments,newline,pop,calFunction,runFunction,runObject) < 0)
                         {
-                          // Finish tracing if active. Show what we will be calling
-                          m_debugger->PrintObject(m_stack_pointer[n]);
-                          newline = false;
-                        }
-                        switch (m_stack_pointer[n]->m_type) 
-                        {
-                          case DTYPE_INTERNAL:(*m_stack_pointer[n]->m_value.v_internal)(this,n);
-                                              pop = n; // Number of arguments to pop again
-                                              break;
-                          case DTYPE_STRING:  calFunction = m_vm->FindScript(*m_stack_pointer[n]->m_value.v_string);
-                                              if(calFunction == nullptr)
-                                              {
-                                                m_vm->Error(_T("Call to non-existing function: %s"),*m_stack_pointer[n]->m_value.v_string);
-                                              }
-                                              break;
-                          case DTYPE_SCRIPT:  calFunction = m_stack_pointer[n]->m_value.v_script;
-                                              break;
-                          default:            m_vm->Error(_T("Call to non-procedure, Type %s"),GetTypename(m_stack_pointer[n]->m_type));
-                                              return -1;
-                        }
-                        if(calFunction)
-                        {
-                           // Test number of arguments and data types
-                           TestFunctionArguments(calFunction,n);
-
-                           CheckStack(STACKFRAME_SIZE);
-                           PushInteger(0);                                     // No object
-                           PushFunction(runFunction);                          // Running function
-                           PushInteger(n);                                     // NUMBER OF ARGUMENTS
-                           PushInteger((int)(m_stack_top - m_frame_pointer));  // OFFSET SP FROM TOP (BEGINNING)
-                           PushInteger((int)(m_pc - m_code));                  // OFFSET IN BYTECODE
-                           m_code = m_pc   = calFunction->GetBytecode();       // New bytecode program counter
-                           runFunction     = calFunction;                      // Now running this function
-                           m_frame_pointer = m_stack_pointer;
-                           runObject       = nullptr;
-                           calFunction     = nullptr;
+                          return -1;
                         }
                         break;
-      case OP_RETURN:		// RETURN FROM A SCRIPT FUNCTION
-                        if (m_frame_pointer == topframe) 
+      case OP_RETURN:   // RETURN FROM A SCRIPT FUNCTION or THE COMPLETE INTERPRETER
+                        if(m_frame_pointer == topframe)
                         {
                           if(m_trace)
                           {
@@ -277,165 +242,126 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                           }
                           return 0;
                         }
-                        val             = m_stack_pointer[0];
-                        runObject       = nullptr;
-                        m_stack_pointer = m_frame_pointer;
-                        pcoff           = m_frame_pointer[SF_OFF_PRGCOUNTER]->m_value.v_integer;
-                        n               = m_frame_pointer[SF_OFF_ARGUMENTS] ->m_value.v_integer;
-                        runFunction     = m_frame_pointer[SF_OFF_FUNCTION]  ->m_value.v_script;
-                        if(m_frame_pointer[SF_OFF_OBJECT]->m_type == DTYPE_OBJECT)
-                        {
-                          runObject = m_frame_pointer[SF_OFF_OBJECT]->m_value.v_object;
-                        }
-                        m_frame_pointer = m_stack_top - m_frame_pointer[SF_OFF_FRAMEPNTR]->m_value.v_integer;
-                        m_code = runFunction->GetBytecode();
-                        m_pc   = m_code + pcoff;
-                        m_stack_pointer += STACKFRAME_SIZE; 
-                        // Restore return value from function
-                        m_stack_pointer[0] = val;
-                        if(m_trace)
-                        {
-                          m_debugger->PrintReturn(runFunction);
-                        }
+                        // Regular return from a method/function
+                        Inter_return(numArguments,val,runObject,pcoff,runFunction);
                         // Pop this amount of variables from the stack
-                        pop = n;
+                        pop = numArguments;
                         break;
-      case OP_LOAD:  		// REFERENCE (LOAD A VARIABLE VALUE)
+      case OP_LOAD:     // REFERENCE (LOAD A VARIABLE VALUE)
                         m_stack_pointer[0] = m_vm->GetGlobal(*m_pc++);
                         break;
-      case OP_STORE:		// STORE a variable
+      case OP_STORE:    // STORE a variable
                         m_vm->SetGlobal(*m_pc++,m_stack_pointer[0]);
                         break;
-      case OP_VLOAD: 		// LOAD A VECTOR/ARRAY ELEMENT
-                        CheckType(0,DTYPE_INTEGER);
-                        switch (m_stack_pointer[1]->m_type) 
-                        {
-                          case DTYPE_ARRAY:  VectorRef(); break;
-                          case DTYPE_STRING: StringRef(); break;
-                          default:	         BadType(1,DTYPE_ARRAY); break;
-                        }
+      case OP_VLOAD:    // LOAD A VECTOR/ARRAY ELEMENT
+                        Inter_vload();
                         // Implicit "POP 1"
                         pop = 1;
                         break;
-      case OP_VSTORE:		// STORE AN ELEMENT BACK IN A VECTOR/ARRAY
-                        CheckType(1,DTYPE_INTEGER);
-                        switch (m_stack_pointer[2]->m_type) 
-                        {
-                          case DTYPE_ARRAY:  VectorSet(); break;
-                          case DTYPE_STRING: StringSet(); break;
-                          default:	         BadType(1,DTYPE_ARRAY); break;
-                        }
+      case OP_VSTORE:   // STORE AN ELEMENT BACK IN A VECTOR/ARRAY
+                        Inter_vstore();
+                        // Implicit "POP 2"
                         pop = 2;
                         break;
-      case OP_MLOAD:		// LOAD AN OBJECT MEMBER ON THE STACK
+      case OP_MLOAD:    // LOAD AN OBJECT MEMBER ON THE STACK
                         m_stack_pointer[0] = runObject->GetAttribute(*m_pc++);
                         break;
-      case OP_MSTORE: 	// STORE TOS IN AN OBJECT MEMBER
-                        n = *m_pc++;
-                        if(runObject->SetAttribute(n,m_vm->AllocMemObject(m_stack_pointer[0])) == false)
+      case OP_MSTORE:   // STORE TOS IN AN OBJECT MEMBER
+                        numArguments = *m_pc++;
+                        if(runObject->SetAttribute(numArguments,m_vm->AllocMemObject(m_stack_pointer[0])) == false)
                         {
-                          BadMemberArgument(runObject,n);
+                          BadMemberArgument(runObject,numArguments);
                         }
                         break;
-      case OP_ALOAD:		// LOAD AN ARGUMENT ON TOS
+      case OP_ALOAD:    // LOAD AN ARGUMENT ON TOS
                         number = ArgumentReference(*m_pc++);
                         m_stack_pointer[0] = m_frame_pointer[number];
                         break;
-      case OP_ASTORE: 	// STORE TOS IN AN ARGUMENT
+      case OP_ASTORE:   // STORE TOS IN AN ARGUMENT
                         number = ArgumentReference(*m_pc++);
                         m_frame_pointer[number] = m_stack_pointer[0];
                         break;
-      case OP_TLOAD: 		// REFERENCE A LOCAL VARIABLE
-                        n = *m_pc++;
-                        m_stack_pointer[0] = m_frame_pointer[-n-1];
+      case OP_TLOAD:    // REFERENCE A LOCAL VARIABLE
+                        numArguments = *m_pc++;
+                        m_stack_pointer[0] = m_frame_pointer[-numArguments - 1];
                         break;
-      case OP_TSTORE: 	// SET a value in a Temporary (local variable)
-                        n = *m_pc++;
-                        m_frame_pointer[-n-1] = m_stack_pointer[0];
+      case OP_TSTORE:   // SET a value in a Temporary (local variable)
+                        numArguments = *m_pc++;
+                        m_frame_pointer[-numArguments - 1] = m_stack_pointer[0];
                         break;
-      case OP_TSPACE:		// Create space on the stack for local variables (temporaries)
+      case OP_TSPACE:   // Create space on the stack for local variables (temporaries)
                         ReserveSpace(*m_pc++);
                         break;
-      case OP_BRT:  		// BRANCH if TRUE
+      case OP_BRT:      // BRANCH if TRUE
                         m_pc = (istrue(m_stack_pointer[0])) ? m_pc = m_code + GetWordOperand() : m_pc + 2;
                         break;
-      case OP_BRF:  		// BRANCH IF FALSE
+      case OP_BRF:      // BRANCH IF FALSE
                         m_pc = (istrue(m_stack_pointer[0])) ? m_pc + 2 : m_pc = m_code + GetWordOperand();
                         break;
-      case OP_BR:   		// UNCONDITIONAL BRANCH
+      case OP_BR:       // UNCONDITIONAL BRANCH
                         m_pc = m_code + GetWordOperand();
                         break;
-      case OP_NIL:  		// SET TOS TO NIL (ZERO)
+      case OP_NIL:      // SET TOS TO NIL (ZERO)
                         SetNil(0);
                         break;
-      case OP_PUSH: 		// PUSH INTEGER TO TOS
+      case OP_PUSH:     // PUSH INTEGER TO TOS
                         CheckStack(1);
                         PushInteger(0);
                         break;
-      case OP_NOT:		  // NOT OPERATOR ON TOS
+      case OP_NOT:      // NOT OPERATOR ON TOS
                         SetInteger(istrue(m_stack_pointer[0]) ? FALSE : TRUE);
                         break;
-      case OP_NEG:		  // NEGATE TOS
+      case OP_NEG:      // NEGATE TOS
                         CheckType(0,DTYPE_INTEGER);
                         m_stack_pointer[0]->m_value.v_integer = -(m_stack_pointer[0]->m_value.v_integer);
                         break;
-      case OP_ADD:		  // PERFORM OPERATOR ADD on INTEGER, STRING, BCD or VARIANT
+      case OP_ADD:      // PERFORM OPERATOR ADD on INTEGER, STRING, BCD or VARIANT
                         inter_operator(OP_ADD);
                         pop = 1;
                         break;
-      case OP_SUB:		  // PERFORM OPERATOR SUBTRACT on INTEGER, STRING, BCD or VARIANT
+      case OP_SUB:      // PERFORM OPERATOR SUBTRACT on INTEGER, STRING, BCD or VARIANT
                         inter_operator(OP_SUB);
                         pop = 1;
                         break;
-      case OP_MUL:		  // PERFORM OPERATOR MULTIPLY on INTEGER, STRING, BCD or VARIANT
+      case OP_MUL:      // PERFORM OPERATOR MULTIPLY on INTEGER, STRING, BCD or VARIANT
                         inter_operator(OP_MUL);
                         pop = 1;
                         break;
-      case OP_DIV:  		// PERFORM OPERATOR DIVIDE on INTEGER, STRING, BCD or VARIANT
+      case OP_DIV:      // PERFORM OPERATOR DIVIDE on INTEGER, STRING, BCD or VARIANT
                         inter_operator(OP_DIV);
                         pop = 1;
                         break;
-      case OP_REM: 		  // PERFORM OPERATOR REMAINDER on INTEGER, STRING, BCD or VARIANT
+      case OP_REM:      // PERFORM OPERATOR REMAINDER on INTEGER, STRING, BCD or VARIANT
                         inter_operator(OP_REM);
                         pop = 1;
                         break;
-      case OP_INC:  	  // INCREMENT TOS (INTEGER, BCD or VARIANT)
+      case OP_INC:      // INCREMENT TOS (INTEGER, BCD or VARIANT)
                         Inter_increment();
                         break;
-      case OP_DEC: 		  // DECREMENT TOS (INTEGER, BCD or VARIANT)
+      case OP_DEC:      // DECREMENT TOS (INTEGER, BCD or VARIANT)
                         Inter_decrement();
                         break;
-      case OP_BAND: 		// OPERATOR BINARY-AND on an INTEGER
+      case OP_BAND:     // OPERATOR BINARY-AND on an INTEGER
                         Inter_binary(OP_BAND);
                         pop = 1;
                         break;
-      case OP_BOR:  	  // OPERATOR BINARY-OR on an INTEGER	
+      case OP_BOR:      // OPERATOR BINARY-OR on an INTEGER	
                         Inter_binary(OP_BOR);
                         pop = 1;
                         break;
-      case OP_XOR: 		  // OPERATOR BINARY-EXCLUSIVE OR on an INTEGER
+      case OP_XOR:      // OPERATOR BINARY-EXCLUSIVE OR on an INTEGER
                         Inter_binary(OP_XOR);
                         pop = 1;
                         break;
-      case OP_BNOT: 		// OPERATOR BINARY-NOT on an INTEGER
+      case OP_BNOT:     // OPERATOR BINARY-NOT on an INTEGER
                         Inter_binary(OP_BNOT);
                         break;
-      case OP_SHL:  		// OPERATOR BINARY SHIFTLEFT or PRINT TO STREAM
-                        switch(m_stack_pointer[1]->m_type) 
-                        {
-                          case DTYPE_INTEGER: CheckType(0,DTYPE_INTEGER);
-                                              m_stack_pointer[1]->m_value.v_integer <<= m_stack_pointer[0]->m_value.v_integer;
-                                              break;
-                          case DTYPE_FILE:    m_vm->Print(m_stack_pointer[1]->m_value.v_file,false,m_stack_pointer[0]);
-                                              break;
-                          default:            break;
-                        }
+      case OP_SHL:      // OPERATOR BINARY SHIFTLEFT or PRINT TO STREAM
+                        Inter_shiftLeft();
                         pop = 1;
                         break;
-      case OP_SHR:  		// OPERATOR BINARY SHIFT RIGHT
-                        CheckType(0,DTYPE_INTEGER);
-                        CheckType(1,DTYPE_INTEGER);
-                        m_stack_pointer[1]->m_value.v_integer >>= m_stack_pointer[0]->m_value.v_integer;
+      case OP_SHR:      // OPERATOR BINARY SHIFT RIGHT
+                        Inter_shiftRight();
                         pop = 1;
                         break;
       case OP_LT:       // OPERATOR LESS THAN (<)
@@ -446,7 +372,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         inter_operator(OP_LE);
                         pop = 1;
                         break;
-      case OP_EQ: 		  // OPERATOR EQUAL (==)
+      case OP_EQ:       // OPERATOR EQUAL (==)
                         inter_operator(OP_EQ);
                         pop = 1;
                         break;
@@ -463,103 +389,13 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         pop = 1;
                         break;
       case OP_LIT:      // LOAD A LITERAL FOR THE CURRENT FUNCTION
-                        val = runFunction ? runFunction->GetLiteral(*m_pc++) 
-                                          : m_vm->GetLiteral(*m_pc++);
-                        if(val->m_type == DTYPE_INTEGER ||
-                           val->m_type == DTYPE_STRING)
-                        {
-                          // Get a duplicate (by-value) from a literal
-                          // See the QL_Compiler::add_literal function!
-                          m_stack_pointer[0] = m_vm->AllocMemObject(val);
-                        }
-                        else
-                        {
-                          // INTERNAL, ARRAY Etc are by-reference
-                          m_stack_pointer[0] = val;
-                        }
+                        Inter_literal(val,runFunction);
                         break;
       case OP_SEND:     // SEND REQUEST -> CALL A MEMBER OF AN OBJECT, INTERNAL METHOD
-                        n = *m_pc++; // Get the stack offset
-
-                        // Check that the member selector is a string!
-                        CheckType(n - 1, DTYPE_STRING);
-
-                        if(m_trace)
-                        {
-                          // Finish tracing if active. Show what we will be calling
-                          m_debugger->PrintObject(m_stack_pointer[n]);
-                          newline = false;
-                        }
-
-                        // See if it is an immediate scripted object
-                        if(m_stack_pointer[n]->m_type == DTYPE_OBJECT)
-                        {
-                          // SEND REQUEST TO AN OBJECT
-                          calObject = m_stack_pointer[n]->m_value.v_object;
-                          vClass    = calObject->GetClass();
-                          selector  = *m_stack_pointer[n-1]->m_value.v_string;
-                          // Creating the "this" pointer on the stack on the place of the selector!
-                          m_stack_pointer[n - 1] = m_stack_pointer[n];
-
-                          if(selector.IsEmpty())
-                          {
-                            NoMethod(selector);
-                            break;
-                          }
-                          val = vClass->RecursiveFindFuncMember(selector);
-
-                          switch(val->m_type)
-                          {
-                            case DTYPE_INTERNAL:	(*val->m_value.v_internal)(this,n);
-                                                  pop = n;
-                                                  break;
-                            case DTYPE_STRING:    val = calObject->GetClass()->FindFuncMember(selector);
-                                                  if(val)
-                                                  {
-                                                    calFunction = val->m_value.v_script;
-                                                  }
-                                                  else
-                                                  {
-                                                    NoMethod(selector);
-                                                  }
-                                                  break;
-                            case DTYPE_SCRIPT:    calFunction = val->m_value.v_script;
-                                                  break;
-                            default:		          m_vm->Error(_T("Bad method, Selector '%s', Type %d"),selector,val->m_type);
-                                                  break;
-                          }
-                          if(calFunction)
-                          {
-                            // Test arguments. Allow for 'this' pointer as extra argument
-                            TestFunctionArguments(calFunction,n - 1);
-
-                            CheckStack(STACKFRAME_SIZE);
-                            PushObject(runObject);
-                            PushFunction(runFunction);
-                            PushInteger(n);
-                            PushInteger((int)(m_stack_top - m_frame_pointer));
-                            PushInteger((int)(m_pc - m_code));
-                            m_code = m_pc   = calFunction->GetBytecode();
-                            runFunction     = calFunction;
-                            runObject       = calObject;
-                            m_frame_pointer = m_stack_pointer;
-                            calFunction     = nullptr;
-                            calObject       = nullptr;
-                          }
-                        }
-                        else
-                        {
-                          // SEND REQUEST TO INTERNAL OBJECT
-                          DoSendInternal(n);
-                          // POP two of the stack
-                          pop = n;
-                        }
+                        Inter_send(numArguments,newline,calObject,vClass,selector,val,pop,calFunction,runObject,runFunction);
                         break;
       case OP_DUP2:     // Duplicate top two stack entries
-                        CheckStack(2);
-                        m_stack_pointer -= 2; // Grow the stack by 2
-                        m_stack_pointer[0] = m_stack_pointer[2];
-                        m_stack_pointer[1] = m_stack_pointer[3];
+                        Inter_duplicate2();
                         break;
       case OP_NEW:      // Create a new object from a class reference
                         if(m_stack_pointer[0]->m_type != DTYPE_CLASS)
@@ -569,36 +405,7 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         m_stack_pointer[0] = m_vm->NewObject(m_stack_pointer[0]->m_value.v_class);
                         break;
       case OP_DESTROY:  // Delete the object on the top of the stack
-                        if(m_stack_pointer[0]->m_type != DTYPE_OBJECT)
-                        {
-                          BadType(0,DTYPE_OBJECT);
-                        }
-                        calObject = m_stack_pointer[0]->m_value.v_object;
-
-                        // Put object on the stack
-                        PushInteger(0);
-                        m_stack_pointer[0] = m_stack_pointer[1];
-
-                        val = calObject->GetClass()->RecursiveFindFuncMember(_T("destroy"));
-                        if(val && val->m_value.v_script)
-                        {
-                           // Use destroy function: no arguments allowed
-                           calFunction = val->m_value.v_script;
-                           TestFunctionArguments(calFunction,0);
-                           // Same as a OP_SEND method
-                           CheckStack(STACKFRAME_SIZE);
-                           PushObject(runObject);
-                           PushFunction(runFunction);
-                           PushInteger(1); // No arguments
-                           PushInteger((int)(m_stack_top - m_frame_pointer));
-                           PushInteger((int)(m_pc - m_code));
-                           m_code = m_pc   = calFunction->GetBytecode();
-                           runFunction     = calFunction;
-                           runObject       = calObject;
-                           m_frame_pointer = m_stack_pointer;
-                           calFunction     = nullptr;
-                           calObject       = nullptr;
-                        }
+                        Inter_Destroy(val,calFunction,calObject,runFunction,runObject);
                         break;
       case OP_DELETE:   // At the end of the "Destroy" DTOR method
                         // The compiler emits an OP_DELETE after the OP_DESTROY
@@ -607,23 +414,9 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
                         SetInteger(number);
                         break;
       case OP_SWITCH:   // PERFORM A SWITCH STATEMENT
-                        // Get number of cases
-                        n   = GetWordOperand();
-                        // Get value
-                        val = m_stack_pointer[0];
-                        // Walk the cases list
-                        while (--n >= 0) 
-                        {
-                          pcoff = GetWordOperand();
-                          if(Equal(val,runFunction->GetLiteral(pcoff)))
-                          {
-                            break;
-                          }
-                          m_pc += 2;
-                        }
-                        m_pc = m_code + GetWordOperand();
+                        Inter_switch(numArguments,val,runFunction,pcoff);
                         break;
-      default:		      // UNKNOWN BYTECODE
+      default:          // UNKNOWN BYTECODE
                         m_vm->Error(_T("INTERNAL Bad opcode: %02X"),m_pc[-1]);
                         break;
     }
@@ -641,6 +434,304 @@ QLInterpreter::Interpret(Object* p_object,Function* p_function)
     }
   }
   return 0;
+}
+
+int
+QLInterpreter::Inter_call(int&       numArguments
+                         ,bool&      newline
+                         ,int&       pop
+                         ,Function*& calFunction
+                         ,Function*& runFunction
+                         ,Object*&   runObject)
+{
+  numArguments = *m_pc++;  // Where we find our callee
+  if(m_trace)
+  {
+    // Finish tracing if active. Show what we will be calling
+    m_debugger->PrintObject(m_stack_pointer[numArguments]);
+    newline = false;
+  }
+  switch (m_stack_pointer[numArguments]->m_type) 
+  {
+    case DTYPE_INTERNAL:(*m_stack_pointer[numArguments]->m_value.v_internal)(this,numArguments);
+                        pop = numArguments; // Number of arguments to pop again
+                        break;
+    case DTYPE_STRING:  calFunction = m_vm->FindScript(*m_stack_pointer[numArguments]->m_value.v_string);
+                        if(calFunction == nullptr)
+                        {
+                          m_vm->Error(_T("Call to non-existing function: %s"),*m_stack_pointer[numArguments]->m_value.v_string);
+                        }
+                        break;
+    case DTYPE_SCRIPT:  calFunction = m_stack_pointer[numArguments]->m_value.v_script;
+                        break;
+    default:            m_vm->Error(_T("Call to non-procedure, Type %s"),GetTypename(m_stack_pointer[numArguments]->m_type));
+                        return -1;
+  }
+  if(calFunction)
+  {
+    // Test number of arguments and data types
+    TestFunctionArguments(calFunction,numArguments);
+
+    CheckStack(STACKFRAME_SIZE);
+    PushInteger(0);                                     // No object
+    PushFunction(runFunction);                          // Running function
+    PushInteger(numArguments);                          // NUMBER OF ARGUMENTS
+    PushInteger((int)(m_stack_top - m_frame_pointer));  // OFFSET SP FROM TOP (BEGINNING)
+    PushInteger((int)(m_pc - m_code));                  // OFFSET IN BYTECODE
+    m_code = m_pc   = calFunction->GetBytecode();       // New bytecode program counter
+    runFunction     = calFunction;                      // Now running this function
+    m_frame_pointer = m_stack_pointer;
+    runObject       = nullptr;
+    calFunction     = nullptr;
+  }
+  return 0;
+}
+
+void
+QLInterpreter::Inter_send(int&        numArguments
+                         ,bool&       newline
+                         ,Object*&    calObject
+                         ,Class*&     vClass
+                         ,CString&    selector
+                         ,MemObject*& val
+                         ,int&        pop
+                         ,Function*&  calFunction
+                         ,Object*&    runObject
+                         ,Function*&  runFunction)
+{
+  numArguments = *m_pc++; // Get the stack offset
+
+  // Check that the member selector is a string!
+  CheckType(numArguments - 1, DTYPE_STRING);
+
+  if(m_trace)
+  {
+    // Finish tracing if active. Show what we will be calling
+    m_debugger->PrintObject(m_stack_pointer[numArguments]);
+    newline = false;
+  }
+
+  // See if it is an immediate scripted object
+  if(m_stack_pointer[numArguments]->m_type == DTYPE_OBJECT)
+  {
+    // SEND REQUEST TO AN OBJECT
+    calObject = m_stack_pointer[numArguments]->m_value.v_object;
+    vClass    = calObject->GetClass();
+    selector  = *m_stack_pointer[numArguments - 1]->m_value.v_string;
+    // Creating the "this" pointer on the stack on the place of the selector!
+    m_stack_pointer[numArguments - 1] = m_stack_pointer[numArguments];
+
+    if(selector.IsEmpty())
+    {
+      NoMethod(selector);
+      return;
+    }
+    val = vClass->RecursiveFindFuncMember(selector);
+
+    switch(val->m_type)
+    {
+      case DTYPE_INTERNAL:	(*val->m_value.v_internal)(this,numArguments);
+                            pop = numArguments;
+                            break;
+      case DTYPE_STRING:    val = calObject->GetClass()->FindFuncMember(selector);
+                            if(val)
+                            {
+                              calFunction = val->m_value.v_script;
+                            }
+                            else
+                            {
+                              NoMethod(selector);
+                            }
+                            break;
+      case DTYPE_SCRIPT:    calFunction = val->m_value.v_script;
+                            break;
+      default:              m_vm->Error(_T("Bad method, Selector '%s', Type %d"),selector,val->m_type);
+                            break;
+    }
+    if(calFunction)
+    {
+      // Test arguments. Allow for 'this' pointer as extra argument
+      TestFunctionArguments(calFunction,numArguments - 1);
+
+      CheckStack(STACKFRAME_SIZE);
+      PushObject(runObject);
+      PushFunction(runFunction);
+      PushInteger(numArguments);
+      PushInteger((int)(m_stack_top - m_frame_pointer));
+      PushInteger((int)(m_pc - m_code));
+      m_code = m_pc   = calFunction->GetBytecode();
+      runFunction     = calFunction;
+      runObject       = calObject;
+      m_frame_pointer = m_stack_pointer;
+      calFunction     = nullptr;
+      calObject       = nullptr;
+    }
+  }
+  else
+  {
+    // SEND REQUEST TO INTERNAL OBJECT
+    DoSendInternal(numArguments);
+    // POP two of the stack
+    pop = numArguments;
+  }
+}
+
+void
+QLInterpreter::Inter_return(int&         numArguments
+                           ,MemObject*&  val
+                           ,Object*&     runObject
+                           ,int&         pcoff
+                           ,Function*&   runFunction)
+{
+  val             = m_stack_pointer[0];
+  runObject       = nullptr;
+  m_stack_pointer = m_frame_pointer;
+  pcoff           = m_frame_pointer[SF_OFF_PRGCOUNTER]->m_value.v_integer;
+  numArguments    = m_frame_pointer[SF_OFF_ARGUMENTS] ->m_value.v_integer;
+  runFunction     = m_frame_pointer[SF_OFF_FUNCTION]  ->m_value.v_script;
+  if(m_frame_pointer[SF_OFF_OBJECT]->m_type == DTYPE_OBJECT)
+  {
+    runObject = m_frame_pointer[SF_OFF_OBJECT]->m_value.v_object;
+  }
+  m_frame_pointer = m_stack_top - m_frame_pointer[SF_OFF_FRAMEPNTR]->m_value.v_integer;
+  m_code = runFunction->GetBytecode();
+  m_pc   = m_code + pcoff;
+  m_stack_pointer += STACKFRAME_SIZE; 
+  // Restore return value from function
+  m_stack_pointer[0] = val;
+  if(m_trace)
+  {
+    m_debugger->PrintReturn(runFunction);
+  }
+}
+
+void
+QLInterpreter::Inter_vload()
+{
+  CheckType(0,DTYPE_INTEGER);
+  switch(m_stack_pointer[1]->m_type)
+  {
+    case DTYPE_ARRAY:  VectorRef(); break;
+    case DTYPE_STRING: StringRef(); break;
+    default:	         BadType(1,DTYPE_ARRAY); break;
+  }
+}
+
+void
+QLInterpreter::Inter_vstore()
+{
+  CheckType(1,DTYPE_INTEGER);
+  switch(m_stack_pointer[2]->m_type)
+  {
+    case DTYPE_ARRAY:  VectorSet(); break;
+    case DTYPE_STRING: StringSet(); break;
+    default:	         BadType(1,DTYPE_ARRAY); break;
+  }
+}
+
+void
+QLInterpreter::Inter_shiftLeft()
+{
+  switch(m_stack_pointer[1]->m_type) 
+  {
+    case DTYPE_INTEGER: CheckType(0,DTYPE_INTEGER);
+                        m_stack_pointer[1]->m_value.v_integer <<= m_stack_pointer[0]->m_value.v_integer;
+                        break;
+    case DTYPE_FILE:    m_vm->Print(m_stack_pointer[1]->m_value.v_file,false,m_stack_pointer[0]);
+                        break;
+    default:            break;
+  }
+}
+
+void
+QLInterpreter::Inter_shiftRight()
+{
+  CheckType(0,DTYPE_INTEGER);
+  CheckType(1,DTYPE_INTEGER);
+  m_stack_pointer[1]->m_value.v_integer >>= m_stack_pointer[0]->m_value.v_integer;
+}
+
+void
+QLInterpreter::Inter_literal(MemObject*& val,Function*& runFunction)
+{
+  val = runFunction ? runFunction->GetLiteral(*m_pc++) 
+                    : m_vm->GetLiteral(*m_pc++);
+  if(val->m_type == DTYPE_INTEGER ||
+      val->m_type == DTYPE_STRING)
+  {
+    // Get a duplicate (by-value) from a literal
+    // See the QL_Compiler::add_literal function!
+    m_stack_pointer[0] = m_vm->AllocMemObject(val);
+  }
+  else
+  {
+    // INTERNAL, ARRAY Etc are by-reference
+    m_stack_pointer[0] = val;
+  }
+}
+
+void
+QLInterpreter::Inter_duplicate2()
+{
+  CheckStack(2);
+  m_stack_pointer   -= 2; // Grow the stack by 2
+  m_stack_pointer[0] = m_stack_pointer[2];
+  m_stack_pointer[1] = m_stack_pointer[3];
+}
+
+void
+QLInterpreter::Inter_Destroy(MemObject*& val,Function*& calFunction,Object*& calObject,Function*& runFunction,Object*& runObject)
+{
+  if(m_stack_pointer[0]->m_type != DTYPE_OBJECT)
+  {
+    BadType(0,DTYPE_OBJECT);
+  }
+  calObject = m_stack_pointer[0]->m_value.v_object;
+
+  // Put object on the stack
+  PushInteger(0);
+  m_stack_pointer[0] = m_stack_pointer[1];
+
+  val = calObject->GetClass()->RecursiveFindFuncMember(_T("destroy"));
+  if(val && val->m_value.v_script)
+  {
+      // Use destroy function: no arguments allowed
+      calFunction = val->m_value.v_script;
+      TestFunctionArguments(calFunction,0);
+      // Same as a OP_SEND method
+      CheckStack(STACKFRAME_SIZE);
+      PushObject(runObject);
+      PushFunction(runFunction);
+      PushInteger(1); // No arguments
+      PushInteger((int)(m_stack_top - m_frame_pointer));
+      PushInteger((int)(m_pc - m_code));
+      m_code = m_pc   = calFunction->GetBytecode();
+      runFunction     = calFunction;
+      runObject       = calObject;
+      m_frame_pointer = m_stack_pointer;
+      calFunction     = nullptr;
+      calObject       = nullptr;
+  }
+}
+
+void
+QLInterpreter::Inter_switch(int& numArguments,MemObject*& val,Function*& runFunction,int& pcoff)
+{
+  // Get number of cases
+  numArguments = GetWordOperand();
+  // Get value
+  val = m_stack_pointer[0];
+  // Walk the cases list
+  while(--numArguments >= 0) 
+  {
+    pcoff = GetWordOperand();
+    if(Equal(val,runFunction->GetLiteral(pcoff)))
+    {
+      break;
+    }
+    m_pc += 2;
+  }
+  m_pc = m_code + GetWordOperand();
 }
 
 // Test correct data types and number of arguments
@@ -1823,8 +1914,14 @@ QLInterpreter::DoSendInternal(int p_offset)
   }
 }
 
+//////////////////////////////////////////////////////////////////////////
+//
+// RUNTIME ERROR PRINTING
+//
+//////////////////////////////////////////////////////////////////////////
+
 /* type names */
-static TCHAR *tnames[] = 
+static TCHAR *type_names[] = 
 {
    _T("")
   ,_T("ENDMARKER")
@@ -1851,7 +1948,7 @@ QLInterpreter::GetTypename(int type)
   CString buffer;
   if(type >= _DTMIN && type <= _DTMAX)
   {
-    return (tnames[type]);
+    return (type_names[type]);
   }
   buffer.Format(_T("TYPE (%d)"),type);
   return buffer;
@@ -2012,7 +2109,7 @@ QLInterpreter::SetString(CString p_string)
 
 // Set TOS to a FILE
 void
-QLInterpreter::SetFile(FILE* p_fp)
+QLInterpreter::SetFile(WinFile* p_fp)
 {
   MemObject* object = m_vm->AllocMemObject(DTYPE_FILE);
   object->m_value.v_file = p_fp;
