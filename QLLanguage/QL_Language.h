@@ -20,7 +20,7 @@
 // USED IN *.qob FILES
 #define QL_VERSION        200 // 2.00
 
-#define QUANTUM_PROMPT    _T("Quantum Language (c) 2014-2018 ir. W.E. Huisman")
+#define QUANTUM_PROMPT    _T("Quantum Language (c) 2014-2024 ir. W.E. Huisman")
 #define QUANTUM_VERSION   _T("2.0")
 
 // Tracing macro

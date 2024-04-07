@@ -12,7 +12,6 @@
 #include "QL_Compiler.h"
 #include "QL_Interpreter.h"
 #include "QL_Exception.h"
-#include <io.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -20,9 +19,16 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// The one and only application object
-
 using namespace std;
+
+// Static command line options
+bool    g_verbose     = false;
+bool    g_comptrace   = false;
+bool    g_objecttrace = false;
+bool    g_inttrace    = false;
+bool    g_objectfile  = false;
+bool    g_dumpmem     = false;
+CString g_entrypoint(_T("main"));
 
 // Provide standard drivers for output
 void osputs_stdout(LPCTSTR p_string)
@@ -35,18 +41,9 @@ void osputs_stderr(LPCTSTR p_string)
   _fputts(p_string,stderr);
 }
 
-// Static command line options
-bool    verbose     = false;
-bool    comptrace   = false;
-bool    objecttrace = false;
-bool    inttrace    = false;
-bool    objectfile  = false;
-bool    dumpmem     = false;
-CString entrypoint(_T("main"));
-
 void PrintVersion()
 {
-  if (verbose)
+  if (g_verbose)
   {
     _tprintf(_T("%s\n"),          QUANTUM_PROMPT);
     _tprintf(_T("Version: %s\n"), QUANTUM_VERSION);
@@ -84,41 +81,41 @@ ParseCommandLine(int& index)
     {
       if (_totlower(lpszParam[1]) == _T('h') || lpszParam[1] == '?')
       {
-        verbose = true;
+        g_verbose = true;
         PrintVersion();
         Usage();
         return false;
       }
       else if (_totlower(lpszParam[1]) == 'c')
       {
-        objectfile = true;
+        g_objectfile = true;
       }
       else if (_totlower(lpszParam[1]) == 'v')
       {
-        verbose = true;
+        g_verbose = true;
       }
       else if (_totlower(lpszParam[1]) == 'b')
       {
-        comptrace = true;
+        g_comptrace = true;
       }
       else if (_totlower(lpszParam[1]) == 't')
       {
-        inttrace = true;
+        g_inttrace = true;
       }
       else if(_totlower(lpszParam[1]) == 'x')
       {
-        dumpmem = true;
+        g_dumpmem = true;
       }
       else if(_totlower(lpszParam[1]) == 'o')
       {
-        objecttrace = true;
+        g_objecttrace = true;
       }
       else if (_totlower(lpszParam[1]) == 'e')
       {
-        entrypoint = __targv[++index];
-        if (entrypoint.IsEmpty())
+        g_entrypoint = __targv[++index];
+        if(g_entrypoint.IsEmpty())
         {
-          entrypoint = _T("main");
+          g_entrypoint = _T("main");
         }
       }
       else if (_totlower(lpszParam[1]) == 'd')
@@ -149,6 +146,23 @@ ParseCommandLine(int& index)
   return true;
 }
 
+int InitMFC()
+{
+  HMODULE hModule = ::GetModuleHandle(NULL);
+  if(hModule == NULL)
+  {
+    _tprintf(_T("QL: Fatal Error: module initialization failed\n"));
+    return 1;
+  }
+  // initialize MFC and print and error on failure
+  if(!AfxWinInit(hModule,NULL,::GetCommandLine(),0))
+  {
+    _tprintf(_T("QL: Fatal Error: MFC initialization failed\n"));
+    return 1;
+  }
+  return 0;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // MAIN PROGRAM DRIVER
@@ -157,104 +171,91 @@ ParseCommandLine(int& index)
 
 int _tmain(int argc,TCHAR* argv[],TCHAR* envp[])
 {
-  int nRetCode = 0;
-
-  HMODULE hModule = ::GetModuleHandle(NULL);
-  if (hModule == NULL)
+  // Initialize MFC and String management
+  int returnCode = InitMFC();
+  if(returnCode)
   {
-    _tprintf(_T("QL: Fatal Error: module initialization failed\n"));
-    nRetCode = 1;
+    return returnCode;
+  }
+
+  // Record argument list
+  qlargc = argc;
+  qlargv = argv;
+
+  bool compiled = false;
+
+  // Handle command line input and act on it
+  if(argc > 1)
+  {
+    int ind = 0;
+    if(ParseCommandLine(ind))
+    {
+      QLVirtualMachine vm;
+
+      PrintVersion();
+      while(ind < argc)
+      {
+        if(vm.IsObjectFile(argv[ind]) && !g_objectfile)
+        {
+          compiled = vm.LoadFile(argv[ind],g_objecttrace);
+          if(compiled && g_verbose)
+          {
+            _tprintf(_T("Read object file: %s\n"),argv[ind]);
+          }
+        }
+        else if(vm.IsSourceFile(argv[ind]))
+        {
+          compiled = vm.CompileFile(argv[ind],g_comptrace);
+          if(compiled && g_verbose)
+          {
+            _tprintf(_T("Compiled source file: %s\n"),argv[ind]);
+          }
+        }
+        else
+        {
+          _ftprintf(stderr,_T("File not found: %s\n"),argv[ind]);
+          returnCode = 1;
+        }
+        // Next argument from command line
+        ++ind;
+      }
+
+      if(g_objectfile)
+      {
+        // Last argument is the object file
+        if(vm.WriteFile(argv[argc - 1],g_objecttrace) && g_verbose)
+        {
+          _tprintf(_T("Written object file: %s\n"),argv[argc - 1]);
+        }
+      }
+      else if(compiled)
+      {
+        // Now execute main or the entrypoint
+        try
+        {
+          vm.SetDumping(g_dumpmem);
+
+          QLInterpreter inter(&vm, g_inttrace);
+          returnCode = inter.Execute(g_entrypoint);
+        }
+        catch(int &error)
+        {
+          returnCode = error;
+        }
+        catch(QLException& exp)
+        {
+          returnCode = -1;
+          _ftprintf(stderr,_T("%s\n"),exp.GetErrorMessage().GetString());
+        }
+      }
+    }
   }
   else
   {
-    // initialize MFC and print and error on failure
-    if(!AfxWinInit(hModule, NULL, ::GetCommandLine(), 0))
-    {
-      _tprintf(_T("QL: Fatal Error: MFC initialization failed\n"));
-      nRetCode = 1;
-    }
-    else
-    {
-      // Record argument list
-      qlargc = argc;
-      qlargv = argv;
-
-      bool compiled = false;
-
-      // Handle command line input and act on it
-      if(argc > 1)
-      {
-        int ind = 0;
-        if(ParseCommandLine(ind))
-        {
-          QLVirtualMachine vm;
-
-          PrintVersion();
-          while(ind < argc)
-          {
-            if(vm.IsObjectFile(argv[ind]) && !objectfile)
-            {
-              compiled = vm.LoadFile(argv[ind],objecttrace);
-              if(compiled && verbose)
-              {
-                _tprintf(_T("Read object file: %s\n"),argv[ind]);
-              }
-            }
-            else if (vm.IsSourceFile(argv[ind]))
-            {
-              compiled = vm.CompileFile(argv[ind],comptrace);
-              if(compiled && verbose)
-              {
-                _tprintf(_T("Compiled source file: %s\n"),argv[ind]);
-              }
-            }
-            else
-            {
-              _ftprintf(stderr,_T("File not found: %s\n"),argv[ind]);
-              nRetCode = 1;
-            }
-            // Next argument from command line
-            ++ind;
-          }
-
-          if(objectfile)
-          {
-            // Last argument is the object file
-            if(vm.WriteFile(argv[argc - 1],objecttrace) && verbose)
-            {
-              _tprintf(_T("Written object file: %s\n"),argv[argc - 1]);
-            }
-          }
-          else if(compiled)
-          {
-            // Now execute main or the entrypoint
-            try
-            {
-              vm.SetDumping(dumpmem);
-
-              QLInterpreter inter(&vm, inttrace);
-              nRetCode = inter.Execute(entrypoint);
-            }
-            catch(int &error)
-            {
-              nRetCode = error;
-            }
-            catch(QLException& exp)
-            {
-              nRetCode = -1;
-              _ftprintf(stderr,_T("%s\n"),exp.GetErrorMessage().GetString());
-            }
-          }
-        }
-      }
-      else
-      {
-        // Started with no arguments: tell the world who we are
-        verbose = true;
-        PrintVersion();
-        Usage();
-      }
-    }
+    // Started with no arguments: tell the world who we are
+    g_verbose = true;
+    PrintVersion();
+    Usage();
   }
-  return nRetCode;
+  return returnCode;
 }
